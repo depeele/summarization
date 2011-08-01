@@ -1,0 +1,92 @@
+/**
+ * Description: Wired Science Specific Stylesheet
+ */
+#blog_header{
+    background-image: url('/images/blogs/banners/hed_wiredscience.gif');
+}
+
+#sidebar.frontalcortex .widget_widget_rss h2 {
+    background-image:url(/wiredscience/wp-content/gallery/frontalcortex/xrail_morestories.gif);
+}
+
+#sidebar.neuronculture .widget_widget_rss h2 {
+    background-image:url(/wiredscience/wp-content/gallery/frontalcortex/xrail_morestories.gif);
+}
+
+#sidebar.clasticdetritus .widget_widget_rss h2 {
+    background-image:url(/wiredscience/wp-content/gallery/frontalcortex/xrail_morestories.gif);
+}
+
+#sidebar.dotphysics .widget_widget_rss h2 {
+    background-image:url(/wiredscience/wp-content/gallery/frontalcortex/xrail_morestories.gif);
+}
+
+#sidebar.superbug .widget_widget_rss h2 {
+    background-image:url(/wiredscience/wp-content/gallery/frontalcortex/xrail_morestories.gif);
+}
+
+#sidebar.geneticfuture .widget_widget_rss h2 {
+    background-image:url(/wiredscience/wp-content/gallery/frontalcortex/xrail_morestories.gif);
+}
+
+#sidebar.laelaps .widget_widget_rss h2 {
+    background-image:url(/wiredscience/wp-content/gallery/frontalcortex/xrail_morestories.gif);
+}
+
+#sidebar.convergence .widget_widget_rss h2 {
+    background-image:url(/wiredscience/wp-content/gallery/frontalcortex/xrail_morestories.gif);
+}
+
+
+.widget_widget_text h2 {display:none;}
+
+
+
+
+/**  Author Archive  **/
+#author_top {width:660px; color:#000;}
+#author_top a {color:#00bcec;}
+#author_top a:hover {background:#00bcec; color:#FFF;}
+.archive_header a {color:#bbb;}
+.author_name {font-family: "tandelle-1","tandelle-2", Helvetica, Arial, Verdana; font-size:48px; width:440px; border-top:#b1e724 solid 5px; padding-top:20px; float:left;}
+.author_image  {float:right; }
+.author_image img {width:200px; height:200px; }
+.author_bio {font-size:13px; line-height:20px; width:430px; color:#666; }
+.author_extra {font-size:12px; line-height:20px; color:#666; margin-top:7px; font-style:italic; }
+.archive_header{color:#000; font-family: "tandelle-1","tandelle-2", Helvetica, Arial, Verdana; display:block; width:660px; text-transform:uppercase; font-size:20px; letter-spacing:1px; margin:20px 0 5px;}
+.archive_header a {color:#bbb !important;}
+.author_tweet {font-family: "tandelle-1","tandelle-2", Helvetica, Arial, Verdana; font-size:28px; clear:both; text-align:right; float:none; min-height:100px; padding:50px 0 0 180px; margin:10px 0 0 0; font-weight:bold;
+background:url("/wiredscienceblogs/wp-content/gallery/wp_theme/author_archive_bar.gif") no-repeat  ;}
+.author_follow {font-size:13px; font-family:Helvetica, Arial, Verdana, san-serif; line-height:20px; font-weight:normal; }
+
+#author_list, #author_list a {font-family:Helvetica, Arial, Verdana; color:#bbb; font-size:13px; line-height:20px}
+#author_list h2 a {font-size:16px}
+#author_list h2 a {color:#000;}
+#author_list a:hover {background:#00bcec !important; color:#fff;}
+.author_post {padding:10px 0;}
+
+.author_post .extras_date, .author_post .extras_comments, .author_post .extras_tags {display:inline-block;}
+
+
+
+
+.scienceblog .post h1 {font-family:"tandelle-1", "tandelle-2", Helvetica, Arial, Verdana; font-size:40px; font-weight:700; line-height:40px; padding-bottom:10px; letter-spacing:1px;}
+
+
+#adSkinLayer1.clasticdetritus { background: url("/wiredscience/wp-content/gallery/scienceblogs/clasticdetritus_bg.gif") no-repeat scroll center 0px #FFFFFF !important;}
+#adSkinLayer1.dotphysics { background: url("/wiredscience/wp-content/gallery/scienceblogs/dotphysics_bg.gif") no-repeat scroll center 0px #FFFFFF !important;}
+#adSkinLayer1.frontalcortex { background: url("/wiredscience/wp-content/gallery/scienceblogs/frontalcortex_bg.gif") no-repeat scroll center 0px #FFFFFF !important;}
+#adSkinLayer1.geneticfuture { background: url("/wiredscience/wp-content/gallery/scienceblogs/geneticfuture_bg.gif") no-repeat scroll center 0px #FFFFFF !important;}
+#adSkinLayer1.laelaps { background: url("/wiredscience/wp-content/gallery/scienceblogs/laelaps_bg.gif") no-repeat scroll center 0px #FFFFFF !important;}
+#adSkinLayer1.neuronculture { background: url("/wiredscience/wp-content/gallery/scienceblogs/neuronculture_bg.gif") no-repeat scroll center 0px #FFFFFF !important;}
+#adSkinLayer1.superbug { background: url("/wiredscience/wp-content/gallery/scienceblogs/superbug_bg.gif") no-repeat scroll center 0px #FFFFFF !important;}
+#adSkinLayer1.convergence { background: url("/wiredscience/wp-content/gallery/scienceblogs/convergence_bg.gif") no-repeat scroll center 0px #FFFFFF !important;}
+
+
+
+
+
+
+
+
+

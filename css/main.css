@@ -1,0 +1,35 @@
+body {
+  font:  14px/1.231 arial,helvetica,clean,sans-serif;
+}
+
+#article .src,
+#article .src iframe {
+  width:  400px;
+  height: 300px;
+}
+
+section {
+  display:  block;
+  padding:  1em;
+  margin:   0;
+}
+
+section p {
+  display:  block;
+  padding:  0 0 1em;
+  margin:   0;
+}
+
+section p span:after {
+  content:  "  ";
+}
+
+section p span {
+  font-size:  1em;
+  color:      #ddd;
+}
+
+section p .highlight {
+  font-size:  1.2em;
+  color:      #229;
+}

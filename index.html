@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=620" />
+
+  <title>Summarization Viewer</title>
+
+  <link rel="stylesheet" type="text/css" href="css/main.css" />
+
+  <script src='js/jquery.min.js'></script>
+  <script src='js/jquery.summary.js'></script>
+ </head>
+ <body>
+  <div id='article'></div>
+ </body>
+
+ <script>
+ (function($) {
+    $('#article').summary({
+        //src:      'http://www.wired.com/wiredscience/2011/07/the-selfishness-of-trust/',
+        //src:      'samples/0001.html',
+        metadata: 'samples/0001.xml'
+    });
+ }(jQuery));
+ </script>
+</html>
