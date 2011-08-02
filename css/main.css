@@ -2,6 +2,11 @@ body {
   font:  14px/1.231 arial,helvetica,clean,sans-serif;
 }
 
+.ui-widget-overlay {
+  opacity:  0.25;
+  filter:   Alpha(Opacity=25);
+}
+
 #article .src,
 #article .src iframe {
   width:  400px;
@@ -15,9 +20,10 @@ section {
 }
 
 section p {
-  display:  block;
-  padding:  0 0 1em;
-  margin:   0;
+  display:    block;
+  padding:    0 0 1em;
+  margin:     0;
+  font-size:  1em;
 }
 
 section p span:after {
@@ -25,11 +31,51 @@ section p span:after {
 }
 
 section p span {
-  font-size:  1em;
   color:      #ddd;
 }
 
 section p .highlight {
-  font-size:  1.2em;
-  color:      #229;
+  /*color:      #229;*/
+}
+
+.summary-dialog {
+  background:       transparent;
+}
+
+.summary-dialog .ui-dialog-content {
+  padding:          1em 2em;
+  background-color: rgba(242, 245, 247, 0.88);
+}
+
+.summary-dialog .controls {
+  margin:         0;
+  padding:        0 0 1em 0;
+  border-bottom:  1px solid #ddd;
+}
+.summary-dialog .controls #threshold {
+  border:       1px solid #ddd;
+  color:        #f6931f;
+  font-weight:  bold;
+  width:        7em;
+  margin-left:  0.5em;
+}
+.summary-dialog .controls .slider {
+  margin:       0.5em;
+}
+.summary-dialog .list {
+  list-style: none;
+  padding:    0 1em;
+  margin:     0;
+}
+.summary-dialog .list li {
+  position:       relative;
+  padding:        0.5em 0;
+  text-align:     justify;
+  border-bottom:  1px dotted #aaa;
+}
+.summary-dialog .list li .rank {
+  position:       absolute;
+  top:            -0.25em;
+  left:           -1.5em;
+  color:          #f6931f;
 }
