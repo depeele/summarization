@@ -22,8 +22,17 @@
   </div>
   <div class='summary-control ui-layout-east'>
    <div class='controls ui-layout-north'>
-    <label for="threshold">Threshold range:</label>
-    <input id="threshold" name="threshold" type="text" />
+    <label for="threshold">Threshold:</label>
+
+	<input name="threshold" id="threshold-low" type="radio" value="25" />
+    <label for="threshold-low">low</label>
+
+	<input name="threshold" id="threshold-medium" type="radio" value="50" />
+    <label for="threshold-medium">medium</label>
+
+	<input name="threshold" id="threshold-high" type="radio" value="75" />
+    <label for="threshold-high">high</label>
+
    </div>
    <ul class='list ui-layout-center'></ul>
   </div>
@@ -37,17 +46,17 @@
 
     $('.ui-layout-east').layout({
         north:  {
-            size:       75,
+            size:       50,
             resizable:  false,
             closable:   false
         }
     });
 
     $('#article').summary({
-        //src:      'http://www.wired.com/wiredscience/2011/07/the-selfishness-of-trust/',
-        //src:      'samples/0001.html',
-        metadata:   'samples/0001.xml',
-        dialog:     '#dialog'
+        //src:      	'samples/0001.html',
+        metadata:   	'samples/0001.xml',
+        dialog:     	'#dialog',
+		thresholdType:	'discrete'
     });
  }(jQuery));
  </script>

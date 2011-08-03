@@ -22,11 +22,16 @@ $.Summary = function($el, options) {
 
 $.Summary.prototype = {
     options: {
-        src:            null,   // The URL of the original source
-        metadata:       null,   // The URL of the
-                                // summarization/characterization metadata
+        src:            null,       // The URL of the original source
+        metadata:       null,       // The URL of the
+                                    // summarization/characterization metadata
 
-        showSentences:  5       // The minimum number of sentences to present
+        thresholdType:  'slider',   // The type of threshold:
+                                    //  'slider' for a continuous range
+                                    //  'discrete' for 3 discrete steps.
+
+        showSentences:  5           // The minimum number of sentences to
+                                    // present
     },
 
     /** @brief  Initialize this new instance.
@@ -43,6 +48,11 @@ $.Summary.prototype = {
         self.options  = opts;
         self.metadata = null;
         self.$src     = null;
+
+        var $gp = self.element.parent().parent()
+        self.$control   = $gp.find('.summary-control');
+        self.$list      = self.$control.find('.list');
+        self.$threshold = self.$control.find('input[name=threshold]');
 
         self._bindEvents();
 
@@ -203,26 +213,26 @@ $.Summary.prototype = {
         var self    = this;
         var opts    = self.options;
 
-        // Render the jquery-ui controls: dialog, slider
-        var $control   = $('.summary-control');
-        var $controls  = $control.find('.controls');
+        if (opts.thresholdType === 'slider')
+        {
+            // Render the jquery-ui controls: dialog, slider
+            var $controls  = self.$control.find('.controls');
 
-        self.$list     = $control.find('.list');
-        self.$threshold= $controls.find('#threshold')
-                            .addClass('ui-corner-all');
-        self.$slider   = $('<div />')
-                            .addClass('slider')
-                            .slider({
-                                range:  true,
-                                min:    0,
-                                max:    100,
-                                values: [minThreshold, maxThreshold],
-                                slide:  function(event, ui) {
-                                    self.threshold(ui.values[0],
-                                                   ui.values[1]);
-                                }
-                            })
-                            .appendTo($controls);
+            self.$threshold.addClass('ui-corner-all');
+            self.$slider   = $('<div />')
+                                .addClass('slider')
+                                .slider({
+                                    range:  true,
+                                    min:    0,
+                                    max:    100,
+                                    values: [minThreshold, maxThreshold],
+                                    slide:  function(event, ui) {
+                                        self.threshold(ui.values[0],
+                                                       ui.values[1]);
+                                    }
+                                })
+                                .appendTo($controls);
+        }
 
         self.threshold( minThreshold, maxThreshold );
     },
@@ -239,11 +249,36 @@ $.Summary.prototype = {
         self.minThreshold = min;
         self.maxThreshold = max;
 
-        self.$slider.slider('values', 0, self.minThreshold);
-        self.$slider.slider('values', 1, self.maxThreshold);
+        if (self.$slider)
+        {
+            self.$slider.slider('values', 0, min);
+            self.$slider.slider('values', 1, max);
 
-        var str = self.minThreshold +' - ' + self.maxThreshold;
-        self.$threshold.val( str );
+            var str = min +' - ' + max;
+            self.$threshold.val( str );
+        }
+        else
+        {
+            // Discrete
+            if (min >= 75)      { min = 75; }
+            else if (min >= 50) { min = 50; }
+            else                { min = 25; }
+
+            self.minThreshold = min;
+
+            var val = parseInt(self.$threshold.filter(':checked').val(), 10);
+            if (val !== min)
+            {
+                /* This click SHOULD be caught by the $threshold.change()
+                 * handler, which will invoke THIS method AGAIN with the new
+                 * value.
+                 *
+                 * So just return.
+                 */
+                self.$threshold.filter('[value='+ min +']').click();
+                return;
+            }
+        }
 
         // Remove existing highlights
         self.$s.removeClass('highlight')
@@ -362,6 +397,7 @@ $.Summary.prototype = {
 
     _bindEvents: function() {
         var self    = this;
+        var opts    = self.options;
         var $gp     = self.element.parent().parent();
 
         /*************************************************************
@@ -470,9 +506,18 @@ $.Summary.prototype = {
          */
         $gp.delegate('.controls input', 'change', function() {
             var val     = $(this).val();
-            var range   = val.split(/\s*-\s*/);
-            var min     = parseInt(range[0]);
-            var max     = parseInt(range[1]);
+            var min,max;
+
+            if (opts.thresholdType === 'slider')
+            {
+                var range   = val.split(/\s*-\s*/);
+                min = parseInt(range[0]);
+                max = parseInt(range[1]);
+            }
+            else
+            {
+                min = parseInt( val, 10 );
+            }
 
             if (isNaN(min)) { min = self.minThreshold; }
             if (isNaN(max)) { max = self.maxThreshold; }
@@ -485,6 +530,11 @@ $.Summary.prototype = {
          *
          */
         $gp.delegate('.controls input', 'keydown', function(e) {
+            if (opts.thresholdType !== 'slider')
+            {
+                return;
+            }
+
             var $el     = $(this);
             var val     = $el.val();
             var divider = val.indexOf('-');
@@ -529,104 +579,12 @@ $.Summary.prototype = {
     },
 
     _unbindEvents: function() {
-        var $parent = this.element.parent();
-
-        $parent.undelegate('.controls input', 'change');
-        $parent.undelegate('.controls input', 'keydown');
-
         var self    = this;
         var $gp     = self.element.parent().parent();
 
-        $gp.undelegate('.article-pane span', 'hover');
-
-        $gp.delegate('.summary-control .list li', 'mouseenter', function() {
-            var $el = $(this);
-            var rk  = $el.children().text();
-            var re  = (rk.length > 0
-                        ? new RegExp('^'+ rk)
-                        : null);
-            var txt = $el.text();
-            if (re !== null)
-            {
-                txt = txt.replace(re, '');
-            }
-
-            var $s = self.element
-                        .find(':contains('+ txt +')');
-            $s.addClass('hover-link');
-        });
-
-        $gp.delegate('.summary-control .list li', 'mouseleave', function() {
-            var $el = $(this);
-            var rk  = $el.children().text();
-            var re  = (rk.length > 0
-                        ? new RegExp('^'+ rk)
-                        : null);
-            var txt = $el.text();
-            if (re !== null)
-            {
-                txt = txt.replace(re, '');
-            }
-
-            var $s = self.element
-                        .find(':contains('+ txt +')');
-            $s.removeClass('hover-link');
-        });
-
-        $gp.delegate('.controls input', 'change', function() {
-            var val     = $(this).val();
-            var range   = val.split(/\s*-\s*/);
-            var min     = parseInt(range[0]);
-            var max     = parseInt(range[1]);
-
-            if (isNaN(min)) { min = self.minThreshold; }
-            if (isNaN(max)) { max = self.maxThreshold; }
-
-            self.threshold(min, max);
-        });
-
-        $gp.delegate('.controls input', 'keydown', function(e) {
-            var $el     = $(this);
-            var val     = $el.val();
-            var divider = val.indexOf('-');
-            var pos     = self._getCaret( $el );
-            var vals    = [ self.minThreshold, self.maxThreshold ];
-            var which   = ( pos > divider ? 1 : 0);
-
-            /* If the key is arrow up or down, adjust the min or max threshold
-             * (depending on which one the current caret/cursor is nearest) up
-             * or down.
-             */
-            switch (e.which)
-            {
-            case $.ui.keyCode.UP:
-                if (vals[which] < 100)
-                {
-                    vals[which] = vals[which] + 1;
-                }
-                break;
-
-            case $.ui.keyCode.DOWN:
-                if (vals[which] > 0)
-                {
-                    vals[which] = vals[which] - 1;
-                }
-                break;
-
-            default:
-                return;
-            }
-
-            // If we've flipped min/max, make sure they're properly ordered
-            vals = vals.sort(function(a,b){ return a-b; });
-            self.threshold(vals[0], vals[1]);
-
-            // Reset the caret/cursor position to its original value
-            self._setCaret( $el, pos );
-
-            // Squelch this event
-            return false;
-        });
+        $gp.undelegate('.article-pane .highlight',  'mouseenter mouseleave');
+        $gp.undelegate('.summary-control .list li', 'mouseenter mouseleave');
+        $gp.undelegate('.controls input',           'change keydown');
     }
 };
 
