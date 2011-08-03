@@ -2,31 +2,34 @@
  <title>The Collapse of Political Trust</title>
  <author>Jonah Lehrer</author>
  <published><date>July 27, 2011</date><time>5:40 pm</time></published>
- <categories>
-  <category>Frontal Cortex</category>
-  <category>Science Blogs</category>
- </categories>
+ <keywords>
+  <keyword id='politic' rank='.8'>Politic</keyword>
+  <keyword id='blog' rank='.1'>Blog</keyword>
+ </keywords>
 
  <body>
   <section>
    <p>
-    <s rank='.1'>American politics makes me sad.</s>
+    <s rank='.1'>American <keyword id='politic'>politics</keyword> makes me
+    sad.</s>
     <s rank='.7'>One can’t help but imagine the history books of the future,
     highlighting this moment as an example of why the decline began, how a
-    country this rich and free developed such a dysfunctional political
+    country this rich and free developed such a dysfunctional <keyword
+    id='politic'>political</keyword>
     system.</s>
    </p>
 
    <p>
-    <s rank='.1'>But this post is not a lament for a bygone politics, because
-    lord knows there are enough of those.</s>
+    <s rank='.1'>But this post is not a lament for a bygone <keyword
+    id='politic'>politics</keyword>, because lord knows there are enough of
+    those.</s>
     <s rank='.1'>Instead, I think the current breakdown in Washington
     highlights the fragility of a human capability we’ve long taken for
     granted: trust.</s>
     <s rank='.9'>While economists have begun focusing on trust as a crucial
     factor in economic development – a country without trust can’t build the
     institutions that make growth possible – trust is also an essential
-    component of effective politics.</s>
+    component of effective <keyword id='politic'>politics</keyword>.</s>
     <s rank='.3'>Democracies, after all, depend on compromise.</s>
     <s rank='.3'>And compromise requires trust.</s>
    </p>
@@ -136,15 +139,18 @@
     polarization of Congress.</s>
     <s rank='.1'>But I can’t help but wonder if one of the reasons has to with
     this newfound lack of favor trading, as it’s increasingly difficult for
-    politicians to barter projects in exchange for votes.</s>
+    <keyword id='politic'>politicians</keyword> to barter projects in exchange
+    for votes.</s>
     <s rank='.1'>It’s easy to hate on Congressional pork and mock all those
     silly projects that get snuck into bills.</s>
-    <s rank='.7'>But when we do without pork, we also deny our politicians a
-    means of building trusting relationships across the aisle.</s>
+    <s rank='.7'>But when we do without pork, we also deny our <keyword
+    id='politic'>politicians</keyword> a means of building trusting
+    relationships across the aisle.</s>
     <s rank='.5'>In this sense, those bridges to nowhere are a sort of
     benevolent inefficiency, a form of waste that, just maybe, keeps us from
     becoming a banana republic.</s>
-    <s rank='.1'>Such are the hazards of politics in age of cutting.</s>
+    <s rank='.1'>Such are the hazards of <keyword
+    id='politic'>politics</keyword> in age of cutting.</s>
     <s rank='.7'>If trust begins when we share the treasure, what happens when
     there’s no treasure left to share?</s>
    </p>
@@ -156,8 +162,8 @@
 
    <p>
     <s rank='.1'>PPS. For more on the hidden benefits of Congressional pork,
-    check out this paper by the political scientists John Ellwood and Eric
-    Patashnik.</s>
+    check out this paper by the <keyword id='politic'>political</keyword>
+    scientists John Ellwood and Eric Patashnik.</s>
    </p>
 
    <p>
