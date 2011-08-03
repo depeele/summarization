@@ -215,7 +215,7 @@ $.Summary.prototype = {
 
         if (opts.thresholdType === 'slider')
         {
-            // Render the jquery-ui controls: dialog, slider
+            // Render the slider controls
             var $controls  = self.$control.find('.controls');
 
             self.$threshold.addClass('ui-corner-all');
@@ -232,6 +232,15 @@ $.Summary.prototype = {
                                     }
                                 })
                                 .appendTo($controls);
+        }
+        else
+        {
+            // Render the discrete controls
+            self.$threshold.each(function() {
+                var $el = $(this);
+                var val = parseInt($el.val(), 10);
+                $el.data('valueInt', val);
+            });
         }
 
         self.threshold( minThreshold, maxThreshold );
@@ -260,14 +269,14 @@ $.Summary.prototype = {
         else
         {
             // Discrete
-            if (min >= 75)      { min = 75; }
-            else if (min >= 50) { min = 50; }
-            else                { min = 25; }
+            var val;
+            self.$threshold.each(function() {
+                val = $(this).data('valueInt');
+                if (min >= val) { self.minThreshold = val; }
+            });
 
-            self.minThreshold = min;
-
-            var val = parseInt(self.$threshold.filter(':checked').val(), 10);
-            if (val !== min)
+            val = self.$threshold.filter(':checked').data('valueInt');
+            if (val !== self.minThreshold)
             {
                 /* This click SHOULD be caught by the $threshold.change()
                  * handler, which will invoke THIS method AGAIN with the new
@@ -275,7 +284,8 @@ $.Summary.prototype = {
                  *
                  * So just return.
                  */
-                self.$threshold.filter('[value='+ min +']').click();
+                self.$threshold.filter('[value='+ self.minThreshold +']')
+                        .click();
                 return;
             }
         }
