@@ -3,52 +3,57 @@
  <author>Jonah Lehrer</author>
  <published><date>July 27, 2011</date><time>5:40 pm</time></published>
  <keywords>
-  <keyword id='politic' rank='.8'>Politic</keyword>
-  <keyword id='blog' rank='.1'>Blog</keyword>
+  <keyword name='politics' rank='.8'>Politics</keyword>
+  <keyword name='trust' rank='.9'>Trust</keyword>
  </keywords>
 
  <body>
   <section>
    <p>
-    <s rank='.1'>American <keyword id='politic'>politics</keyword> makes me
+    <s rank='.1'>American <keyword name='politics'>politics</keyword> makes me
     sad.</s>
     <s rank='.7'>One can’t help but imagine the history books of the future,
     highlighting this moment as an example of why the decline began, how a
     country this rich and free developed such a dysfunctional <keyword
-    id='politic'>political</keyword>
-    system.</s>
+    name='politics'>political</keyword> system.</s>
    </p>
 
    <p>
     <s rank='.1'>But this post is not a lament for a bygone <keyword
-    id='politic'>politics</keyword>, because lord knows there are enough of
+    name='politics'>politics</keyword>, because lord knows there are enough of
     those.</s>
     <s rank='.1'>Instead, I think the current breakdown in Washington
     highlights the fragility of a human capability we’ve long taken for
-    granted: trust.</s>
-    <s rank='.9'>While economists have begun focusing on trust as a crucial
-    factor in economic development – a country without trust can’t build the
-    institutions that make growth possible – trust is also an essential
-    component of effective <keyword id='politic'>politics</keyword>.</s>
+    granted: <keyword name='trust'>trust</keyword>.</s>
+    <s rank='.9'>While economists have begun focusing on <keyword
+    name='trust'>trust</keyword>as a crucial factor in economic development – a
+    country without <keyword name='trust'>trust</keyword>can’t build the
+    institutions that make growth possible – <keyword
+    name='trust'>trust</keyword> is also an essential component of effective
+    <keyword name='politics'>politics</keyword>.</s>
     <s rank='.3'>Democracies, after all, depend on compromise.</s>
-    <s rank='.3'>And compromise requires trust.</s>
+    <s rank='.3'>And compromise requires <keyword
+    name='trust'>trust</keyword>.</s>
    </p>
 
    <p>
-    <s rank='.1'>At the moment, the neuroscience of trust remains extremely
-    provisional.</s>
-    <s rank='.4'>We still don’t know why some societies are awash in trust
-    while others are forced to do without, subsisting on nothing but the
-    instinctive faith in close friends and family.</s>
-    <s rank='.4'>We don’t know why some people are so much more trusting than
-    others or what happens when the bonds of trust are broken.</s>
+    <s rank='.1'>At the moment, the neuroscience of <keyword
+    name='trust'>trust</keyword> remains extremely provisional.</s>
+    <s rank='.4'>We still don’t know why some societies are awash in <keyword
+    name='trust'>trust</keyword> while others are forced to do without,
+    subsisting on nothing but the instinctive faith in close friends and
+    family.</s>
+    <s rank='.4'>We don’t know why some people are so much more <keyword
+    name='trust'>trusting</keyword> than others or what happens when the bonds
+    of <keyword name='trust'>trust</keyword> are broken.</s>
     <s rank='.1'>Nevertheless, there have been some interesting glimmers into
-    the formation of trust in the brain.</s>
+    the formation of <keyword name='trust'>trust</keyword> in the brain.</s>
    </p>
 
    <p>
-    <s rank='.1'>Consider this elegant investigation of trust, led by Brooks
-    King-Casas, Colin Camerer, Read Montague, et. al.</s>
+    <s rank='.1'>Consider this elegant investigation of <keyword
+    name='trust'>trust</keyword>, led by Brooks King-Casas, Colin Camerer, Read
+    Montague, et. al.</s>
     <s rank='.1'>The research was born out of a serious limitation of
     conventional fMRI, which looks at the individual brain in splendid
     isolation.</s>
@@ -62,10 +67,11 @@
 
    <p>
     <s rank='.2'>The experiment revolved around a simple economic game in which
-    getting the maximum reward required the strangers to trust one another.</s>
+    getting the maximum reward required the strangers to <keyword
+    name='trust'>trust</keyword> one another.</s>
     <s rank='.3'>However, if one of the players grew especially selfish, he or
     she could always steal from the pot and erase the tenuous sense of
-    trust.</s>
+    <keyword name='trust'>trust</keyword>.</s>
     <s rank='.4'>By monitoring the players’ brains, the scientists were able to
     predict whether or not someone would steal money several seconds before the
     theft actually occurred.</s>
@@ -75,63 +81,70 @@
     since it plays a central role in modulating our expectation of
     pleasure.)</s>
     <s rank='.1'>Montague noticed that whenever the caudate exhibited reduced
-    activity, trust tended to break down.</s>
+    activity, <keyword name='trust'>trust</keyword> tended to break down.</s>
    </p>
 
    <p>
     <s rank='.1'>But what exactly is the caudate computing?</s>
-    <s rank='.1'>How do we decide whom to trust with our money?</s>
+    <s rank='.1'>How do we decide whom to <keyword name='trust'>trust</keyword>
+    with our money?</s>
     <s rank='.6'>At first, the caudate didn’t get excited until the subjects
-    actually trusted one another and garnered their separate rewards.</s>
+    actually <keyword name='trust'>trusted</keyword> one another and garnered
+    their separate rewards.</s>
     <s rank='.6'>But over time this brain area started to expect those rewards,
     so that it fired long before the money actually arrived.</s>
     <s rank='.1'>It’s only at this point – once we take those future benefits
-    for granted – that the bonds of trust between the players began to
-    form.</s>
+    for granted – that the bonds of <keyword name='trust'>trust</keyword>
+    between the players began to form.</s>
    </p>
 
    <p>
-    <s rank='.8'>The moral is that trust is ultimately about the expectation of
-    rewards.</s>
-    <s rank='.4'>We see trust as such a noble trait, but it’s ultimately rooted
-    in a greedy calculation, emanating from our primal dopaminergic
-    circuitry:</s>
+    <s rank='.8'>The moral is that <keyword name='trust'>trust</keyword> is
+    ultimately about the expectation of rewards.</s>
+    <s rank='.4'>We see <keyword name='trust'>trust</keyword> as such a noble
+    trait, but it’s ultimately rooted in a greedy calculation, emanating from
+    our primal dopaminergic circuitry:</s>
    </p>
 
    <p>
     <s rank='.8'>Taken together, these results suggest that the head of the
     caudate nucleus receives or computes information about (i) the fairness of
     a social partner’s decision and (ii) the intention to repay that decision
-    with trust.</s>
-    <s rank='.5'>In early rounds of the game, the ”intention to trust” is
-    evident only after an investment is revealed.</s>
+    with <keyword name='trust'>trust</keyword>.</s>
+    <s rank='.5'>In early rounds of the game, the ”intention to <keyword
+    name='trust'>trust</keyword>” is evident only after an investment is
+    revealed.</s>
     <s rank='.5'>With experience, this signal shifts to a time preceding the
     revelation of the investment.</s>
    </p>
 
    <p>
-    <s rank='.6'>In other words, we don’t trust people because they seem nice
-    or virtuous or trustworthy, whatever those adjectives mean.</s>
-    <s rank='.6'>We trust them because they get us the good stuff, delivering
-    what Montague refers to as the “social juice” of reciprocity.</s>
-    <s rank='.8'>When we say we trust someone, what we’re really saying is that
-    they’re a reliable source of what we want.</s>
+    <s rank='.6'>In other words, we don’t <keyword name='trust'>trust</keyword>
+    people because they seem nice or virtuous or <keyword
+    name='trust'>trustworthy</keyword>, whatever those adjectives mean.</s>
+    <s rank='.6'>We <keyword name='trust'>trust</keyword> them because they get
+    us the good stuff, delivering what Montague refers to as the “social juice”
+    of reciprocity.</s>
+    <s rank='.8'>When we say we <keyword name='trust'>trust</keyword> someone,
+    what we’re really saying is that they’re a reliable source of what we
+    want.</s>
     <s rank='.4'>I scratch your back, you scratch mine.</s>
    </p>
 
    <p>
     <s rank='.1'>And this returns us to the present dysfunction in
     Washington.</s>
-    <s rank='.9'>If trust is about the distribution of rewards – about learning
-    to expect bonuses from others – then it’s going to be a lot harder to share
-    those rewards in an age of scarcity and deficits.</s>
+    <s rank='.9'>If <keyword name='trust'>trust</keyword> is about the
+    distribution of rewards – about learning to expect bonuses from others –
+    then it’s going to be a lot harder to share those rewards in an age of
+    scarcity and deficits.</s>
     <s rank='.7'>For the first time in decades, congresspeople aren’t trading
     pork barrel projects and tax breaks – they’re negotiating steep budget
     cuts.</s>
     <s rank='.8'>Those cuts might be necessary, but they’re aren’t going to
     excite the caudate or generate that requisite burst of “social juice.</s>
-    <s rank='.1'>The traditional means of developing trust among Congresspeople
-    have disappeared.</s>
+    <s rank='.1'>The traditional means of developing <keyword
+    name='trust'>trust</keyword> among Congresspeople have disappeared.</s>
    </p>
 
    <p>
@@ -139,20 +152,20 @@
     polarization of Congress.</s>
     <s rank='.1'>But I can’t help but wonder if one of the reasons has to with
     this newfound lack of favor trading, as it’s increasingly difficult for
-    <keyword id='politic'>politicians</keyword> to barter projects in exchange
-    for votes.</s>
+    <keyword name='politics'>politicians</keyword> to barter projects in
+    exchange for votes.</s>
     <s rank='.1'>It’s easy to hate on Congressional pork and mock all those
     silly projects that get snuck into bills.</s>
     <s rank='.7'>But when we do without pork, we also deny our <keyword
-    id='politic'>politicians</keyword> a means of building trusting
-    relationships across the aisle.</s>
+    name='politics'>politicians</keyword> a means of building <keyword
+    name='trust'>trusting</keyword> relationships across the aisle.</s>
     <s rank='.5'>In this sense, those bridges to nowhere are a sort of
     benevolent inefficiency, a form of waste that, just maybe, keeps us from
     becoming a banana republic.</s>
     <s rank='.1'>Such are the hazards of <keyword
-    id='politic'>politics</keyword> in age of cutting.</s>
-    <s rank='.7'>If trust begins when we share the treasure, what happens when
-    there’s no treasure left to share?</s>
+    name='politics'>politics</keyword> in age of cutting.</s>
+    <s rank='.7'>If <keyword name='trust'>trust</keyword> begins when we share
+    the treasure, what happens when there’s no treasure left to share?</s>
    </p>
 
    <p>
@@ -162,7 +175,7 @@
 
    <p>
     <s rank='.1'>PPS. For more on the hidden benefits of Congressional pork,
-    check out this paper by the <keyword id='politic'>political</keyword>
+    check out this paper by the <keyword name='politics'>political</keyword>
     scientists John Ellwood and Eric Patashnik.</s>
    </p>
 
