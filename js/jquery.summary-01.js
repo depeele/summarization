@@ -2,6 +2,27 @@
  *
  *  A simple jQuery widget to present an article along with summarization
  *  information about that article.
+ *
+ *  The markup for controls to allow a continuous range should be of the form:
+ *      <div class='summary-control'>
+ *        <label for='threshold'>Threshold range:</label>
+ *        <input name='threshold' type='text' />
+ *      </div>
+ *
+ *  The markup for controls to allow a discrete set of values  should be of the
+ *  form:
+ *      <div class='summary-control'>
+ *        <label for='threshold'>Threshold:</label>
+ *
+ *        <input name='threshold' id='threshold-low' type='radio' value'=25' />
+ *        <label for='threshold-low'>low</label>
+ *
+ *        <input name='threshold' id='threshold-med' type='radio' value'=50' />
+ *        <label for='threshold-med'>medium</label>
+ *
+ *        <input name='threshold' id='threshold-high' type='radio' value'=75' />
+ *        <label for='threshold-high'>high</label>
+ *      </div>
  */
 (function($) {
 
@@ -26,10 +47,6 @@ $.Summary.prototype = {
         metadata:       null,       // The URL of the
                                     // summarization/characterization metadata
 
-        thresholdType:  'slider',   // The type of threshold:
-                                    //  'slider' for a continuous range
-                                    //  'discrete' for 3 discrete steps.
-
         showSentences:  5           // The minimum number of sentences to
                                     // present
     },
@@ -53,6 +70,7 @@ $.Summary.prototype = {
         self.$control   = $gp.find('.summary-control');
         self.$list      = self.$control.find('.list');
         self.$threshold = self.$control.find('input[name=threshold]');
+        self.$slider    = null;
 
         self._bindEvents();
 
@@ -213,7 +231,8 @@ $.Summary.prototype = {
         var self    = this;
         var opts    = self.options;
 
-        if (opts.thresholdType === 'slider')
+        // Single threshold input indicates that we use the slider
+        if (self.$threshold.length === 1)
         {
             // Render the slider controls
             var $controls  = self.$control.find('.controls');
@@ -233,6 +252,7 @@ $.Summary.prototype = {
                                 })
                                 .appendTo($controls);
         }
+        // Multiple threshold inputs indicates that we use radio buttons
         else
         {
             // Render the discrete controls
@@ -518,7 +538,7 @@ $.Summary.prototype = {
             var val     = $(this).val();
             var min,max;
 
-            if (opts.thresholdType === 'slider')
+            if (self.$threshold)
             {
                 var range   = val.split(/\s*-\s*/);
                 min = parseInt(range[0]);
@@ -540,7 +560,7 @@ $.Summary.prototype = {
          *
          */
         $gp.delegate('.controls input', 'keydown', function(e) {
-            if (opts.thresholdType !== 'slider')
+            if (! self.$threshold)
             {
                 return;
             }
