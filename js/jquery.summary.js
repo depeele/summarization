@@ -381,7 +381,10 @@ $.Summary.prototype = {
                 $s.addClass('ui-state-highlight');
 
                 // Scroll the container
-                //self.$list.scrollTo($s, {duration:100, axis:'y'});
+                if (self.$list.scrollTo)
+                {
+                    self.$list.scrollTo($s, {duration:100, axis:'y'});
+                }
 
             }, 250);
         });
@@ -428,7 +431,11 @@ $.Summary.prototype = {
                 $s.parent().addClass('hover-link');
 
                 // Scroll the container
-                //self.element.scrollTo($s.parent(), {duration:100, axis:'y'});
+                if (self.element.scrollTo)
+                {
+                    self.element.scrollTo($s.parent(),
+                                          {duration:100, axis:'y'});
+                }
             }, 250);
         });
 
