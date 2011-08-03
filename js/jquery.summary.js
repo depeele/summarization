@@ -85,33 +85,8 @@ $.Summary.prototype = {
 
         if (self.metadata === null) { return; }
 
-        var $xml    = $( self.metadata );
-
-        /* Convert the XML to HTML that can be styled.
-         * Start with the XML <section>
-         */
-        $xml.find('body section').each(function() {
-            var $div     = $('<section />');
-
-            // Convert the XML <p> to an HTML <p>
-            $(this).find('p').each(function() {
-                var $p  = $('<p />');
-
-                // Convert the XML <s> to an HTML <span>
-                $(this).find('s').each(function() {
-                    var $s    = $(this);
-                    var $span = $('<span />')
-                                    .attr('rank', $s.attr('rank'))
-                                    .text( $s.text() );
-
-                    $p.append($span);
-                });
-
-                $div.append($p);
-            });
-
-            self.element.append( $div );
-        });
+        // Renter the XML
+        self.renderXml( self.metadata );
 
         // Find all sentences and bucket them based upon 'rank'
         self.$s     = self.element.find('p span');
@@ -147,30 +122,93 @@ $.Summary.prototype = {
             }
         }
 
-        self.renderDialog( minThreshold, maxThreshold );
+        self.renderControl( minThreshold, maxThreshold );
+    },
+
+    /** @brief  Given XML content, convert it to stylable HTML.
+     *  @param  xml     The XML to render.
+     *
+     */
+    renderXml: function(xml) {
+        var self    = this;
+        var $xml    = $( xml );
+
+        /* Convert the XML to HTML that can be styled.
+         *
+         * First, handle any <header>, adding a <header> element BEFORE this
+         * element.
+         */
+        var $header     = $('<header />').appendTo( self.element );
+
+        $xml.find('document').children().each(function() {
+            var $el = $(this);
+
+            switch (this.nodeName)
+            {
+            case 'title':
+                $header.append('<h1>'+ $el.text() +'</h1>');
+                break;
+
+            case 'published':
+                var str     = $el.find('date').text() +' '
+                            + $el.find('time').text();
+                var date    = new Date(str);
+                var $time   = $('<time />')
+                                .attr('datetime', date.toISOString())
+                                .attr('pubdate',  true)
+                                .text(str)
+                                .appendTo($header);
+                break;
+
+            case 'body':
+                // Process any XML <section> elements
+                $el.find('section').each(function() {
+                    // Leave this for later
+                    var $div     = $('<section />');
+
+                    // Convert the XML <p> to an HTML <p>
+                    $(this).find('p').each(function() {
+                        var $p  = $('<p />');
+
+                        // Convert the XML <s> to an HTML <span>
+                        $(this).find('s').each(function() {
+                            var $s    = $(this);
+                            var $span = $('<span />')
+                                            .attr('rank', $s.attr('rank'))
+                                            .text( $s.text() );
+
+                            $p.append($span);
+                        });
+
+                        $div.append($p);
+                    });
+
+                    self.element.append( $div );
+                });
+                break;
+
+            default:
+                $header.append( $el );
+                break;
+            }
+        });
+
     },
 
     /** @brief  Render the summary dialog with controls.
      *  @param  minThreshold    The threshold minimum.
      *  @param  maxThreshold    The threshold maximum.
      */
-    renderDialog: function( minThreshold, maxThreshold ) {
+    renderControl: function( minThreshold, maxThreshold ) {
         var self    = this;
         var opts    = self.options;
 
         // Render the jquery-ui controls: dialog, slider
-        self.$dialog   = $('<div />')
-                            .insertBefore(self.element);
-        self.$controls = $('<div />')
-                            .addClass('controls')
-                            .html(  '<label for="threshold">'
-                                  +  'Threshold range:</label>'
-                                  + '<input id="threshold" type="text" />')
-                            .appendTo(self.$dialog);
-        self.$list     = $('<ul />')
-                            .addClass('list')
-                            .appendTo(self.$dialog);
-        self.$threshold= self.$controls.find('#threshold')
+        var $control   = $('.summary-control');
+        var $controls  = $control.find('.controls');
+
+        self.$list     = $control.find('.list');
+        self.$threshold= $controls.find('#threshold')
                             .addClass('ui-corner-all');
         self.$slider   = $('<div />')
                             .addClass('slider')
@@ -184,41 +222,10 @@ $.Summary.prototype = {
                                                    ui.values[1]);
                                 }
                             })
-                            .appendTo(self.$controls);
-
-        self.$dialog.dialog({
-            dialogClass:    'summary-dialog',
-            title:          'Summary Information',
-            modal:          true,
-            width:          '50%',
-            //position:       ['right','top'],
-            position:       {
-                my:     'right top',
-                at:     'right top',
-                offset: '-25 50'
-            },
-            open:           function() {
-                
-            },
-        });
-        /*
-        self.$dialog.dialog({
-            title:  self.$controls
-        });
-        // */
-
-        /*
-        var $titlebar   = self.$dialog.find('.ui-dialog-titlebar');
-        $titlebar.find('.ui-dialog-title').remove();
-
-        self.$controls
-                .addClass('ui-dialog-title')
-                .prependTo( $titlebar );
-        // */
+                            .appendTo($controls);
 
         self.threshold( minThreshold, maxThreshold );
     },
-
 
     /** @brief  Change the rank threshold.
      *  @param  min     The minimum threshold.
@@ -355,9 +362,106 @@ $.Summary.prototype = {
 
     _bindEvents: function() {
         var self    = this;
-        var $parent = this.element.parent();
+        var $gp     = self.element.parent().parent();
 
-        $parent.delegate('.controls input', 'change', function() {
+        /*************************************************************
+         * Link from highlights to the summary entry
+         *
+         */
+        var articleTimer    = null;
+        $gp.delegate('.article-pane .highlight', 'mouseenter', function() {
+            var $el = $(this);
+            articleTimer = setTimeout(function() {
+                articleTimer = null;
+
+                var txt = $el.text();
+
+                var $s = self.$list
+                            .find(':contains('+ txt +')');
+                $s.addClass('ui-state-highlight');
+
+                // Scroll the container
+                self.$list.scrollTo($s, {duration:100, axis:'y'});
+
+            }, 250);
+        });
+
+        $gp.delegate('.article-pane .highlight', 'mouseleave', function() {
+            if (articleTimer !== null)
+            {
+                // Just cancel the pending highlight
+                clearTimeout(articleTimer);
+                return;
+            }
+
+            var $el = $(this);
+            var txt = $el.text();
+
+            var $s = self.$list
+                        .find(':contains('+ txt +')');
+            $s.removeClass('ui-state-highlight');
+        });
+
+        /*************************************************************
+         * Link from summary items to their source paragraphs
+         *
+         */
+        var controlTimer    = null;
+        $gp.delegate('.summary-control .list li', 'mouseenter', function() {
+            var $el = $(this);
+            controlTimer = setTimeout(function() {
+                controlTimer = null;
+
+                var rk  = $el.children().text();
+                var re  = (rk.length > 0
+                            ? new RegExp('^'+ rk)
+                            : null);
+                var txt = $el.text();
+                if (re !== null)
+                {
+                    txt = txt.replace(re, '');
+                }
+
+                var $s = self.element
+                            .find('span:contains('+ txt +')');
+                $s.addClass('ui-state-highlight');
+                $s.parent().addClass('hover-link');
+
+                // Scroll the container
+                self.element.scrollTo($s.parent(), {duration:100, axis:'y'});
+            }, 250);
+        });
+
+        $gp.delegate('.summary-control .list li', 'mouseleave', function() {
+            if (controlTimer !== null)
+            {
+                // Just cancel the pending highlight
+                clearTimeout(controlTimer);
+                return;
+            }
+
+            var $el = $(this);
+            var rk  = $el.children().text();
+            var re  = (rk.length > 0
+                        ? new RegExp('^'+ rk)
+                        : null);
+            var txt = $el.text();
+            if (re !== null)
+            {
+                txt = txt.replace(re, '');
+            }
+
+            var $s = self.element
+                        .find('span:contains('+ txt +')');
+            $s.removeClass('ui-state-highlight');
+            $s.parent().removeClass('hover-link');
+        });
+
+        /*************************************************************
+         * Reflect changes in the threshold input box to the slider
+         *
+         */
+        $gp.delegate('.controls input', 'change', function() {
             var val     = $(this).val();
             var range   = val.split(/\s*-\s*/);
             var min     = parseInt(range[0]);
@@ -369,7 +473,11 @@ $.Summary.prototype = {
             self.threshold(min, max);
         });
 
-        $parent.delegate('.controls input', 'keydown', function(e) {
+        /*************************************************************
+         * Allow arrow up/down to change the threshold input values
+         *
+         */
+        $gp.delegate('.controls input', 'keydown', function(e) {
             var $el     = $(this);
             var val     = $el.val();
             var divider = val.indexOf('-');
@@ -418,6 +526,100 @@ $.Summary.prototype = {
 
         $parent.undelegate('.controls input', 'change');
         $parent.undelegate('.controls input', 'keydown');
+
+        var self    = this;
+        var $gp     = self.element.parent().parent();
+
+        $gp.undelegate('.article-pane span', 'hover');
+
+        $gp.delegate('.summary-control .list li', 'mouseenter', function() {
+            var $el = $(this);
+            var rk  = $el.children().text();
+            var re  = (rk.length > 0
+                        ? new RegExp('^'+ rk)
+                        : null);
+            var txt = $el.text();
+            if (re !== null)
+            {
+                txt = txt.replace(re, '');
+            }
+
+            var $s = self.element
+                        .find(':contains('+ txt +')');
+            $s.addClass('hover-link');
+        });
+
+        $gp.delegate('.summary-control .list li', 'mouseleave', function() {
+            var $el = $(this);
+            var rk  = $el.children().text();
+            var re  = (rk.length > 0
+                        ? new RegExp('^'+ rk)
+                        : null);
+            var txt = $el.text();
+            if (re !== null)
+            {
+                txt = txt.replace(re, '');
+            }
+
+            var $s = self.element
+                        .find(':contains('+ txt +')');
+            $s.removeClass('hover-link');
+        });
+
+        $gp.delegate('.controls input', 'change', function() {
+            var val     = $(this).val();
+            var range   = val.split(/\s*-\s*/);
+            var min     = parseInt(range[0]);
+            var max     = parseInt(range[1]);
+
+            if (isNaN(min)) { min = self.minThreshold; }
+            if (isNaN(max)) { max = self.maxThreshold; }
+
+            self.threshold(min, max);
+        });
+
+        $gp.delegate('.controls input', 'keydown', function(e) {
+            var $el     = $(this);
+            var val     = $el.val();
+            var divider = val.indexOf('-');
+            var pos     = self._getCaret( $el );
+            var vals    = [ self.minThreshold, self.maxThreshold ];
+            var which   = ( pos > divider ? 1 : 0);
+
+            /* If the key is arrow up or down, adjust the min or max threshold
+             * (depending on which one the current caret/cursor is nearest) up
+             * or down.
+             */
+            switch (e.which)
+            {
+            case $.ui.keyCode.UP:
+                if (vals[which] < 100)
+                {
+                    vals[which] = vals[which] + 1;
+                }
+                break;
+
+            case $.ui.keyCode.DOWN:
+                if (vals[which] > 0)
+                {
+                    vals[which] = vals[which] - 1;
+                }
+                break;
+
+            default:
+                return;
+            }
+
+            // If we've flipped min/max, make sure they're properly ordered
+            vals = vals.sort(function(a,b){ return a-b; });
+            self.threshold(vals[0], vals[1]);
+
+            // Reset the caret/cursor position to its original value
+            self._setCaret( $el, pos );
+
+            // Squelch this event
+            return false;
+        });
     }
 };
 

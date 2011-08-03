@@ -7,18 +7,41 @@
   <title>Summarization Viewer</title>
 
   <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.css" />
+  <link rel="stylesheet" type="text/css" href="css/layout.css" />
   <link rel="stylesheet" type="text/css" href="css/main.css" />
 
   <script src='js/jquery.min.js'></script>
   <script src='js/jquery-ui.js'></script>
+  <script src='js/jquery.layout.js'></script>
+  <script src='js/jquery.scrollTo.js'></script>
   <script src='js/jquery.summary.js'></script>
  </head>
  <body>
-  <div id='article'></div>
+  <div class='article-pane ui-layout-center'>
+   <article id='article'></article>
+  </div>
+  <div class='summary-control ui-layout-east'>
+   <div class='controls ui-layout-north'>
+    <label for="threshold">Threshold range:</label>
+    <input id="threshold" type="text" />
+   </div>
+   <ul class='list ui-layout-center'></ul>
+  </div>
  </body>
 
  <script>
  (function($) {
+    $('body').layout({
+        east:   { size: 400, minSize: 250, maxSize: 800 }
+    });
+
+    $('.ui-layout-east').layout({
+        north:  {
+            resizable:  false,
+            closable:   false
+        }
+    });
+
     $('#article').summary({
         //src:      'http://www.wired.com/wiredscience/2011/07/the-selfishness-of-trust/',
         //src:      'samples/0001.html',

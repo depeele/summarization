@@ -2,78 +2,123 @@ body {
   font:  14px/1.231 arial,helvetica,clean,sans-serif;
 }
 
-.ui-widget-overlay {
-  opacity:  0.25;
-  filter:   Alpha(Opacity=25);
+.article-pane {
+  padding:          0;
 }
 
-#article .src,
-#article .src iframe {
-  width:  400px;
-  height: 300px;
+.article-pane header {
+  display:        block;
+  padding:        0.5em;
+  margin-right:   0.5em;
+  border-bottom:  0.5em solid #ccc;
+}
+.article-pane header h1,
+.article-pane header author,
+.article-pane header time,
+.article-pane header categories {
+  display:      inline-block;
+}
+.article-pane header h1 {
+  font-size:    1.2em;
+  font-weight:  bold;
+}
+.article-pane header author,
+.article-pane header time,
+.article-pane header categories {
+  font-size:    0.8em;
+  padding-left: 2em;
+  color:        #999;
+}
+.article-pane header author:before {
+  content:      'by ';
+}
+.article-pane header time {
+  font-style:   italic;
+}
+.article-pane header categories {
+  font-size:    0.8em;
+}
+.article-pane header categories category:before {
+  content:      ' / ';
 }
 
-section {
+.article-pane article {
+  height:     100%;
+  overflow-y: scroll;
+  margin:     0 0.5em;
+}
+
+article section {
   display:  block;
-  padding:  1em;
+  padding:  0.5em;
   margin:   0;
 }
 
-section p {
+article section p {
   display:    block;
-  padding:    0 0 1em;
+  padding:    0.5em;
   margin:     0;
   font-size:  1em;
+  border:     1px solid #fff;
 }
 
-section p span:after {
+article section p span:after {
   content:  "  ";
 }
 
-section p span {
-  color:      #ddd;
+article section p span {
+  color:      #444;
+  opacity:    .2;
+  border:     none !important;
 }
 
-section p .highlight {
+article section p .highlight {
   /*color:      #229;*/
+  opacity:    1.0;
 }
 
-.summary-dialog {
+article section p.hover-link span {
+  opacity:    1.0;
+}
+
+.summary-control {
   background:       transparent;
+  padding:          0;
 }
 
-.summary-dialog .ui-dialog-content {
-  padding:          1em 2em;
-  background-color: rgba(242, 245, 247, 0.88);
-}
-
-.summary-dialog .controls {
+.summary-control .controls {
   margin:         0;
-  padding:        0 0 1em 0;
+  padding:        0.5em;
+  border:         none;
   border-bottom:  1px solid #ddd;
+  overflow:       hidden;
 }
-.summary-dialog .controls #threshold {
+.summary-control .controls #threshold {
   border:       1px solid #ddd;
   color:        #f6931f;
   font-weight:  bold;
   width:        7em;
   margin-left:  0.5em;
 }
-.summary-dialog .controls .slider {
-  margin:       0.5em;
+.summary-control .controls .slider {
+  margin:       0.5em 1em;
 }
-.summary-dialog .list {
-  list-style: none;
-  padding:    0 1em;
-  margin:     0;
+.summary-control .list {
+  list-style:   none;
+  padding:      0.5em;
+  padding-left: 2em;
+  margin:       0;
+  overflow-y:   scroll;
 }
-.summary-dialog .list li {
+.summary-control .list li {
   position:       relative;
-  padding:        0.5em 0;
+  padding:        0.5em;
+  margin:         0;
   text-align:     justify;
+  border:         1px solid #fff;
   border-bottom:  1px dotted #aaa;
 }
-.summary-dialog .list li .rank {
+.summary-control .list li .rank {
   position:       absolute;
   top:            -0.25em;
   left:           -1.5em;
