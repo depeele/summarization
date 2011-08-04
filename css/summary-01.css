@@ -89,6 +89,9 @@ article section p.hover-link span {
 }
 
 .control-pane .controls {
+  font-size:      0.8em;
+  text-align:     center;
+
   /*
   margin:         0;
   padding:        0.5em;

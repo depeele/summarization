@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=620" />
+
+  <title>Summarization Viewer</title>
+
+  <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.css" />
+  <link rel="stylesheet" type="text/css" href="css/layout.css" />
+  <link rel="stylesheet" type="text/css" href="css/summary-02.css" />
+
+  <script src='js/jquery.min.js'></script>
+  <script src='js/jquery-ui.js'></script>
+  <script src='js/jquery.summary-02.js'></script>
+ </head>
+ <body>
+  <div class='article-pane'>
+   <article id='article'></article>
+  </div>
+  <div class='control-pane'>
+   <div class='controls ui-layout-north'>
+    <div class='buttons'>
+	 <label for="show" class="label-primary">View</label>
+
+	 <input name="view" id="view-all" type="radio" value="all" />
+     <label for="view-all">all</label>
+
+	 <input name="view" id="view-flagged" type="radio" value="flagged" />
+     <label for="view-flagged">flagged</label>
+
+	 <input name="view" id="view-normal" type="radio" value="normal"
+	 		checked="true" />
+     <label for="view-normal">normal</label>
+    </div>
+
+    <div class='buttons'>
+	 <label for="threshold" class="label-primary">Threshold</label>
+
+	 <input name="threshold" id="threshold-none" type="radio" value="0" />
+     <label for="threshold-none">none</label>
+
+	 <input name="threshold" id="threshold-low" type="radio" value="25" />
+     <label for="threshold-low">low</label>
+
+	 <input name="threshold" id="threshold-medium" type="radio" value="50" />
+     <label for="threshold-medium">medium</label>
+
+	 <input name="threshold" id="threshold-high" type="radio" value="75" />
+     <label for="threshold-high">high</label>
+	</div>
+
+   </div>
+  </div>
+ </body>
+
+ <script>
+ (function($) {
+    $('#article').summary({
+        //src:      	'samples/0001.html',
+        metadata:   	'samples/0001.xml'
+    });
+ }(jQuery));
+ </script>
+</html>
