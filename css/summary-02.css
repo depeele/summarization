@@ -24,7 +24,7 @@ body {
 .article-pane header h1,
 .article-pane header author,
 .article-pane header time,
-.article-pane header keywords {
+.article-pane header .keywords {
   display:      inline-block;
 }
 .article-pane header h1 {
@@ -33,7 +33,7 @@ body {
 }
 .article-pane header author,
 .article-pane header time,
-.article-pane header keywords {
+.article-pane header .keywords {
   font-size:    0.8em;
   padding-left: 2em;
   color:        #999;
@@ -44,10 +44,15 @@ body {
 .article-pane header time {
   font-style:   italic;
 }
-.article-pane header keywords {
+.article-pane header .keywords {
   font-size:    0.8em;
 }
-.article-pane header keywords keyword:before {
+.article-pane header .keywords .keyword {
+  display:    inline-block;
+  cursor:     pointer;
+  border:     1px solid #fff;
+}
+.article-pane header .keywords .keyword:before {
   content:      ' / ';
 }
 
@@ -84,6 +89,7 @@ body {
 }
 
 .article-pane article section p .expanded,
+.article-pane article section p .keyworded,
 .article-pane article section p .highlight {
   display:    block;
 }
@@ -97,6 +103,10 @@ body {
   display:    block;
 
   color:      rgb(246,147,31);
+}
+
+.article-pane article section p .keyword {
+  border:     1px solid #fff;
 }
 
 .article-pane article section p .controls {

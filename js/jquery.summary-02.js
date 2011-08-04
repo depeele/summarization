@@ -206,6 +206,23 @@ $.Summary.prototype = {
                                 .appendTo($header);
                 break;
 
+            case 'keywords':
+                // Process any XML <keyword> elements
+                var $keywords   = $('<div />')
+                                    .addClass('keywords')
+                                    .appendTo($header);
+
+                $el.find('keyword').each(function() {
+                    var $kw         = $(this);
+                    var $keyword    = $('<div />')
+                                        .addClass('keyword')
+                                        .text( $kw.text() )
+                                        .attr('name', $kw.attr('name'))
+                                        .attr('rank', $kw.attr('rank'))
+                                        .appendTo($keywords);
+                });
+                break;
+
             case 'body':
                 // Process any XML <section> elements
                 $el.find('section').each(function() {
@@ -221,8 +238,27 @@ $.Summary.prototype = {
                             var $s    = $(this);
                             var $div  = $('<div />')
                                             .addClass('sentence')
-                                            .attr('rank', $s.attr('rank'))
-                                            .text( $s.text() );
+                                            .attr('rank', $s.attr('rank'));
+
+                            // Assemble the HTML from the XML
+                            $.each(this.childNodes, function() {
+                                var $node   = $(this);
+                                switch (this.nodeName)
+                                {
+                                case '#text':
+                                    $div.append( $node.text() );
+                                    break;
+
+                                case 'keyword':
+                                    $('<span />')
+                                        .addClass('keyword')
+                                        .attr('name', $node.attr('name'))
+                                        .text( $node.text() )
+                                        .appendTo( $div );
+                                    $div.append(' ');
+                                    break;
+                                }
+                            });
 
                             $p.append( $div );
                         });
@@ -354,6 +390,11 @@ $.Summary.prototype = {
                   .parent().show();
             }
         }
+
+        /* Ensure that any paragraph containing a 'keyworded' sentence is
+         * visible
+         */
+        self.element.find('p:has(.keyworded)').show();
     },
 
     /******************************************************************
@@ -438,7 +479,8 @@ $.Summary.prototype = {
     _bindEvents: function() {
         var self    = this;
         var opts    = self.options;
-        var $gp     = self.element.parent().parent();
+        var $parent = self.element.parent();
+        var $gp     = $parent.parent();
 
         /*************************************************************
          * Reflect changes in the threshold input box to the slider
@@ -534,8 +576,7 @@ $.Summary.prototype = {
          *
          */
         var rankTimer   = null;
-        $gp.delegate('.article-pane .rank', 'mouseenter mouseleave',
-                     function(e) {
+        $parent.delegate('.rank', 'mouseenter mouseleave', function(e) {
             var $el = $(this);
 
             //console.log('rank mouse: '+ e.type);
@@ -568,8 +609,7 @@ $.Summary.prototype = {
          *
          */
         var sentTimer   = null;
-        $gp.delegate('.article-pane .sentence', 'mouseenter mouseleave',
-                     function(e) {
+        $parent.delegate('.sentence', 'mouseenter mouseleave', function(e) {
             var $el = $(this);
 
             //console.log('sent mouse: '+ e.type);
@@ -611,8 +651,7 @@ $.Summary.prototype = {
          * Click handler for sentence controls
          *
          */
-        $gp.delegate('.article-pane .sentence .controls .ui-icon', 'click',
-                     function(e) {
+        $parent.delegate('.sentence .controls .ui-icon', 'click', function(e) {
             var $el = $(this);
             var $s  = $el.parents('.sentence:first');
             console.log('control click: '+ $el.attr('class'));
@@ -730,14 +769,57 @@ $.Summary.prototype = {
                 }
             }
         });
+
+        /*************************************************************
+         * Clicking on a keyword hides all sentences except those
+         * with that keyword
+         *
+         */
+        $parent.delegate('header .keyword', 'click', function() {
+            var $kw         = $(this);
+            var toggleOn    = (! $kw.hasClass('ui-state-highlight'));
+            var name        = $kw.attr('name');
+            var $kws        = $parent.find('article .keyword');
+            var $hl         = $kws.filter('[name='+ name +']');
+
+            // Remove any sentence 'keyworded' classes
+            $parent.find('.keyworded').removeClass('keyworded');
+
+            // Remove all keyword highlights
+            $kws.removeClass('ui-state-highlight');
+
+            if (toggleOn)
+            {
+                /* For each keyword that should be highlighted, highlight it
+                 * and ensure that it's containing sentence and paragraph are
+                 * visible.
+                 */
+                $hl.each(function() {
+                    var $el = $(this);
+                    $el.addClass('ui-state-highlight');
+
+                    $el.parent().addClass('keyworded');
+                    $el.parent().parent().show();
+                });
+            }
+            else
+            {
+                // Re-apply threshold to ensure a proper view
+                self.threshold(self.minThreshold, self.maxThreshold);
+            }
+        });
     },
 
     _unbindEvents: function() {
         var self    = this;
-        var $gp     = self.element.parent().parent();
+        var $parent = self.element.parent();
+        var $gp     = $parent.parent();
 
-        $gp.undelegate('.article-pane .rank',       'mouseenter mouseleave');
-        $gp.undelegate('.controls input',           'change keydown');
+        $gp.undelegate('.controls input',     'change keydown');
+
+        $parent.undelegate('.rank', 'mouseenter mouseleave');
+        $parent.undelegate('.sentence .controls .ui-icon', 'click');
+        $parent.undelegate('header keyword',  'click');
     }
 };
 
