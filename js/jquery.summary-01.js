@@ -4,14 +4,14 @@
  *  information about that article.
  *
  *  The markup for controls to allow a continuous range should be of the form:
- *      <div class='summary-control'>
+ *      <div class='control-pane'>
  *        <label for='threshold'>Threshold range:</label>
  *        <input name='threshold' type='text' />
  *      </div>
  *
  *  The markup for controls to allow a discrete set of values  should be of the
  *  form:
- *      <div class='summary-control'>
+ *      <div class='control-pane'>
  *        <label for='threshold'>Threshold:</label>
  *
  *        <input name='threshold' id='threshold-low' type='radio' value'=25' />
@@ -67,7 +67,7 @@ $.Summary.prototype = {
         self.$src     = null;
 
         var $gp = self.element.parent().parent()
-        self.$control   = $gp.find('.summary-control');
+        self.$control   = $gp.find('.control-pane');
         self.$list      = self.$control.find('.list');
         self.$threshold = self.$control.find('input[name=threshold]');
         self.$slider    = null;
@@ -127,6 +127,12 @@ $.Summary.prototype = {
             // Treat the rank as an integer percentile (0 .. 100).
             rank = parseInt(rank * 100);
             if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
+
+            // Adjust the color of the sentence based upon the rank
+            var blue    = Math.ceil( 255 * (rank / 100) );
+            var color   = 'rgb(34,34,'+ blue +')';
+            $el.css({color:color});
+
             self.ranks[rank].push($el);
         });
 
@@ -313,8 +319,7 @@ $.Summary.prototype = {
         }
 
         // Remove existing highlights
-        self.$s.removeClass('highlight')
-               .removeAttr('style');
+        self.$s.removeClass('highlight');
 
         self.$list.empty();
         for (var idex = self.maxThreshold; idex >= self.minThreshold; idex--)
@@ -322,19 +327,15 @@ $.Summary.prototype = {
             var ar  = self.ranks[idex];
             if (ar === undefined)   { continue; }
 
-            //var blue    = Math.floor(255 - (25 * Math.log( 100 - idex )));
-            var blue    = Math.ceil( 255 * (idex / 100) );
-            var color   = 'rgb(34,34,'+ blue +')';
+            var color   = ar[0].css('color');
             var nItems  = ar.length;
             for (var jdex = 0; jdex < nItems; jdex++)
             {
-                //ar[jdex].attr('style', 'font-weight:bold;');
-                ar[jdex].addClass('highlight')
-                        .css({color: color});
+                ar[jdex].addClass('highlight');
 
                 var $li     = $('<li />')
                                 .html(ar[jdex].html())
-                                .css({color: color});
+                                .css( { color: color } );
                 if (jdex === 0)
                 {
                     // Include a rank
@@ -343,7 +344,7 @@ $.Summary.prototype = {
                                 .prependTo($li);
                 }
 
-                    self.$list.append( $li );
+                self.$list.append( $li );
             }
         }
     },
@@ -478,7 +479,7 @@ $.Summary.prototype = {
          *
          */
         var controlTimer    = null;
-        $gp.delegate('.summary-control .list li', 'mouseenter', function() {
+        $gp.delegate('.control-pane .list li', 'mouseenter', function() {
             var $el = $(this);
             controlTimer = setTimeout(function() {
                 controlTimer = null;
@@ -507,7 +508,7 @@ $.Summary.prototype = {
             }, 250);
         });
 
-        $gp.delegate('.summary-control .list li', 'mouseleave', function() {
+        $gp.delegate('.control-pane .list li', 'mouseleave', function() {
             if (controlTimer !== null)
             {
                 // Just cancel the pending highlight
@@ -615,7 +616,7 @@ $.Summary.prototype = {
         var $gp     = self.element.parent().parent();
 
         $gp.undelegate('.article-pane .highlight',  'mouseenter mouseleave');
-        $gp.undelegate('.summary-control .list li', 'mouseenter mouseleave');
+        $gp.undelegate('.control-pane .list li', 'mouseenter mouseleave');
         $gp.undelegate('.controls input',           'change keydown');
     }
 };

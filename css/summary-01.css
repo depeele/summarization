@@ -83,12 +83,12 @@ article section p.hover-link span {
   opacity:    1.0;
 }
 
-.summary-control {
+.control-pane {
   background:       transparent;
   padding:          0;
 }
 
-.summary-control .controls {
+.control-pane .controls {
   /*
   margin:         0;
   padding:        0.5em;
@@ -97,7 +97,7 @@ article section p.hover-link span {
   overflow:       hidden;
   // */
 }
-.summary-control .controls input[type=text] {
+.control-pane .controls input[type=text] {
   border:       1px solid #ddd;
   color:        #f6931f;
   font-weight:  bold;
@@ -105,17 +105,17 @@ article section p.hover-link span {
   margin-left:  0.5em;
   font-size:    0.9em;
 }
-.summary-control .controls .slider {
+.control-pane .controls .slider {
   margin:       0.5em 1em;
 }
-.summary-control .list {
+.control-pane .list {
   list-style:   none;
   padding:      0.5em;
   padding-left: 2em;
   margin:       0;
   overflow-y:   scroll;
 }
-.summary-control .list li {
+.control-pane .list li {
   position:       relative;
   padding:        0.5em;
   margin:         0;
@@ -123,7 +123,7 @@ article section p.hover-link span {
   border:         1px solid #fff;
   border-bottom:  1px dotted #aaa;
 }
-.summary-control .list li .rank {
+.control-pane .list li .rank {
   position:       absolute;
   top:            -0.25em;
   left:           -1.5em;
