@@ -261,6 +261,8 @@ $.Summary.prototype = {
                 var val = parseInt($el.val(), 10);
                 $el.data('valueInt', val);
             });
+
+            self.$threshold.parent().buttonset();
         }
 
         self.threshold( minThreshold, maxThreshold );

@@ -97,12 +97,13 @@ article section p.hover-link span {
   overflow:       hidden;
   // */
 }
-.summary-control .controls #threshold {
+.summary-control .controls input[type=text] {
   border:       1px solid #ddd;
   color:        #f6931f;
   font-weight:  bold;
   width:        7em;
   margin-left:  0.5em;
+  font-size:    0.9em;
 }
 .summary-control .controls .slider {
   margin:       0.5em 1em;
