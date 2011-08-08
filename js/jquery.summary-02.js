@@ -783,10 +783,10 @@ $.Summary.prototype = {
             var $hl         = $kws.filter('[name='+ name +']');
 
             // Remove any sentence 'keyworded' classes
-            $parent.find('.keyworded').removeClass('keyworded');
+            //$parent.find('.keyworded').removeClass('keyworded');
 
             // Remove all keyword highlights
-            $kws.removeClass('ui-state-highlight');
+            //$kws.removeClass('ui-state-highlight');
 
             if (toggleOn)
             {
@@ -804,7 +804,19 @@ $.Summary.prototype = {
             }
             else
             {
-                // Re-apply threshold to ensure a proper view
+                /* For each keyword that should be un-highlighted, un-highlight
+                 * it and then re-apply threshold to ensure a proper view
+                 */
+                $hl.each(function() {
+                    var $el = $(this);
+                    $el.removeClass('ui-state-highlight');
+
+                    if ($el.parent().find('ui-state-highlight').length < 1)
+                    {
+                        $el.parent().removeClass('keyworded');
+                    }
+                });
+
                 self.threshold(self.minThreshold, self.maxThreshold);
             }
         });
