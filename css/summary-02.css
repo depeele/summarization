@@ -160,7 +160,12 @@ body {
 }
 .control-pane .controls-layout-a .threshold,
 .control-pane .controls-layout-a .buttons {
-  padding:      0.5em;
+  display:        inline-block;
+  padding:        0.5em;
+  vertical-align: middle;
+}
+.control-pane .controls-layout-a .buttons {
+  padding-right:  4em;
 }
 .control-pane .controls-layout-a .slider {
   margin:       0.4em;
