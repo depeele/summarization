@@ -99,6 +99,12 @@ body {
   display:    block;
 
   color:      rgb(246,147,31);
+
+  /* Make it unselectable */
+  -moz-user-select:   none;
+  -webkit-user-select:none;
+  -khtml-user-select: none;
+  user-select:        none;
 }
 
 .article-pane article section p .keyword {

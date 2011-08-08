@@ -27,6 +27,13 @@
  *        <label for='threshold-high'>high</label>
  *       </div>
  *      </div>
+ *
+ *
+ *  Requires:
+ *      jquery.js
+ *      jquery-ui.js
+ *      rangy.js
+ *      rangy/seializer.js
  */
 (function($) {
 
@@ -130,20 +137,15 @@ $.Summary.prototype = {
             }
 
             // Include the rank within the sentence
-            $('<div />').addClass('rank')
-                         .css('opacity', opts.rankOpacity)
-                         .text(rank)
-                         .prependTo($el);
+            $('#tmpl-sentence-rank')
+                .tmpl({rank:rank})
+                .css('opacity', opts.rankOpacity)
+                .prependTo($el);
 
             // And sentence controls
-            $('<div />').addClass('controls')
-                         .html( '<div class="expand ui-icon ui-icon-plus" '
-                               +      'title="expand" />'
-                               +'<div class="flag ui-icon ui-icon-flag" '
-                               +      'title="flag" />'
-                               +'<div class="hide ui-icon ui-icon-cancel" '
-                               +      'title="hide" />')
-                         .appendTo($el);
+            $('#tmpl-sentence-controls')
+                .tmpl()
+                .appendTo($el);
 
             self.ranks[rank].push($el);
         });
@@ -208,19 +210,9 @@ $.Summary.prototype = {
 
             case 'keywords':
                 // Process any XML <keyword> elements
-                var $keywords   = $('<div />')
-                                    .addClass('keywords')
-                                    .appendTo($header);
-
-                $el.find('keyword').each(function() {
-                    var $kw         = $(this);
-                    var $keyword    = $('<div />')
-                                        .addClass('keyword')
-                                        .text( $kw.text() )
-                                        .attr('name', $kw.attr('name'))
-                                        .attr('rank', $kw.attr('rank'))
-                                        .appendTo($keywords);
-                });
+                $('#tmpl-header-keywords')
+                    .tmpl({ keywords: $el.find('keyword') })
+                    .appendTo($header);
                 break;
 
             case 'body':
@@ -235,7 +227,7 @@ $.Summary.prototype = {
 
                         // Convert the XML <s> to an HTML <div>
                         $(this).find('s').each(function() {
-                            var $s    = $(this);
+                            var $s      = $(this);
                             var $div  = $('<div />')
                                             .addClass('sentence')
                                             .attr('rank', $s.attr('rank'));
@@ -246,16 +238,15 @@ $.Summary.prototype = {
                                 switch (this.nodeName)
                                 {
                                 case '#text':
-                                    $div.append( $node.text() );
+                                    $('#tmpl-sentence-text')
+                                        .tmpl( {node:$node} )
+                                        .appendTo( $div );
                                     break;
 
                                 case 'keyword':
-                                    $('<span />')
-                                        .addClass('keyword')
-                                        .attr('name', $node.attr('name'))
-                                        .text( $node.text() )
+                                    $('#tmpl-sentence-keyword')
+                                        .tmpl( {node:$node} )
                                         .appendTo( $div );
-                                    $div.append(' ');
                                     break;
                                 }
                             });
@@ -825,6 +816,26 @@ $.Summary.prototype = {
                 self.threshold(self.minThreshold, self.maxThreshold);
             }
         });
+
+        /*************************************************************
+         * On button-up, see if there is a selection.
+         *
+         */
+        $parent.delegate('article .sentence', 'mouseup', function() {
+            var $el = $(this);
+            var sel = rangy.getSelection();
+            var str = sel.toString();
+
+            console.log('mouseup: selection[ '+ str +' ]');
+
+            if (str.length < 1)
+            {
+                // No selection
+            }
+            else
+            {
+            }
+        });
     },
 
     _unbindEvents: function() {
@@ -832,9 +843,10 @@ $.Summary.prototype = {
         var $parent = self.element.parent();
         var $gp     = $parent.parent();
 
-        $gp.undelegate('.controls input',     'change keydown');
+        $gp.undelegate('.controls input', 'change keydown');
 
         $parent.undelegate('.rank', 'mouseenter mouseleave');
+        $parent.undelegate('.sentence', 'mouseenter mouseleave');
         $parent.undelegate('.sentence .controls .ui-icon', 'click');
         $parent.undelegate('header keyword',  'click');
     }

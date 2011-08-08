@@ -10,9 +10,6 @@
   <link rel="stylesheet" type="text/css" href="css/layout.css" />
   <link rel="stylesheet" type="text/css" href="css/summary-02.css" />
 
-  <script src='js/jquery.min.js'></script>
-  <script src='js/jquery-ui.js'></script>
-  <script src='js/jquery.summary-02.js'></script>
  </head>
  <body>
   <div class='article-pane'>
@@ -42,6 +39,73 @@
    </div>
   </div>
  </body>
+
+ <script>
+ function xmlNode(node)
+ {
+    var $node = $(node);
+    var ret;
+    switch (node.nodeName)
+    {
+    case '#text':
+      ret = $node.text();
+      break;
+
+    case 'keyword':
+      ret = $('#tmpl-sentence-keyword').tmpl( {keyword: $node} );
+    }
+
+    return ret;
+ }
+ </script>
+
+ <!-- Templates { -->
+ <!-- 'keywords' is an array of XML nodes -->
+ <script id='tmpl-header-keywords' type='text/x-jquery-tmpl'>
+  <div class='keywords'>
+   {{each keywords}}
+    <div class='keyword'
+          name='${$($value).attr('name')}'
+          rank='${$($value).attr('rank')}'>${$($value).text()}</div>
+   {{/each}}
+  </div>
+ </script>
+
+ <script id='tmpl-sentence-rank' type='text/x-jquery-tmpl'>
+  <div class='rank'>${rank}</div>
+ </script>
+
+ <script id='tmpl-sentence-controls' type='text/x-jquery-tmpl'>
+  <div class='controls'><div
+       class='expand ui-icon ui-icon-plus' title='expand' /><div
+       class='flag ui-icon ui-icon-flag'   title='flag' /><div
+       class='hide ui-icon ui-icon-cancel' title='hide' /></div>
+ </script>
+
+ <!-- 'node' is a jQuery object encapsulating an XML node -->
+ <script id='tmpl-sentence-keyword' type='text/x-jquery-tmpl'>
+  <span class='keyword'
+        name='${node.attr('name')}'>${node.text()}</span>
+ </script>
+
+ <!-- 'node' is a jQuery object encapsulating an XML node -->
+ <script id='tmpl-sentence-text' type='text/x-jquery-tmpl'>
+  <span class='text'>${node.text()}</span>
+ </script>
+
+ <script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>
+  <div class='controls'><div
+       class='flag ui-icon ui-icon-flag'   title='flag' /><div
+       class='tag ui-icon ui-icon-tag'     title='tag' /></div>
+ </script>
+ <!-- Templates } -->
+
+ <script src='js/jquery.min.js'></script>
+ <script src='js/jquery.tmpl.js'></script>
+ <script src='js/jquery-ui.js'></script>
+ <script src='js/rangy.min.js'></script>
+ <script src='js/rangy/serializer.min.js'></script>
+ <script src='js/jquery.summary-02.js'></script>
 
  <script>
  (function($) {
