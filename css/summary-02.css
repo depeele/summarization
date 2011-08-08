@@ -12,7 +12,7 @@ body {
 /**************************************************************************
  * Article Pane
  *
- ***************
+ *******************
  * Header
  */
 .article-pane header {
@@ -56,7 +56,7 @@ body {
   content:      ' / ';
 }
 
-/***************
+/*******************
  * Article
  *
  */
@@ -82,10 +82,6 @@ body {
   display:    none;
   padding:    0 0 0 64px;
   margin:     0;
-}
-
-.article-pane article section p .hidden {
-  display:    none;
 }
 
 .article-pane article section p .expanded,
@@ -122,6 +118,40 @@ body {
   cursor:     pointer;
   visibility: hidden;
 }
+.article-pane article section p .ui-hover .controls .ui-icon,
+.article-pane article section p .flagged .controls .flag,
+.article-pane article section p .hidden .controls .hide {
+  visibility: visible;
+}
+.article-pane article section p .ui-hover .controls .ui-icon {
+  opacity:    0.6;
+}
+
+.article-pane article section p .flagged .controls .flag,
+.article-pane article section p .hidden .controls .hide {
+  opacity:    1.0;
+}
+
+/*******************
+ * Article:Normal
+ *
+ */
+.article-pane article section p .hidden {
+  display:    none;
+}
+
+/*******************
+ * Article:Flagged
+ *
+ */
+
+/*******************
+ * Article:All
+ *
+ */
+.article-pane article.all section p .hidden {
+  display:    block;
+}
 
 /**************************************************************************
  * Control Pane
@@ -134,7 +164,7 @@ body {
   padding:          0;
 }
 
-/***************
+/*******************
  * Controls
  *
  */

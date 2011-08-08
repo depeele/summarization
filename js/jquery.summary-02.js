@@ -514,6 +514,8 @@ $.Summary.prototype = {
 
             case 'view':
                 opts.view = val;
+                self.element.removeClass('all flagged normal')
+                            .addClass(val);
                 self.threshold(self.minThreshold, self.maxThreshold);
                 break;
             }
@@ -625,16 +627,7 @@ $.Summary.prototype = {
                 }
 
                 // Remove the visibility change
-                $el.find('.controls .ui-icon').each(function() {
-                    var $ctl    = $(this);
-                    if ( ($ctl.hasClass('flag') && $el.data('isFlagged')) ||
-                         ($ctl.hasClass('hide') && $el.data('isHidden')) )
-                    {
-                        return;
-                    }
-
-                    $ctl.css('visibility', 'hidden');
-                });
+                $el.removeClass('ui-hover');
 
                 return;
             }
@@ -643,7 +636,7 @@ $.Summary.prototype = {
             sentTimer = setTimeout(function() {
                 sentTimer = null;
 
-                $el.find('.controls .ui-icon').css('visibility', 'visible');
+                $el.addClass('ui-hover');
             }, 250);
         });
 
@@ -658,6 +651,7 @@ $.Summary.prototype = {
 
             if ($el.hasClass('flag'))
             {
+                // (un)Flag this sentence
                 if ($s.data('isFlagged'))
                 {
                     $s.removeClass('flagged')
@@ -671,6 +665,7 @@ $.Summary.prototype = {
             }
             else if ($el.hasClass('hide'))
             {
+                // (un)Hide this sentence
                 if ($s.data('isHidden'))
                 {
                     $s.removeClass('hidden')
@@ -678,19 +673,23 @@ $.Summary.prototype = {
                 }
                 else
                 {
+                    /* If this sentence was presented because of an expansion
+                     * of a nearby sentence, then hide should not hide it
+                     * permanently but rather hide this part of the expansion.
+                     */
                     var expanded    = $s.hasClass('expanded');
                     var hideDone    = function() {
                         if (expanded)
                         {
                             $s.removeClass('expanded');
                         }
-                        else if (opts.view !== 'all')
+                        else
                         {
-                            $s.removeClass('highlight')
-                              .addClass('hidden')
+                            $s.addClass('hidden')
                         }
 
                         $s.css('display', '');
+
                         if ($s.parent().find(':visible').length < 1)
                         {
                             $s.parent().hide();
@@ -704,6 +703,11 @@ $.Summary.prototype = {
                         {
                             $s.slideUp(hideDone);
                         }
+                        else
+                        {
+                            // Make the change immediately
+                            hideDone();
+                        }
                     }
                     else
                     {
@@ -713,6 +717,7 @@ $.Summary.prototype = {
             }
             else if ($el.hasClass('expand'))
             {
+                // (un)Expand this sentence
                 var $prev       = $s.prev();
                 var $next       = $s.next();
                 var expandDone  = function() {
