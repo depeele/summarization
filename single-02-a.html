@@ -2,10 +2,11 @@
 <html lang="en">
  <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=620" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 
   <title>Summarization Viewer</title>
 
+  <link rel="stylesheet" type="text/css" href="css/reset.css" />
   <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.css" />
   <link rel="stylesheet" type="text/css" href="css/layout.css" />
   <link rel="stylesheet" type="text/css" href="css/summary-02.css" />
@@ -16,8 +17,8 @@
    <article id='article'></article>
   </div>
   <div class='control-pane'>
-   <div class='controls controls-layout-a ui-layout-north'>
-    <div class='buttons buttons-a'>
+   <div class='controls ui-layout-north'>
+    <div class='buttons'>
      <label for="show">View</label>
 
      <input name="view" id="view-all" type="radio" value="all" />
@@ -71,6 +72,17 @@
   </div>
  </script>
 
+ <!-- 'node' is a jQuery object encapsulating an XML node -->
+ <script id='tmpl-sentence-text' type='text/x-jquery-tmpl'>
+  <span class='text'>${node.text()}</span>
+ </script>
+
+ <!-- 'node' is a jQuery object encapsulating an XML node -->
+ <script id='tmpl-sentence-keyword' type='text/x-jquery-tmpl'>
+  <span class='keyword'
+        name='${node.attr('name')}'>${node.text()}</span>
+ </script>
+
  <script id='tmpl-sentence-rank' type='text/x-jquery-tmpl'>
   <div class='rank'>${rank}</div>
  </script>
@@ -82,29 +94,19 @@
        class='hide ui-icon ui-icon-cancel' title='hide' /></div>
  </script>
 
- <!-- 'node' is a jQuery object encapsulating an XML node -->
- <script id='tmpl-sentence-keyword' type='text/x-jquery-tmpl'>
-  <span class='keyword'
-        name='${node.attr('name')}'>${node.text()}</span>
- </script>
-
- <!-- 'node' is a jQuery object encapsulating an XML node -->
- <script id='tmpl-sentence-text' type='text/x-jquery-tmpl'>
-  <span class='text'>${node.text()}</span>
- </script>
-
  <script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>
-  <div class='controls'><div
-       class='flag ui-icon ui-icon-flag'   title='flag' /><div
-       class='tag ui-icon ui-icon-tag'     title='tag' /></div>
+  <div class='selection-controls ui-corner-all'><div
+       class='highlight ui-icon ui-icon-document-b' title='highlight' /><div
+       class='tag ui-icon ui-icon-tag'              title='tag' /></div>
  </script>
  <!-- Templates } -->
 
  <script src='js/jquery.min.js'></script>
- <script src='js/jquery.tmpl.js'></script>
- <script src='js/jquery-ui.js'></script>
+ <script src='js/jquery.tmpl.min.js'></script>
+ <script src='js/jquery-ui.min.js'></script>
  <script src='js/rangy.min.js'></script>
  <script src='js/rangy/serializer.min.js'></script>
+ <script src='js/rangy/cssclassapplier.js'></script>
  <script src='js/jquery.summary-02.js'></script>
 
  <script>

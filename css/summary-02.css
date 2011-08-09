@@ -17,7 +17,7 @@ body {
  */
 .article-pane header {
   display:        block;
-  padding:        0.5em;
+  padding:        1em;
   margin-right:   0.5em;
   border-bottom:  0.5em solid #ccc;
 }
@@ -83,6 +83,14 @@ body {
   padding:    0 0 0 64px;
   margin:     0;
 }
+.article-pane article section p .sentence .text,
+.article-pane article section p .sentence .keyword {
+  position:   relative;
+}
+.article-pane article section p .sentence .highlighter {
+  border:       none;
+  font-weight:  normal;
+}
 
 .article-pane article section p .expanded,
 .article-pane article section p .keyworded,
@@ -111,17 +119,30 @@ body {
   border:     1px solid #fff;
 }
 
-.article-pane article section p .controls {
+.article-pane article section p .controls,
+.article-pane article section p .selection-controls {
   position:   absolute;
-  top:        -0.25em;
-  left:       0;
 
   display:    block;
 }
+.article-pane article section p .controls {
+  top:        -0.25em;
+  left:       0;
+}
+.article-pane article section p .selection-controls {
+  width:            34px;
+  height:           18px;
+  background-color: #fff;
+  border:           1px solid #ccc;
+  z-index:          10;
+}
 
-.article-pane article section p .controls .ui-icon {
+.article-pane article section p .controls .ui-icon,
+.article-pane article section p .selection-controls .ui-icon {
   display:    inline-block;
   cursor:     pointer;
+}
+.article-pane article section p .controls .ui-icon {
   visibility: hidden;
 }
 .article-pane article section p .ui-hover .controls .ui-icon,
@@ -166,7 +187,7 @@ body {
 .control-pane {
   position:         absolute;
   top:              0.25em;
-  right:            1.5em;
+  right:            2em;
   padding:          0;
 }
 
@@ -189,26 +210,23 @@ body {
 }
 .control-pane .controls .threshold,
 .control-pane .controls .buttons {
-  position:     relative;
-  font-size:    0.8em;
-  padding:      0 0 0.5em 5em;
-  text-align:   right;
-}
-.control-pane .controls-layout-a .threshold,
-.control-pane .controls-layout-a .buttons {
+  position:       relative;
   display:        inline-block;
   padding:        0.5em;
   vertical-align: middle;
+  font-size:      0.8em;
 }
-.control-pane .controls-layout-a .buttons {
-  padding-right:  4em;
+.control-pane .controls .buttons {
+  margin:         0 2em;
 }
-.control-pane .controls-layout-a .slider {
-  margin:       0.4em;
+.control-pane .controls .slider {
+  margin:         0.4em;
 }
 
 .control-pane .controls .label-primary {
-  position:     absolute;
-  top:          0.5em;
-  left:         0;
+  position:       absolute;
+  width:          100%;
+  bottom:         -0.75em;
+  left:           0;
+  text-align:     center;
 }

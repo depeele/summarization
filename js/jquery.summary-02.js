@@ -61,6 +61,9 @@ $.Summary.prototype = {
         showSentences:  5,          // The minimum number of sentences to
                                     // present
 
+        lineHeight:     -1,         // The height of a single line
+                                    // (measured in renderXml() if -1);
+
         useColor:       true,
         rankOpacity:    0.3         // The default opacity for rank items
     },
@@ -83,6 +86,12 @@ $.Summary.prototype = {
         self.$control   = $gp.find('.control-pane');
         self.$threshold = self.$control.find('input[name=threshold]');
         self.$slider    = null;
+
+        rangy.init();
+        //self.cssApply   = rangy.createCssClassApplier('highlighter', true);
+        self.cssApply = rangy.createCssClassApplier(
+                                    'ui-state-default highlighter',
+                                    true);
 
         self._bindEvents();
 
@@ -179,6 +188,7 @@ $.Summary.prototype = {
      */
     renderXml: function(xml) {
         var self    = this;
+        var opts    = self.options;
         var $xml    = $( xml );
 
         /* Convert the XML to HTML that can be styled.
@@ -219,18 +229,21 @@ $.Summary.prototype = {
                 // Process any XML <section> elements
                 $el.find('section').each(function() {
                     // Leave this for later
-                    var $div     = $('<section />');
+                    var $div     = $('<section />')
+                                        .appendTo( self.element );
 
                     // Convert the XML <p> to an HTML <p>
                     $(this).find('p').each(function() {
-                        var $p  = $('<p />');
+                        var $p  = $('<p />')
+                                    .appendTo($div);
 
                         // Convert the XML <s> to an HTML <div>
                         $(this).find('s').each(function() {
                             var $s      = $(this);
-                            var $div  = $('<div />')
+                            var $sEl  = $('<div />')
                                             .addClass('sentence')
-                                            .attr('rank', $s.attr('rank'));
+                                            .attr('rank', $s.attr('rank'))
+                                            .appendTo($p);
 
                             // Assemble the HTML from the XML
                             $.each(this.childNodes, function() {
@@ -240,24 +253,30 @@ $.Summary.prototype = {
                                 case '#text':
                                     $('#tmpl-sentence-text')
                                         .tmpl( {node:$node} )
-                                        .appendTo( $div );
+                                        .appendTo( $sEl );
                                     break;
 
                                 case 'keyword':
                                     $('#tmpl-sentence-keyword')
                                         .tmpl( {node:$node} )
-                                        .appendTo( $div );
+                                        .appendTo( $sEl );
                                     break;
                                 }
                             });
 
-                            $p.append( $div );
+                            if (opts.lineHeight < 1)
+                            {
+                                opts.lineHeight = $sEl.height();
+                            }
+
+
+                            //$p.append( $sEl );
                         });
 
-                        $div.append($p);
+                        //$div.append($p);
                     });
 
-                    self.element.append( $div );
+                    //self.element.append( $div );
                 });
                 break;
 
@@ -818,24 +837,84 @@ $.Summary.prototype = {
         });
 
         /*************************************************************
+         * Click handler for selection controls
+         *
+         */
+        $parent.delegate('.sentence .selection-controls .ui-icon', 'mousedown',
+                         function(e) {
+            var $el     = $(e.target);
+            var $ctl    = $el.parents('.selection-controls:first');
+            $ctl.data('mousedown', true);
+
+            console.log('selection-controls mousedown: '+ $el.attr('class'));
+
+            // Squelch this mousedown
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+        $parent.delegate('.sentence .selection-controls .ui-icon', 'mouseup',
+                         function(e) {
+            var $el     = $(e.target);
+            var $ctl    = $el.parents('.selection-controls:first');
+            if (! $ctl.data('mousedown'))
+            {
+                return;
+            }
+
+            // Count this a click
+            $ctl.removeData('mousedown');
+
+            var $s  = $(this);
+            var sel = rangy.getSelection();
+            var str = sel.toString();
+
+            console.log('control click: '+ $el.attr('class')
+                        +', selected[ '+ str +' ]');
+
+            if ($el.hasClass('highlight'))
+            {
+                // Highlight the current selection
+                self.cssApply.toggleSelection( );
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+
+        /*************************************************************
          * On button-up, see if there is a selection.
          *
          */
-        $parent.delegate('article .sentence', 'mouseup', function() {
-            var $el = $(this);
+        $parent.delegate('article .sentence', 'mouseup', function(e) {
+            var $s  = $(this);
+            var $el = $(e.target);
             var sel = rangy.getSelection();
             var str = sel.toString();
 
             console.log('mouseup: selection[ '+ str +' ]');
 
+            // Remove any existing selection controls
+            $parent.find('.selection-controls').remove();
             if (str.length < 1)
             {
                 // No selection
+                return;
             }
-            else
-            {
-            }
+
+            // Add a new selection control just above the current selection
+            var pos = $s.offset();
+            $('#tmpl-selection-controls')
+                .tmpl()
+                .appendTo($s)
+                .css({
+                    top:    (Math.floor(e.offsetY / opts.lineHeight) *
+                               opts.lineHeight) - (opts.lineHeight + 4),
+                    left:   e.offsetX - 16
+                });
         });
+
     },
 
     _unbindEvents: function() {
