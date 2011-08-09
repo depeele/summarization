@@ -1,5 +1,5 @@
 body {
-  font:       14px/1.231 arial,helvetica,clean,sans-serif;
+  font:       16px/1.231 arial,helvetica,clean,sans-serif;
   overflow-y: scroll;
 }
 
@@ -22,11 +22,14 @@ body {
   border-bottom:  0.5em solid #ccc;
 }
 .article-pane header h1,
-.article-pane header author,
-.article-pane header time,
 .article-pane header .keywords {
+  display:      block;
+}
+.article-pane header author,
+.article-pane header time {
   display:      inline-block;
 }
+
 .article-pane header h1 {
   font-size:    1.2em;
   font-weight:  bold;
@@ -178,6 +181,7 @@ body {
  */
 .article-pane article.all section p .hidden {
   display:    block;
+  visibility: visible;
 }
 
 /**************************************************************************

@@ -32,6 +32,7 @@
  *  Requires:
  *      jquery.js
  *      jquery-ui.js
+ *      jquery.delegateHoverIntent.js
  *      rangy.js
  *      rangy/seializer.js
  */
@@ -64,7 +65,7 @@ $.Summary.prototype = {
         lineHeight:     -1,         // The height of a single line
                                     // (measured in renderXml() if -1);
 
-        useColor:       true,
+        useColor:       false,
         rankOpacity:    0.3         // The default opacity for rank items
     },
 
@@ -587,67 +588,49 @@ $.Summary.prototype = {
          * Hover over a rank increases the opacity of them all
          *
          */
-        var rankTimer   = null;
-        $parent.delegate('.rank', 'mouseenter mouseleave', function(e) {
+        $parent.delegateHoverIntent('.rank', function(e) {
             var $el = $(this);
 
-            //console.log('rank mouse: '+ e.type);
+            //console.log('.rank hover: '+ e.type);
 
-            if (e.type === 'mouseleave')
+            switch (e.type)
             {
-                // event: mouseleave
-                if (rankTimer !== null)
-                {
-                    // Just cancel the pending change
-                    clearTimeout(rankTimer);
-                    return;
-                }
-
+            case 'hover-out':
                 // Remove the opacity change for all ranks
                 self.$s.find('.rank').css('opacity', opts.rankOpacity);
-                return;
-            }
 
-            // event: mouseenter
-            rankTimer = setTimeout(function() {
-                rankTimer = null;
+                /* Don't let the 'hover-out' propagate so other hover-based
+                 * events won't be inadvertantly triggered
+                 * (e.g. sentence controls hidden).
+                 */
+                e.stopPropagation();
+                break;
 
+            case 'hover-in':
                 self.$s.find('.rank').css('opacity', 1.0);
-            }, 250);
+                break;
+            }
         });
 
         /*************************************************************
-         * Hover over a sentence show the sentence controls
+         * Hover over a sentence to show the sentence controls
          *
          */
-        var sentTimer   = null;
-        $parent.delegate('.sentence', 'mouseenter mouseleave', function(e) {
+        $parent.delegateHoverIntent('.sentence', function(e) {
             var $el = $(this);
 
-            //console.log('sent mouse: '+ e.type);
+            //console.log('.sentence hover: '+ e.type);
 
-            if (e.type === 'mouseleave')
+            switch (e.type)
             {
-                // event: mouseleave
-                if (sentTimer !== null)
-                {
-                    // Just cancel the pending change
-                    clearTimeout(sentTimer);
-                    return;
-                }
-
-                // Remove the visibility change
-                $el.removeClass('ui-hover');
-
-                return;
-            }
-
-            // event: mouseenter
-            sentTimer = setTimeout(function() {
-                sentTimer = null;
-
+            case 'hover-in':
                 $el.addClass('ui-hover');
-            }, 250);
+                break;
+
+            case 'hover-out':
+                $el.removeClass('ui-hover');
+                break;
+            }
         });
 
         /*************************************************************
@@ -721,7 +704,7 @@ $.Summary.prototype = {
                     }
                     else
                     {
-                        $s.effect('slide', {mode: 'hide'}, hideDone);
+                        $.slideUp(hideDone);
                     }
                 }
             }
@@ -759,12 +742,12 @@ $.Summary.prototype = {
 
                     if ($prev.is(':visible') && (! $prev.hasClass('highlight')))
                     {
-                        $prev.effect('slide', {mode: 'hide'}, expandDone);
+                        $prev.slideUp(expandDone);
                     }
 
                     if ($next.is(':visible') && (! $next.hasClass('highlight')))
                     {
-                        $next.effect('slide', {mode: 'hide'}, expandDone);
+                        $next.slideUp(expandDone);
                     }
                 }
                 else
@@ -774,12 +757,12 @@ $.Summary.prototype = {
 
                     if (! $prev.is(':visible'))
                     {
-                        $prev.effect('slide', expandDone);
+                        $prev.slideDown(expandDone);
                     }
 
                     if (! $next.is(':visible'))
                     {
-                        $next.effect('slide', expandDone);
+                        $next.slideDown(expandDone);
                     }
                 }
             }
@@ -839,52 +822,110 @@ $.Summary.prototype = {
         /*************************************************************
          * Click handler for selection controls
          *
+         * This is broken into mousedown/mouseup in order to squelch
+         * any mouse events if necessary in order to avoid modifying
+         * the current selection.
+         *
          */
-        $parent.delegate('.sentence .selection-controls .ui-icon', 'mousedown',
+        $parent.delegate('.sentence .selection-controls .ui-icon',
+                         'mousedown mouseup',
                          function(e) {
             var $el     = $(e.target);
             var $ctl    = $el.parents('.selection-controls:first');
-            $ctl.data('mousedown', true);
 
-            console.log('selection-controls mousedown: '+ $el.attr('class'));
+            console.log('selection-controls '+ e.type
+                        +': '+ $el.attr('class'));
 
-            // Squelch this mousedown
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        });
-        $parent.delegate('.sentence .selection-controls .ui-icon', 'mouseup',
-                         function(e) {
-            var $el     = $(e.target);
-            var $ctl    = $el.parents('.selection-controls:first');
-            if (! $ctl.data('mousedown'))
+            switch (e.type)
             {
-                return;
+            case 'mousedown':
+                $ctl.data('mousedown', true);
+                break;
+
+            case 'mouseup':
+                if (! $ctl.data('mousedown'))
+                {
+                    return;
+                }
+
+                // Count this a click
+                $ctl.removeData('mousedown');
+
+                var $s  = $(this);
+                var sel = rangy.getSelection();
+                var str = sel.toString();
+
+                console.log('control click: '+ $el.attr('class')
+                            +', selected[ '+ str +' ]');
+
+                if ($el.hasClass('highlight'))
+                {
+                    // Toggle a highlighter for the current selection
+                    self.cssApply.toggleSelection( );
+                }
+                else if ($el.hasClass('remove'))
+                {
+                    // Remove the current highligher
+                    var $hl = $el.parents('.highlighter:first');
+
+                    $hl.after( $hl.text() ).remove();
+                }
+                break;
             }
 
-            // Count this a click
-            $ctl.removeData('mousedown');
-
-            var $s  = $(this);
-            var sel = rangy.getSelection();
-            var str = sel.toString();
-
-            console.log('control click: '+ $el.attr('class')
-                        +', selected[ '+ str +' ]');
-
-            if ($el.hasClass('highlight'))
-            {
-                // Highlight the current selection
-                self.cssApply.toggleSelection( );
-            }
-
+            // Squelch this mouse event
             e.preventDefault();
             e.stopPropagation();
             return false;
         });
 
         /*************************************************************
-         * On button-up, see if there is a selection.
+         * Hover over a 'highlighter' section shows selection controls
+         * to allow removal.
+         *
+         */
+        $parent.delegateHoverIntent('.sentence .highlighter', function(e) {
+            var $el     = $(this);
+            var $s      = $el.parent();
+            var mouseE  = e.originalEvent;
+
+            //console.log('.sentence hover: '+ e.type);
+
+            switch (e.type)
+            {
+            case 'hover-in':
+               /* Add a new selection control just above the current selection.
+                *
+                * Since the original event was triggered within the context of
+                * $parent but on .highlighter, and the nearest positioning
+                * element to it is the sentence, we need to take into account
+                * that mouseE.offsetX has values based upon the offset of
+                * $parent.  SO, we must remove the offset of the sentence that
+                * will contain the controls in order to position it properly
+                * using the mouseE.offsetX value.
+                */
+                var pos = $s.offset();
+
+                $('#tmpl-selection-remove-controls')
+                    .tmpl()
+                    .appendTo($el)
+                    .css({
+                        top:    (Math.floor(mouseE.offsetY / opts.lineHeight) *
+                                opts.lineHeight) - (opts.lineHeight + 1),
+                        left:   mouseE.offsetX  - pos.left - 16
+                    });
+                break;
+
+            case 'hover-out':
+                // Remove the selection control
+                $s.find('.selection-controls').remove();
+                break;
+            }
+        });
+
+
+        /*************************************************************
+         * On mouseup, see if there is a selection.
          *
          */
         $parent.delegate('article .sentence', 'mouseup', function(e) {
