@@ -47,6 +47,9 @@ body {
   padding-left: 2em;
   color:        #999;
 }
+.article-pane header time {
+  font-size:    0.7em;
+}
 .article-pane header author:before {
   content:      'by ';
 }
