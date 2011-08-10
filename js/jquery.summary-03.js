@@ -273,18 +273,22 @@ $.Summary.prototype = {
 
         self.$control.find('.buttons').buttonset();
 
-        self.threshold( minThreshold, maxThreshold );
+        self.threshold( minThreshold, maxThreshold, true /* isInit */ );
     },
 
     /** @brief  Change the rank threshold.
      *  @param  min     The minimum threshold.
      *  @param  max     The maximum threshold.
+     *  @param  isInit  Is this the initial setting?  If not, mark all
+     *                  sentences that currently have a 'highlight' class as
+     *                  'old'.
      *
      */
-    threshold: function( min, max) {
+    threshold: function( min, max, isInit) {
         var self    = this;
         var opts    = self.options;
 
+        // Update the threshold and threshold value presentation
         self.minThreshold = min;
         self.maxThreshold = max;
 
@@ -613,7 +617,6 @@ $.Summary.prototype = {
                         $el.removeClass('su-icon-collapse')
                            .addClass('su-icon-expand')
                            .attr('title', 'expand');
-                        $s.removeClass('expanded');
                     }
                     else
                     {
@@ -622,7 +625,6 @@ $.Summary.prototype = {
                         $el.removeClass('su-icon-expand')
                            .addClass('su-icon-collapse')
                            .attr('title', 'collapse');
-                        $s.addClass('expanded');
                     }
                     $this.css('display', '');
                 };
@@ -632,6 +634,7 @@ $.Summary.prototype = {
                     // Collapse
                     $el.removeData('isExpanded');
 
+                    $s.removeClass('expanded', 500);
                     if ($prev.is(':visible') && (! $prev.hasClass('highlight')))
                     {
                         $prev.slideUp(expandDone);
@@ -647,6 +650,7 @@ $.Summary.prototype = {
                     // Expand
                     $el.data('isExpanded', true);
 
+                    $s.addClass('expanded', 500);
                     if ( (! $prev.is(':visible')) &&
                          (! $prev.hasClass('hidden')) )
                     {

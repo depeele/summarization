@@ -112,6 +112,7 @@ body {
 .article-pane article section p .highlight {
   display:    block;
 }
+.article-pane article section p .new,
 .article-pane article section p .expanded {
   background-color: #eee;
 }
