@@ -99,7 +99,8 @@ $.Summary.prototype = {
         self.renderXml( self.metadata );
 
         // Find all sentences and bucket them based upon 'rank'
-        self.$s     = self.element.find('p .sentence');
+        self.$p     = self.element.find('p');
+        self.$s     = self.$p.find('.sentence');
         self.ranks  = [];
         self.$s.each(function() {
             var $el     = $(this);
@@ -273,20 +274,18 @@ $.Summary.prototype = {
 
         self.$control.find('.buttons').buttonset();
 
-        self.threshold( minThreshold, maxThreshold, true /* isInit */ );
+        self.threshold( minThreshold, maxThreshold);
     },
 
     /** @brief  Change the rank threshold.
      *  @param  min     The minimum threshold.
      *  @param  max     The maximum threshold.
-     *  @param  isInit  Is this the initial setting?  If not, mark all
-     *                  sentences that currently have a 'highlight' class as
-     *                  'old'.
      *
      */
-    threshold: function( min, max, isInit) {
-        var self    = this;
-        var opts    = self.options;
+    threshold: function( min, max) {
+        var self        = this;
+        var opts        = self.options;
+        var isExpand    = (min < self.minThreshold);
 
         // Update the threshold and threshold value presentation
         self.minThreshold = min;
@@ -295,9 +294,12 @@ $.Summary.prototype = {
         var str = min +' - ' + max;
         self.$thresholdValues.text( str );
 
-        // Remove existing highlights and hide all paragraphs
-        self.$s.removeClass('highlight');
-        self.element.find('p').hide();
+        /* Initially mark all sentences as 'NOT highlighted' and all
+         * paragraphs as 'NOT shown'
+         */
+        self.$s.addClass('noHighlight');
+        self.$p.addClass('noShow');
+        self.$p.has('.keyworded').removeClass('noShow').addClass('toShow');
 
         for (var idex = self.maxThreshold; idex >= self.minThreshold; idex--)
         {
@@ -315,15 +317,52 @@ $.Summary.prototype = {
                     continue;
                 }
 
-                $s.addClass('highlight')
-                  .parent().show();
+                // Mark this sentence as TO BE highlighted
+                $s.addClass('toHighlight')
+                  .removeClass('noHighlight');
+
+                var $p  = $s.parent();
+                $p.addClass('toShow')
+                  .removeClass('noShow');
             }
         }
 
         /* Ensure that any paragraph containing a 'keyworded' sentence is
-         * visible
+         * visible regardless
+        self.$p.filter(':has(.keyworded)').show();
          */
-        self.element.find('p:has(.keyworded)').show();
+
+        // Hide/Show paramgraphs
+        self.$p.filter('.noShow')
+            .removeClass('noShow')
+            .slideUp(250);
+        self.$p.filter('.toShow')
+            .removeClass('toShow')
+            .slideDown(250);
+
+        // Hide/Show sentences
+        self.$s.filter('.noHighlight')
+            .removeClass('noHighlight')
+            .slideUp(500, function() {
+                $(this).removeClass('highlight');
+            });
+        self.$s.filter('.toHighlight')
+            .removeClass('toHighlight')
+            .slideDown(500, function() {
+                var $s  = $(this);
+                if (isExpand && $s.hasClass('highlight'))
+                {
+                    /* This was previously marked 'highlight' so now mark it
+                     * 'old'
+                     */
+                    $s.addClass('old', 500);
+                }
+                else
+                {
+                    $s.removeClass('old', 500);
+                    $s.addClass('highlight');
+                }
+            });
     },
 
     /******************************************************************

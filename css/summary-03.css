@@ -112,7 +112,7 @@ body {
 .article-pane article section p .highlight {
   display:    block;
 }
-.article-pane article section p .new,
+.article-pane article section p .old,
 .article-pane article section p .expanded {
   background-color: #eee;
 }
@@ -143,6 +143,7 @@ body {
   position:   absolute;
 
   display:    block;
+  z-index:    10;
 }
 .article-pane article section p .controls {
   top:        2px;
@@ -152,7 +153,6 @@ body {
   background-color: #999;
   color:            #fff;
   border:           none;
-  z-index:          10;
   padding:          2px 2px 0 2px;
 }
 .article-pane article section p .sentence .tagged .selection-controls {
@@ -215,6 +215,7 @@ body {
   top:              0.25em;
   right:            2em;
   padding:          0;
+  z-index:          10;
 }
 
 /*******************
