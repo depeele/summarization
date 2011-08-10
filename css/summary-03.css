@@ -96,11 +96,12 @@ body {
   margin:     0;
 }
 .article-pane article section p .sentence .text,
-.article-pane article section p .sentence .keyword {
+.article-pane article section p .sentence .keyword,
+.article-pane article section p .sentence .tagged {
   position:   relative;
+  border:     none;
 }
-.article-pane article section p .sentence .highlighter {
-  border:       none;
+.article-pane article section p .sentence .tagged {
   font-weight:  normal;
 }
 
@@ -142,27 +143,33 @@ body {
   left:       0;
 }
 .article-pane article section p .selection-controls {
-  width:            34px;
-  height:           18px;
-  background-color: #fff;
-  border:           1px solid #ccc;
+  background-color: #999;
+  color:            #fff;
+  border:           none;
   z-index:          10;
+  padding:          2px 2px 0 2px;
+}
+.article-pane article section p .sentence .tagged .selection-controls {
+  background-color: inherit;
+  border:           1px solid #aed0ea;  /* From .ui-state-default */
+  border-bottom:    none;
 }
 
-.article-pane article section p .controls .ui-icon,
-.article-pane article section p .selection-controls .ui-icon {
+.article-pane article section p .controls .su-icon,
+.article-pane article section p .selection-controls .su-icon {
   display:    inline-block;
   cursor:     pointer;
+  border:     none;
 }
-.article-pane article section p .controls .ui-icon {
+.article-pane article section p .controls .su-icon {
   visibility: hidden;
 }
-.article-pane article section p .ui-hover .controls .ui-icon,
+.article-pane article section p .ui-hover .controls .su-icon,
 .article-pane article section p .starred .controls .star,
 .article-pane article section p .hidden .controls .hide {
   visibility: visible;
 }
-.article-pane article section p .ui-hover .controls .ui-icon {
+.article-pane article section p .ui-hover .controls .su-icon {
   opacity:    0.6;
 }
 

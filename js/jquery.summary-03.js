@@ -63,9 +63,9 @@ $.Summary.prototype = {
         self.$thresholdValues = self.$threshold.find('.values');
 
         rangy.init();
-        //self.cssApply   = rangy.createCssClassApplier('highlighter', true);
+        //self.cssApply   = rangy.createCssClassApplier('tagged', true);
         self.cssApply = rangy.createCssClassApplier(
-                                    'ui-state-default highlighter',
+                                    'ui-state-default tagged',
                                     true);
 
         self._bindEvents();
@@ -499,10 +499,31 @@ $.Summary.prototype = {
         });
 
         /*************************************************************
+         * Mouse over for sentence controls
+         *
+         */
+        $parent.delegate('.sentence .controls .su-icon',
+                         'mouseenter mouseleave',
+                         function(e) {
+            var $el = $(this);
+
+            switch (e.type)
+            {
+            case 'mouseenter':
+                $el.css('opacity', 1.0);
+                break;
+
+            case 'mouseleave':
+                $el.css('opacity', '');
+                break;
+            }
+        });
+
+        /*************************************************************
          * Click handler for sentence controls
          *
          */
-        $parent.delegate('.sentence .controls .ui-icon', 'click',
+        $parent.delegate('.sentence .controls .su-icon', 'click',
                          function(e) {
             var $el = $(this);
             var $s  = $el.parents('.sentence:first');
@@ -515,11 +536,13 @@ $.Summary.prototype = {
                 {
                     $s.removeClass('starred')
                       .removeData('isStarred');
+                    $el.removeClass('su-state-active');
                 }
                 else
                 {
                     $s.addClass('starred')
                       .data('isStarred', true);
+                    $el.addClass('su-state-active');
                 }
             }
             else if ($el.hasClass('hide'))
@@ -586,16 +609,16 @@ $.Summary.prototype = {
                     {
                         $this.removeClass('expanded');
 
-                        $el.removeClass('ui-icon-minus')
-                           .addClass('ui-icon-plus')
+                        $el.removeClass('su-icon-collapse')
+                           .addClass('su-icon-expand')
                            .attr('title', 'expand');
                     }
                     else
                     {
                         $this.addClass('expanded');
 
-                        $el.removeClass('ui-icon-plus')
-                           .addClass('ui-icon-minus')
+                        $el.removeClass('su-icon-expand')
+                           .addClass('su-icon-collapse')
                            .attr('title', 'collapse');
                     }
                     $this.css('display', '');
@@ -693,7 +716,7 @@ $.Summary.prototype = {
          * the current selection.
          *
          */
-        $parent.delegate('.sentence .selection-controls .ui-icon',
+        $parent.delegate('.sentence .selection-controls .su-icon',
                          'mousedown mouseup',
                          function(e) {
             var $el     = $(e.target);
@@ -724,15 +747,15 @@ $.Summary.prototype = {
                 console.log('control click: '+ $el.attr('class')
                             +', selected[ '+ str +' ]');
 
-                if ($el.hasClass('highlight'))
+                if ($el.hasClass('tag'))
                 {
-                    // Toggle a highlighter for the current selection
+                    // Toggle tagged for the current selection
                     self.cssApply.toggleSelection( );
                 }
                 else if ($el.hasClass('remove'))
                 {
                     // Remove the current highligher
-                    var $hl = $el.parents('.highlighter:first');
+                    var $hl = $el.parents('.tagged:first');
 
                     $hl.after( $hl.text() ).remove();
                 }
@@ -746,40 +769,41 @@ $.Summary.prototype = {
         });
 
         /*************************************************************
-         * Hover over a 'highlighter' section shows selection controls
+         * Hover over a 'tagged' section shows selection controls
          * to allow removal.
          *
          */
-        $parent.delegateHoverIntent('.sentence .highlighter',
+        $parent.delegateHoverIntent('article .sentence .tagged',
                                     function(e) {
             var $el     = $(this);
             var $s      = $el.parent();
+            var pos     = $el.position();
+            var offset  = $el.offset();
+            var width   = $el.width();
             var mouseE  = e.originalEvent;
+            // Adjust the mouse coordinates to be relative to $el
+            var mouse   = {
+                x:  Math.abs(mouseE.pageX - offset.left),
+                y:  Math.abs(mouseE.pageY - offset.top)
+            };
 
             //console.log('.sentence hover: '+ e.type);
 
             switch (e.type)
             {
             case 'hover-in':
-               /* Add a new selection control just above the current selection.
-                *
-                * Since the original event was triggered within the context of
-                * $parent but on .highlighter, and the nearest positioning
-                * element to it is the sentence, we need to take into account
-                * that mouseE.offsetX has values based upon the offset of
-                * $parent.  SO, we must remove the offset of the sentence that
-                * will contain the controls in order to position it properly
-                * using the mouseE.offsetX value.
-                */
-                var pos = $s.offset();
+                // Add a new selection control just above the current selection
+                var left    = mouse.x - 12;
+                if (left < 0)                   { left = 0; }
+                else if ((left + 24) > width)   { left = width - 24; }
 
                 $('#tmpl-selection-remove-controls')
                     .tmpl()
                     .appendTo($el)
                     .css({
-                        top:    (Math.floor(mouseE.offsetY / opts.lineHeight) *
-                                opts.lineHeight) - (opts.lineHeight + 1),
-                        left:   mouseE.offsetX  - pos.left - 16
+                        top:    (Math.floor(mouse.y / opts.lineHeight) *
+                                opts.lineHeight) - opts.lineHeight - 3,
+                        left:   left
                     });
                 break;
 
@@ -819,8 +843,8 @@ $.Summary.prototype = {
                 .appendTo($s)
                 .css({
                     top:    (Math.floor(e.offsetY / opts.lineHeight) *
-                               opts.lineHeight) - (opts.lineHeight + 4),
-                    left:   e.offsetX - 16
+                               opts.lineHeight) - opts.lineHeight - 3,
+                    left:   e.offsetX - 12
                 });
         });
 
@@ -835,7 +859,7 @@ $.Summary.prototype = {
 
         $parent.undelegate('.rank', 'mouseenter mouseleave');
         $parent.undelegate('.sentence', 'mouseenter mouseleave');
-        $parent.undelegate('.sentence .controls .ui-icon', 'click');
+        $parent.undelegate('.sentence .controls .su-icon', 'click');
         $parent.undelegate('header keyword',  'click');
     }
 };

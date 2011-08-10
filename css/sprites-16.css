@@ -1,0 +1,37 @@
+.su-icon {
+  width:            16px;
+  height:           16px;
+  background-image: url('images/icons-16.png');
+}
+
+/* positioning */
+.su-icon-star                       { background-position:  0     0; }
+.su-icon-collapse                   { background-position:  -16px 0; }
+.su-icon-expand                     { background-position:  -32px 0; }
+.su-icon-cancel                     { background-position:  -48px 0; }
+.su-icon-tag                        { background-position:  -64px 0; }
+
+.su-icon-star-blue                  { background-position:  0     -16px; }
+.su-icon-collapse-blue              { background-position:  -16px -16px; }
+.su-icon-expand-blue                { background-position:  -32px -16px; }
+.su-icon-cancel-blue                { background-position:  -48px -16px; }
+.su-icon-tag-blue                   { background-position:  -64px -16px; }
+
+.su-icon-star-white                 { background-position:  0     -32px; }
+.su-icon-collapse-white             { background-position:  -16px -32px; }
+.su-icon-expand-white               { background-position:  -32px -32px; }
+.su-icon-cancel-white               { background-position:  -48px -32px; }
+.su-icon-tag-white                  { background-position:  -64px -32px; }
+
+/* state-based positioning */
+.su-state-active.su-icon-star       { background-position:  0     -16px; }
+.su-state-active.su-icon-collapse   { background-position:  -16px -16px; }
+.su-state-active.su-icon-expand     { background-position:  -32px -16px; }
+.su-state-active.su-icon-cancel     { background-position:  -48px -16px; }
+.su-state-active.su-icon-tag        { background-position:  -64px -16px; }
+
+.su-state-reverse.su-icon-star      { background-position:  0     -32px; }
+.su-state-reverse.su-icon-collapse  { background-position:  -16px -32px; }
+.su-state-reverse.su-icon-expand    { background-position:  -32px -32px; }
+.su-state-reverse.su-icon-cancel    { background-position:  -48px -32px; }
+.su-state-reverse.su-icon-tag       { background-position:  -64px -32px; }

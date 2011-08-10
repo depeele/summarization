@@ -9,6 +9,7 @@
   <link rel="stylesheet" type="text/css" href="css/reset.css" />
   <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.css" />
   <link rel="stylesheet" type="text/css" href="css/layout.css" />
+  <link rel="stylesheet" type="text/css" href="css/sprites-16.css" />
   <link rel="stylesheet" type="text/css" href="css/summary-03.css" />
 
  </head>
@@ -36,8 +37,12 @@
      <label for="threshold" class='primary'>Threshold</label>
 
      <div class='buttons'>
-      <button name='threshold-down'>-</button>
-      <button name='threshold-up'>+</button>
+      <button name='threshold-down'
+              title='expand'><div
+             class='expand su-icon su-icon-expand' /></button>
+      <button name='threshold-up'
+              title='collapse'><div
+             class='collapse su-icon su-icon-collapse' /></button>
      </div>
      <label class='values'></label>
     </div>
@@ -94,20 +99,21 @@
 
  <script id='tmpl-sentence-controls' type='text/x-jquery-tmpl'>
   <div class='controls'><div
-       class='expand ui-icon ui-icon-plus' title='expand' /><div
-       class='star ui-icon ui-icon-star'   title='star' /><div
-       class='hide ui-icon ui-icon-cancel' title='hide' /></div>
+       class='expand su-icon su-icon-expand' title='expand' /><div
+       class='star su-icon su-icon-star'     title='star' /><div
+       class='hide su-icon su-icon-cancel'   title='hide' /></div>
  </script>
 
  <script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>
-  <div class='selection-controls ui-corner-all'><div
-       class='highlight ui-icon ui-icon-document-b' title='highlight' /><div
-       class='tag ui-icon ui-icon-tag'              title='tag' /></div>
+  <div class='selection-controls ui-corner-top'><div
+       class='tag su-icon su-state-reverse su-icon-tag'
+       title='tag' /></div>
  </script>
 
  <script id='tmpl-selection-remove-controls' type='text/x-jquery-tmpl'>
-  <div class='selection-controls ui-corner-all'><div
-       class='remove ui-icon ui-icon-cancel' title='remove highlight' /></div>
+  <div class='selection-controls ui-corner-top'><div
+       class='remove su-icon su-icon-cancel-blue ui-state-default'
+       title='remove tag' /></div>
  </script>
  <!-- Templates } -->
 
