@@ -92,8 +92,9 @@ body {
 .article-pane article section p .sentence {
   position:   relative;
   display:    none;
-  padding:    0 0 0 64px;
+  padding:    0.2em 0.2em 0.2em 70px;
   margin:     0;
+  text-align: justify;
 }
 .article-pane article section p .sentence .text,
 .article-pane article section p .sentence .keyword,
@@ -106,20 +107,24 @@ body {
 }
 
 .article-pane article section p .expanded,
+.article-pane article section p .expansion,
 .article-pane article section p .keyworded,
 .article-pane article section p .highlight {
   display:    block;
 }
+.article-pane article section p .expanded {
+  background-color: #eee;
+}
 
 .article-pane article section p .rank {
   position:   absolute;
-  top:        -0.25em;
-  left:       48px;
+  top:        2px;
+  left:       52px;
 
-  font-size:  0.8em;
+  font-size:  0.75em;
   display:    block;
 
-  color:      rgb(246,147,31);
+  color:      #f6931f;
 
   /* Make it unselectable */
   -moz-user-select:   none;
@@ -139,8 +144,8 @@ body {
   display:    block;
 }
 .article-pane article section p .controls {
-  top:        -0.25em;
-  left:       0;
+  top:        2px;
+  left:       2px;
 }
 .article-pane article section p .selection-controls {
   background-color: #999;

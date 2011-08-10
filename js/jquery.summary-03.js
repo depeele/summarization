@@ -559,11 +559,11 @@ $.Summary.prototype = {
                      * of a nearby sentence, then hide should not hide it
                      * permanently but rather hide this part of the expansion.
                      */
-                    var expanded    = $s.hasClass('expanded');
+                    var expansion   = $s.hasClass('expansion');
                     var hideDone    = function() {
-                        if (expanded)
+                        if (expansion)
                         {
-                            $s.removeClass('expanded');
+                            $s.removeClass('expansion');
                         }
                         else
                         {
@@ -578,7 +578,7 @@ $.Summary.prototype = {
                         }
                     };
 
-                    if (! expanded)
+                    if (! expansion)
                     {
                         $s.data('isHidden', true);
                         if (opts.view !== 'all')
@@ -593,8 +593,9 @@ $.Summary.prototype = {
                     }
                     else
                     {
-                        $.slideUp(hideDone);
+                        $s.slideUp(hideDone);
                     }
+
                 }
             }
             else if ($el.hasClass('expand'))
@@ -605,21 +606,23 @@ $.Summary.prototype = {
                 var expandDone  = function() {
                     var $this = $(this);
 
-                    if ($this.hasClass('expanded'))
+                    if ($this.hasClass('expansion'))
                     {
-                        $this.removeClass('expanded');
+                        $this.removeClass('expansion');
 
                         $el.removeClass('su-icon-collapse')
                            .addClass('su-icon-expand')
                            .attr('title', 'expand');
+                        $s.removeClass('expanded');
                     }
                     else
                     {
-                        $this.addClass('expanded');
+                        $this.addClass('expansion');
 
                         $el.removeClass('su-icon-expand')
                            .addClass('su-icon-collapse')
                            .attr('title', 'collapse');
+                        $s.addClass('expanded');
                     }
                     $this.css('display', '');
                 };
@@ -644,12 +647,14 @@ $.Summary.prototype = {
                     // Expand
                     $el.data('isExpanded', true);
 
-                    if (! $prev.is(':visible'))
+                    if ( (! $prev.is(':visible')) &&
+                         (! $prev.hasClass('hidden')) )
                     {
                         $prev.slideDown(expandDone);
                     }
 
-                    if (! $next.is(':visible'))
+                    if ( (! $next.is(':visible')) &&
+                         (! $next.hasClass('hidden')) )
                     {
                         $next.slideDown(expandDone);
                     }
