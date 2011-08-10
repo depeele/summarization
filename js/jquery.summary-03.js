@@ -370,80 +370,172 @@ $.Summary.prototype = {
      *
      */
 
-    /** @brief  Is the current caret/cursor within the min or max value?
-     *  @param  $el     The jQuery/DOM element representing the input control;
+    /** @brief  Given a jQuery DOM star control element (.controls .star)
+     *          toggle the 'star' setting.
+     *  @param  $el     The jQuery DOM element
      *
-     *  @return The caret/cursor position;
      */
-    _getCaret: function($el) {
-        var self    = this;
-        var el      = $el[0];
-        var pos     = 0;
+    _toggleStar: function($el) {
+        var $s  = $el.parents('.sentence:first');
 
-        if (document.selection)
+        // (un)Star this sentence
+        if ($s.data('isStarred'))
         {
-            // IE
+            $s.removeClass('starred')
+              .removeData('isStarred');
+            $el.removeClass('su-state-active');
+        }
+        else
+        {
+            $s.addClass('starred')
+              .data('isStarred', true);
+            $el.addClass('su-state-active');
+        }
 
-            /* Several hurdles with IE:
-             *  - IE does not handle a selection for a given element but for
-             *    the entire document;
-             *  - Windows newlines (\r\n) are counted as 2 characters except
-             *    which it comes to positioning the cursor;
-             *  - There is no easy way to find the cursor position;
-             *
-             * Focus on the target object otherwise the selection MAY NOT be
-             * what we expect.
+        return this;
+    },
+
+    /** @brief  Given a jQuery DOM hide control element (.controls .hide)
+     *          toggle the visibility setting.
+     *  @param  $el     The jQuery DOM element
+     *
+     */
+    _toggleHide: function($el) {
+        var self    = this;
+        var opts    = self.options;
+        var $s      = $el.parents('.sentence:first');
+
+        // (un)Hide this sentence
+        if ($s.data('isHidden'))
+        {
+            $s.removeClass('hidden')
+              .removeData('isHidden');
+        }
+        else
+        {
+            /* If this sentence was presented because of an expansion
+             * of a nearby sentence, then hide should not hide it
+             * permanently but rather hide this part of the expansion.
              */
-            el.focus();
+            var expansion   = $s.hasClass('expansion');
+            var hideDone    = function() {
+                if (expansion)
+                {
+                    $s.removeClass('expansion');
+                }
+                else
+                {
+                    $s.addClass('hidden')
+                }
 
-            // Create a TextRange based on the current selection
-            var range = document.selection.createRange();
-            if (range.parentElement() == obj)
+                $s.css('display', '');
+
+                if ($s.parent().find(':visible').length < 1)
+                {
+                    $s.parent().hide();
+                }
+            };
+
+            if (! expansion)
             {
-                /* Move the start of the cursor back by as much as the value
-                 * length
-                 */
-                range.moveStart('character', -el.value.length);
+                $s.data('isHidden', true);
+                if (opts.view !== 'all')
+                {
+                    $s.slideUp(hideDone);
+                }
+                else
+                {
+                    // Make the change immediately
+                    hideDone();
+                }
+            }
+            else
+            {
+                $s.slideUp(hideDone);
+            }
 
-                /* The length of the range text is now the current cursor
-                 * position
-                 */
-                pos = range.text.length;
+        }
+
+        return this;
+    },
+
+    /** @brief  Given a jQuery DOM expand control element (.controls .expand)
+     *          toggle the expand/collapse setting.
+     *  @param  $el     The jQuery DOM element
+     *
+     */
+    _toggleExpand: function($el) {
+        var self    = this;
+        var opts    = self.options;
+        var $s      = $el.parents('.sentence:first');
+
+        // (un)Expand this sentence
+        var $prev       = $s.prev();
+        var $next       = $s.next();
+        var expandDone  = function() {
+            var $this = $(this);
+
+            if ($this.hasClass('expansion'))
+            {
+                $this.removeClass('expansion');
+
+                $el.removeClass('su-icon-collapse')
+                   .addClass('su-icon-expand')
+                   .attr('title', 'expand');
+            }
+            else
+            {
+                $this.addClass('expansion');
+
+                $el.removeClass('su-icon-expand')
+                   .addClass('su-icon-collapse')
+                   .attr('title', 'collapse');
+            }
+            $this.css('display', '');
+        };
+
+        if ($el.data('isExpanded'))
+        {
+            // Collapse
+            $el.removeData('isExpanded');
+
+            $s.removeClass('expanded', 500);
+            if ($prev.is(':visible') && (! $prev.hasClass('highlight')))
+            {
+                $prev.slideUp(expandDone);
+            }
+
+            if ($next.is(':visible') && (! $next.hasClass('highlight')))
+            {
+                $next.slideUp(expandDone);
             }
         }
-        else if (el.selectionStart)
+        else
         {
-            // Gecko
-            pos = el.selectionStart;
+            // Expand
+            $el.data('isExpanded', true);
+
+            $s.addClass('expanded', 500);
+            if ( (! $prev.is(':visible')) &&
+                 (! $prev.hasClass('hidden')) )
+            {
+                $prev.slideDown(expandDone);
+            }
+
+            if ( (! $next.is(':visible')) &&
+                 (! $next.hasClass('hidden')) )
+            {
+                $next.slideDown(expandDone);
+            }
         }
 
-        return pos;
+        return this;
     },
 
     /** @brief  Set the caret/cursor position within the given element
      *  @param  $el     The jQuery/DOM element representing the input control;
      *  @param  pos     The desired caret/cursor position;
      */
-    _setCaret: function($el, pos) {
-        var self    = this;
-        var el      = $el[0];
-
-        if (document.selection)
-        {
-            // IE
-            var range   = obj.createTextRange();
-            range.move('character', pos);
-            range.select();
-        }
-        else if (el.selectionStart)
-        {
-            // Gecko
-            el.focus();
-            el.setSelectionRange(pos, pos);
-        }
-    },
-
-
     _bindEvents: function() {
         var self    = this;
         var opts    = self.options;
@@ -574,134 +666,15 @@ $.Summary.prototype = {
 
             if ($el.hasClass('star'))
             {
-                // (un)Star this sentence
-                if ($s.data('isStarred'))
-                {
-                    $s.removeClass('starred')
-                      .removeData('isStarred');
-                    $el.removeClass('su-state-active');
-                }
-                else
-                {
-                    $s.addClass('starred')
-                      .data('isStarred', true);
-                    $el.addClass('su-state-active');
-                }
+                self._toggleStar($el);
             }
             else if ($el.hasClass('hide'))
             {
-                // (un)Hide this sentence
-                if ($s.data('isHidden'))
-                {
-                    $s.removeClass('hidden')
-                      .removeData('isHidden');
-                }
-                else
-                {
-                    /* If this sentence was presented because of an expansion
-                     * of a nearby sentence, then hide should not hide it
-                     * permanently but rather hide this part of the expansion.
-                     */
-                    var expansion   = $s.hasClass('expansion');
-                    var hideDone    = function() {
-                        if (expansion)
-                        {
-                            $s.removeClass('expansion');
-                        }
-                        else
-                        {
-                            $s.addClass('hidden')
-                        }
-
-                        $s.css('display', '');
-
-                        if ($s.parent().find(':visible').length < 1)
-                        {
-                            $s.parent().hide();
-                        }
-                    };
-
-                    if (! expansion)
-                    {
-                        $s.data('isHidden', true);
-                        if (opts.view !== 'all')
-                        {
-                            $s.slideUp(hideDone);
-                        }
-                        else
-                        {
-                            // Make the change immediately
-                            hideDone();
-                        }
-                    }
-                    else
-                    {
-                        $s.slideUp(hideDone);
-                    }
-
-                }
+                self._toggleHide($el);
             }
             else if ($el.hasClass('expand'))
             {
-                // (un)Expand this sentence
-                var $prev       = $s.prev();
-                var $next       = $s.next();
-                var expandDone  = function() {
-                    var $this = $(this);
-
-                    if ($this.hasClass('expansion'))
-                    {
-                        $this.removeClass('expansion');
-
-                        $el.removeClass('su-icon-collapse')
-                           .addClass('su-icon-expand')
-                           .attr('title', 'expand');
-                    }
-                    else
-                    {
-                        $this.addClass('expansion');
-
-                        $el.removeClass('su-icon-expand')
-                           .addClass('su-icon-collapse')
-                           .attr('title', 'collapse');
-                    }
-                    $this.css('display', '');
-                };
-
-                if ($el.data('isExpanded'))
-                {
-                    // Collapse
-                    $el.removeData('isExpanded');
-
-                    $s.removeClass('expanded', 500);
-                    if ($prev.is(':visible') && (! $prev.hasClass('highlight')))
-                    {
-                        $prev.slideUp(expandDone);
-                    }
-
-                    if ($next.is(':visible') && (! $next.hasClass('highlight')))
-                    {
-                        $next.slideUp(expandDone);
-                    }
-                }
-                else
-                {
-                    // Expand
-                    $el.data('isExpanded', true);
-
-                    $s.addClass('expanded', 500);
-                    if ( (! $prev.is(':visible')) &&
-                         (! $prev.hasClass('hidden')) )
-                    {
-                        $prev.slideDown(expandDone);
-                    }
-
-                    if ( (! $next.is(':visible')) &&
-                         (! $next.hasClass('hidden')) )
-                    {
-                        $next.slideDown(expandDone);
-                    }
-                }
+                self._toggleExpand($el);
             }
         });
 
@@ -716,12 +689,6 @@ $.Summary.prototype = {
             var name        = $kw.attr('name');
             var $kws        = $parent.find('article .keyword');
             var $hl         = $kws.filter('[name='+ name +']');
-
-            // Remove any sentence 'keyworded' classes
-            //$parent.find('.keyworded').removeClass('keyworded');
-
-            // Remove all keyword highlights
-            //$kws.removeClass('ui-state-highlight');
 
             if (toggleOn)
             {
