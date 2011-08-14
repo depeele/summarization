@@ -57,7 +57,7 @@ $.Summary.prototype = {
         self.options  = opts;
         self.metadata = null;
 
-        var $gp = self.element.parent().parent()
+        var $gp = self.element.parent().parent();
         self.$control         = $gp.find('.control-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
@@ -108,7 +108,7 @@ $.Summary.prototype = {
             if (isNaN(rank))                    { return; }
 
             // Treat the rank as an integer percentile (0 .. 100).
-            rank = parseInt(rank * 100);
+            rank = parseInt(rank * 100, 10);
             if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
 
             if (opts.useColor === true)
@@ -370,14 +370,15 @@ $.Summary.prototype = {
      *
      */
 
-    /** @brief  Given a jQuery DOM star control element (.controls .star)
+    /** @brief  Given a jQuery DOM sentence element (.sentence),
      *          toggle the 'star' setting.
-     *  @param  $el     The jQuery DOM element
+     *  @param  $s      The jQuery DOM sentence element
      *
      */
-    _toggleStar: function($el) {
-        var $s  = $el.parents('.sentence:first');
-
+    _toggleStar: function($s) {
+        var self    = this;
+        var opts    = self.options;
+        var $el     = $s.find('.controls .expand');
         // (un)Star this sentence
         if ($s.data('isStarred'))
         {
@@ -395,15 +396,15 @@ $.Summary.prototype = {
         return this;
     },
 
-    /** @brief  Given a jQuery DOM hide control element (.controls .hide)
+    /** @brief  Given a jQuery DOM sentence element (.sentence),
      *          toggle the visibility setting.
-     *  @param  $el     The jQuery DOM element
+     *  @param  $s      The jQuery DOM sentence element
      *
      */
-    _toggleHide: function($el) {
+    _toggleHide: function($s) {
         var self    = this;
         var opts    = self.options;
-        var $s      = $el.parents('.sentence:first');
+        var $el     = $s.find('.controls .expand');
 
         // (un)Hide this sentence
         if ($s.data('isHidden'))
@@ -425,7 +426,7 @@ $.Summary.prototype = {
                 }
                 else
                 {
-                    $s.addClass('hidden')
+                    $s.addClass('hidden');
                 }
 
                 $s.css('display', '');
@@ -459,39 +460,119 @@ $.Summary.prototype = {
         return this;
     },
 
-    /** @brief  Given a jQuery DOM expand control element (.controls .expand)
-     *          toggle the expand/collapse setting.
-     *  @param  $el     The jQuery DOM element
-     *
+    /** @brief  Given a jQuery DOM sentence (.sentence), expand it.
+     *  @param  $s      The jQuery DOM sentence element
+     *  @param  cb      The callback to invoke when expansion is complete
+     *                      function(type) invoked in the context of
+     *                      the expanded sibling with type == 'expand'
      */
-    _toggleExpand: function($el) {
-        var self    = this;
-        var opts    = self.options;
-        var $s      = $el.parents('.sentence:first');
-
-        // (un)Expand this sentence
+    _expand: function($s, cb) {
+        var self        = this;
+        var opts        = self.options;
         var $prev       = $s.prev();
         var $next       = $s.next();
         var expandDone  = function() {
             var $this = $(this);
 
-            if ($this.hasClass('expansion'))
-            {
-                $this.removeClass('expansion');
+            $this.addClass('expansion');
+            $this.css('display', '');
+            if (cb) { cb.call(this, 'expand'); }
+        };
 
+        if ($s.hasClass('expanded'))
+        {
+            return;
+        }
+        
+        $s.addClass('expanded', 500);
+        if ( (! $prev.is(':visible')) &&
+             (! $prev.hasClass('hidden')) )
+        {
+            $prev.slideDown(expandDone);
+        }
+        
+        if ( (! $next.is(':visible')) &&
+             (! $next.hasClass('hidden')) )
+        {
+            $next.slideDown(expandDone);
+        }
+
+        return this;
+    },
+
+    /** @brief  Given a jQuery DOM sentence (.sentence), collapse it.
+     *  @param  $s      The jQuery DOM sentence element
+     *  @param  cb      The callback to invoke when collapse is complete
+     *                      function(type) invoked in the context of
+     *                      the collapsed sibling with type == 'collapse'
+     */
+    _collapse: function($s, cb) {
+        var self        = this;
+        var opts        = self.options;
+        var $prev       = $s.prev();
+        var $next       = $s.next();
+        var collapseDone= function() {
+            var $this = $(this);
+
+            $this.removeClass('expansion');
+            $this.css('display', '');
+            if (cb) { cb.call(this, 'collapse'); }
+        };
+        /*
+        var sibDone     = function($sib) {
+            $sib.slideUp(collapseDone);
+        };
+        // */
+
+        if ($s.hasClass('expanded'))
+        {
+            $s.removeClass('expanded', 500);
+        }
+        else if (! $s.hasClass('expansion'))
+        {
+            return;
+        }
+
+        if ($prev.is(':visible') && (! $prev.hasClass('highlight')))
+        {
+            //self._collapse($prev, sibDone);
+            $prev.slideUp(collapseDone);
+        }
+
+        if ($next.is(':visible') && (! $next.hasClass('highlight')))
+        {
+            //self._collapse($next, sibDone);
+            $next.slideUp(collapseDone);
+        }
+
+        return this;
+    },
+
+    /** @brief  Given a jQuery DOM sentence element (.sentence),
+     *          toggle the expand/collapse setting.
+     *  @param  $s      The jQuery DOM sentence element
+     *
+     */
+    _toggleExpand: function($s) {
+        var self        = this;
+        var opts        = self.options;
+        var $el         = $s.find('.controls .expand');
+        var toggleDone  = function(type) {
+            var $this = $(this);
+
+            switch (type)
+            {
+            case 'collapse':
                 $el.removeClass('su-icon-collapse')
                    .addClass('su-icon-expand')
                    .attr('title', 'expand');
-            }
-            else
-            {
-                $this.addClass('expansion');
-
+                break;
+                
+            case 'expand':
                 $el.removeClass('su-icon-expand')
                    .addClass('su-icon-collapse')
                    .attr('title', 'collapse');
             }
-            $this.css('display', '');
         };
 
         if ($el.data('isExpanded'))
@@ -499,34 +580,14 @@ $.Summary.prototype = {
             // Collapse
             $el.removeData('isExpanded');
 
-            $s.removeClass('expanded', 500);
-            if ($prev.is(':visible') && (! $prev.hasClass('highlight')))
-            {
-                $prev.slideUp(expandDone);
-            }
-
-            if ($next.is(':visible') && (! $next.hasClass('highlight')))
-            {
-                $next.slideUp(expandDone);
-            }
+            self._collapse($s, toggleDone);
         }
         else
         {
             // Expand
             $el.data('isExpanded', true);
 
-            $s.addClass('expanded', 500);
-            if ( (! $prev.is(':visible')) &&
-                 (! $prev.hasClass('hidden')) )
-            {
-                $prev.slideDown(expandDone);
-            }
-
-            if ( (! $next.is(':visible')) &&
-                 (! $next.hasClass('hidden')) )
-            {
-                $next.slideDown(expandDone);
-            }
+            self._expand($s, toggleDone);
         }
 
         return this;
@@ -666,15 +727,15 @@ $.Summary.prototype = {
 
             if ($el.hasClass('star'))
             {
-                self._toggleStar($el);
+                self._toggleStar($s);
             }
             else if ($el.hasClass('hide'))
             {
-                self._toggleHide($el);
+                self._toggleHide($s);
             }
             else if ($el.hasClass('expand'))
             {
-                self._toggleExpand($el);
+                self._toggleExpand($s);
             }
         });
 
