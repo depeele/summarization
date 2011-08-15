@@ -369,10 +369,10 @@ $.Summary.prototype = {
         // Hide/Show paramgraphs
         self.$p.filter('.noShow')
             .removeClass('noShow')
-            .slideUp(opts.animSpeed);
+            .addClass('hidden', opts.animSpeed / 4);
         self.$p.filter('.toShow')
             .removeClass('toShow')
-            .slideDown(opts.animSpeed);
+            .removeClass('hidden', opts.animSpeed * 4);
 
         // Hide/Show sentences
         self.$s.filter('.noHighlight')
@@ -544,7 +544,7 @@ $.Summary.prototype = {
 
                 if ($s.parent().find(':visible').length < 1)
                 {
-                    $s.parent().hide();
+                    $s.parent().addClass('hidden', opts.animSpeed / 4);
                 }
             };
 
@@ -897,9 +897,12 @@ $.Summary.prototype = {
                 $hl.each(function() {
                     var $el = $(this);
                     var $s  = $el.parent();
+                    var $p  = $s.parent();
                     $el.addClass('ui-state-highlight');
 
-                    $s.parent().slideDown(opts.animSpeed);
+                    //$p.slideDown(opts.animSpeed);
+                    $p.removeClass('hidden', opts.animSpeed * 4);
+
                     $s.slideDown(opts.animSpeed, function() {
                         $s.addClass('keyworded');
 
@@ -923,9 +926,10 @@ $.Summary.prototype = {
                         if (! $s.hasClass('highlight'))
                         {
                             $s.slideUp(opts.animSpeed, function() {
-                                if ($s.parent().find(':visible').length < 1)
+                                var $p  = $s.parent();
+                                if ($p.find(':visible').length < 1)
                                 {
-                                    $s.parent().hide();
+                                    $p.addClass('hidden', opts.animSpeed);
                                 }
 
                                 self._updateCoverage( );
@@ -1079,7 +1083,7 @@ $.Summary.prototype = {
                 .appendTo($s)
                 .css({
                     top:    (Math.floor(e.offsetY / opts.lineHeight) *
-                               opts.lineHeight) - opts.lineHeight - 3,
+                               opts.lineHeight) - opts.lineHeight,
                     left:   e.offsetX - 12
                 });
         });
