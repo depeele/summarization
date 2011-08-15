@@ -112,10 +112,19 @@ body {
 .article-pane article section p .highlight {
   display:    block;
 }
-.article-pane article section p .old,
+.article-pane article section p .old-0,
 .article-pane article section p .expanded {
   background-color: #eee;
 }
+
+/* Progressive age */
+.article-pane article section p .old-1  { background-color: #ddd; }
+.article-pane article section p .old-2  { background-color: #ccc; }
+.article-pane article section p .old-3  { background-color: #bbb; }
+.article-pane article section p .old-4  { background-color: #aaa; }
+.article-pane article section p .old-5  { background-color: #999; }
+.article-pane article section p .old-6  { background-color: #888; }
+.article-pane article section p .old-7  { background-color: #777; }
 
 .article-pane article section p .rank {
   position:   absolute;
