@@ -184,6 +184,13 @@ body {
   opacity:    1.0;
 }
 
+/* When expanded, present the expand icon as collapse by mirroring
+ * .su-icon-collapse
+ */
+.article-pane article section p .expanded .controls .su-icon-expand {
+  background-position:  -16px 0;
+}
+
 /*******************
  * Article:Normal
  *

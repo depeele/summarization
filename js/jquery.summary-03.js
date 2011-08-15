@@ -462,13 +462,11 @@ $.Summary.prototype = {
 
     /** @brief  Given a jQuery DOM sentence (.sentence), expand it.
      *  @param  $s      The jQuery DOM sentence element
-     *  @param  cb      The callback to invoke when expansion is complete
-     *                      function(type) invoked in the context of
-     *                      the expanded sibling with type == 'expand'
      */
-    _expand: function($s, cb) {
+    _expand: function($s) {
         var self        = this;
         var opts        = self.options;
+        var $el         = $s.find('.controls .expand');
         var $prev       = $s.prev();
         var $next       = $s.next();
         var expandDone  = function() {
@@ -476,14 +474,18 @@ $.Summary.prototype = {
 
             $this.addClass('expansion');
             $this.css('display', '');
-            if (cb) { cb.call(this, 'expand'); }
+
+            $el.attr('title', 'collapse');
         };
 
-        if ($s.hasClass('expanded'))
+        if ($s.data('isExpanding') || $s.hasClass('expanded'))
         {
+            // Already (being) expanded
             return;
         }
         
+        // Mark this sentence as being expanded
+        $s.data('isExpanding', true);
         $s.addClass('expanded', 500);
         if ( (! $prev.is(':visible')) &&
              (! $prev.hasClass('hidden')) )
@@ -497,32 +499,38 @@ $.Summary.prototype = {
             $next.slideDown(expandDone);
         }
 
+        // Remove our marker indicating that this sentence is being expanded
+        $s.removeData('isExpanding');
         return this;
     },
 
     /** @brief  Given a jQuery DOM sentence (.sentence), collapse it.
      *  @param  $s      The jQuery DOM sentence element
-     *  @param  cb      The callback to invoke when collapse is complete
-     *                      function(type) invoked in the context of
-     *                      the collapsed sibling with type == 'collapse'
      */
-    _collapse: function($s, cb) {
-        var self        = this;
-        var opts        = self.options;
-        var $prev       = $s.prev();
-        var $next       = $s.next();
-        var collapseDone= function() {
+    _collapse: function($s) {
+        var self                = this;
+        var opts                = self.options;
+        var $el                 = $s.find('.controls .expand');
+        var $prev               = $s.prev();
+        var $next               = $s.next();
+        var collapseDone        = function() {
             var $this = $(this);
 
             $this.removeClass('expansion');
             $this.css('display', '');
-            if (cb) { cb.call(this, 'collapse'); }
+
+            $el.attr('title', 'expand');
         };
-        /*
-        var sibDone     = function($sib) {
+        var collapseExpansion   = function($sib) {
+            self._collapse($sib);
             $sib.slideUp(collapseDone);
         };
-        // */
+
+        if ($s.data('isCollapsing'))
+        {
+            // This sentence is already being collapsed
+            return;
+        }
 
         if ($s.hasClass('expanded'))
         {
@@ -533,17 +541,39 @@ $.Summary.prototype = {
             return;
         }
 
+        // Mark this sentence as being collapsed
+        $s.data('isCollapsing', true);
+
         if ($prev.is(':visible') && (! $prev.hasClass('highlight')))
         {
-            //self._collapse($prev, sibDone);
-            $prev.slideUp(collapseDone);
+            if ($prev.hasClass('expanded'))
+            {
+                // Expanded expansion
+                collapseExpansion($prev);
+            }
+            else
+            {
+                // Simple expansion
+                $prev.slideUp(collapseDone);
+            }
         }
 
         if ($next.is(':visible') && (! $next.hasClass('highlight')))
         {
-            //self._collapse($next, sibDone);
-            $next.slideUp(collapseDone);
+            if ($next.hasClass('expanded'))
+            {
+                // Expanded expansion
+                collapseExpansion($next);
+            }
+            else
+            {
+                // Simple expansion
+                $next.slideUp(collapseDone);
+            }
         }
+
+        // Remove our marker indicating that this sentence is being collapsed
+        $s.removeData('isCollapsing');
 
         return this;
     },
@@ -557,37 +587,16 @@ $.Summary.prototype = {
         var self        = this;
         var opts        = self.options;
         var $el         = $s.find('.controls .expand');
-        var toggleDone  = function(type) {
-            var $this = $(this);
 
-            switch (type)
-            {
-            case 'collapse':
-                $el.removeClass('su-icon-collapse')
-                   .addClass('su-icon-expand')
-                   .attr('title', 'expand');
-                break;
-                
-            case 'expand':
-                $el.removeClass('su-icon-expand')
-                   .addClass('su-icon-collapse')
-                   .attr('title', 'collapse');
-            }
-        };
-
-        if ($el.data('isExpanded'))
+        if ($s.hasClass('expanded'))
         {
             // Collapse
-            $el.removeData('isExpanded');
-
-            self._collapse($s, toggleDone);
+            self._collapse($s);
         }
         else
         {
             // Expand
-            $el.data('isExpanded', true);
-
-            self._expand($s, toggleDone);
+            self._expand($s);
         }
 
         return this;
