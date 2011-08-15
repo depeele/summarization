@@ -57,25 +57,6 @@
   </div>
  </body>
 
- <script>
- function xmlNode(node)
- {
-    var $node = $(node);
-    var ret;
-    switch (node.nodeName)
-    {
-    case '#text':
-      ret = $node.text();
-      break;
-
-    case 'keyword':
-      ret = $('#tmpl-sentence-keyword').tmpl( {keyword: $node} );
-    }
-
-    return ret;
- }
- </script>
-
  <!-- Templates { -->
  <!-- 'keywords' is an array of XML nodes -->
  <script id='tmpl-header-keywords' type='text/x-jquery-tmpl'>
@@ -135,8 +116,8 @@
  <script>
  (function($) {
     $('#article').summary({
-        //src:          'samples/0001.html',
-        metadata:       'samples/0001.xml'
+        src:        'samples/0001.html',
+        metadata:   'samples/0001.xml'
     });
  }(jQuery));
  </script>

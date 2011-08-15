@@ -30,17 +30,23 @@ $.Summary = function($el, options) {
 $.Summary.prototype = {
     options: {
         src:            null,       // The URL of the original source
-        metadata:       null,       // The URL of the
-                                    // summarization/characterization metadata
+        metadata:       null,       /* The URL of the
+                                     * summarization/characterization metadata
+                                     */
 
-        showSentences:  5,          // The minimum number of sentences to
-                                    // present
+        showSentences:  5,          /* The minimum number of sentences to
+                                     * present
+                                     */
 
-        lineHeight:     -1,         // The height of a single line
-                                    // (measured in renderXml() if -1);
+        lineHeight:     -1,         /* The height of a single line
+                                     * (measured in renderXml() if -1);
+                                     */
 
-        useColor:       false,
-        rankOpacity:    0.3         // The default opacity for rank items
+        useColor:       false,      // Color sentences based upon rank?
+        rankOpacity:    0.3,        // The default opacity for rank items
+        animSpeed:      200         /* Speed (in ms) of slideUp/Down and
+                                     * class-change animations
+                                     */
     },
 
     /** @brief  Initialize this new instance.
@@ -112,10 +118,13 @@ $.Summary.prototype = {
             rank = parseInt(rank * 100, 10);
             if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
 
-            if (opts.useColor === true)
+            if (opts.useColor !== false)
             {
                 // Adjust the color of the sentence based upon the rank
-                var red     = 221 - Math.ceil( 221 * (rank / 100) );
+                var base    = (opts.useColor === true
+                                ? 221
+                                : opts.useColor);
+                var red     = base - Math.ceil( base * (rank / 100) );
                 var green   = red;
                 var blue    = red;
                 var color   = 'rgb('+ red +','+ green +','+ blue +')';
@@ -181,7 +190,21 @@ $.Summary.prototype = {
             switch (this.nodeName)
             {
             case 'title':
-                $header.append('<h1>'+ $el.text() +'</h1>');
+                var $h1 = $('<h1 />');
+
+                if (opts.src !== null)
+                {
+                    var $a  = $('<a />')
+                                .attr('href', opts.src)
+                                .text( $el.text() )
+                                .appendTo($h1);
+                }
+                else
+                {
+                    $h1.text( $el.text() );
+                }
+
+                $header.append( $h1 );
                 break;
 
             case 'published':
@@ -346,15 +369,15 @@ $.Summary.prototype = {
         // Hide/Show paramgraphs
         self.$p.filter('.noShow')
             .removeClass('noShow')
-            .slideUp(250);
+            .slideUp(opts.animSpeed);
         self.$p.filter('.toShow')
             .removeClass('toShow')
-            .slideDown(250);
+            .slideDown(opts.animSpeed);
 
         // Hide/Show sentences
         self.$s.filter('.noHighlight')
             .removeClass('noHighlight')
-            .slideUp(500, function() {
+            .slideUp(opts.animSpeed, function() {
                 var $s  = $(this);
 
                 if ($s.hasClass('highlight'))
@@ -372,7 +395,7 @@ $.Summary.prototype = {
             });
         self.$s.filter('.toHighlight')
             .removeClass('toHighlight')
-            .slideDown(500, function() {
+            .slideDown(opts.animSpeed, function() {
                 var $s  = $(this);
 
                 // Remove any per-sentence expansion indicators.
@@ -410,10 +433,16 @@ $.Summary.prototype = {
      */
 
     /** @brief  Update the coverage indicator.
-     *  @param  coverage    The new value (0..1);
+     *  @param  coverage    The new value (0..1).  If NOT provided, use the
+     *                      percentage of sentences that are currently visible.
      */
     _updateCoverage: function(coverage) {
         var self    = this;
+        if (coverage === undefined)
+        {
+            coverage = self.$s.filter(':visible').length / self.$s.length;
+        }
+
         self.$coverage.slider('value', Math.round(coverage * 100, 2));
     },
 
@@ -421,7 +450,9 @@ $.Summary.prototype = {
      *  @param  $s      The jQuery DOM sentence element
      */
     _ageOlder: function($s) {
-        var age         = $s.data('age');
+        var self    = this;
+        var opts    = self.options;
+        var age     = $s.data('age');
 
         // Increase and remember the current age
         if (age >= 0)   { age++;   }
@@ -430,18 +461,20 @@ $.Summary.prototype = {
         $s.data('age', age);
 
         // Add the current age class
-        $s.addClass('old-'+ age, 500);
+        $s.addClass('old-'+ age, opts.animSpeed);
     },
 
     /** @brief  Make this sentence "younger".
      *  @param  $s      The jQuery DOM sentence element
      */
     _ageYounger: function($s) {
-        var age         = $s.data('age');
+        var self    = this;
+        var opts    = self.options;
+        var age     = $s.data('age');
         if (age === undefined)  { age = 0; }
 
         // Remove the current age class
-        $s.removeClass('old-'+ age, 500);
+        $s.removeClass('old-'+ age, opts.animSpeed);
 
         // Decrease and remember the current age
         if (age >= 0)   { age--; }
@@ -520,7 +553,7 @@ $.Summary.prototype = {
                 $s.data('isHidden', true);
                 if (opts.view !== 'all')
                 {
-                    $s.slideUp(hideDone);
+                    $s.slideUp(opts.animSpeed, hideDone);
                 }
                 else
                 {
@@ -530,7 +563,7 @@ $.Summary.prototype = {
             }
             else
             {
-                $s.slideUp(hideDone);
+                $s.slideUp(opts.animSpeed, hideDone);
             }
 
         }
@@ -555,9 +588,7 @@ $.Summary.prototype = {
 
             $el.attr('title', 'collapse');
 
-            var coverage    = self.$s.filter(':visible').length /
-                              self.$s.length;
-            self._updateCoverage(coverage);
+            self._updateCoverage();
         };
 
         if ($s.data('isExpanding') || $s.hasClass('expanded'))
@@ -568,20 +599,20 @@ $.Summary.prototype = {
         
         // Mark this sentence as being expanded
         $s.data('isExpanding', true);
-        $s.addClass('expanded', 500);
+        $s.addClass('expanded', opts.animSpeed);
 
         // If the previous sibling is NOT visible...
         if ( (! $prev.is(':visible')) &&
              (! $prev.hasClass('hidden')) )
         {
-            $prev.slideDown(expandDone);
+            $prev.slideDown(opts.animSpeed, expandDone);
         }
         
         // If the next sibling NOT is visible...
         if ( (! $next.is(':visible')) &&
              (! $next.hasClass('hidden')) )
         {
-            $next.slideDown(expandDone);
+            $next.slideDown(opts.animSpeed, expandDone);
         }
 
         // Remove our marker indicating that this sentence is being expanded
@@ -606,13 +637,11 @@ $.Summary.prototype = {
 
             $el.attr('title', 'expand');
 
-            var coverage    = self.$s.filter(':visible').length /
-                              self.$s.length;
-            self._updateCoverage(coverage);
+            self._updateCoverage();
         };
         var collapseExpansion   = function($sib) {
             self._collapse($sib);
-            $sib.slideUp(collapseDone);
+            $sib.slideUp(opts.animSpeed, collapseDone);
         };
 
         if ($s.data('isCollapsing'))
@@ -623,7 +652,7 @@ $.Summary.prototype = {
 
         if ($s.hasClass('expanded'))
         {
-            $s.removeClass('expanded', 500);
+            $s.removeClass('expanded', opts.animSpeed);
         }
         else if (! $s.hasClass('expansion'))
         {
@@ -644,7 +673,7 @@ $.Summary.prototype = {
             else
             {
                 // Simple expansion
-                $prev.slideUp(collapseDone);
+                $prev.slideUp(opts.animSpeed, collapseDone);
             }
         }
 
@@ -659,7 +688,7 @@ $.Summary.prototype = {
             else
             {
                 // Simple expansion
-                $next.slideUp(collapseDone);
+                $next.slideUp(opts.animSpeed, collapseDone);
             }
         }
 
@@ -870,9 +899,11 @@ $.Summary.prototype = {
                     var $s  = $el.parent();
                     $el.addClass('ui-state-highlight');
 
-                    $s.parent().slideDown(250);
-                    $s.slideDown(500, function() {
+                    $s.parent().slideDown(opts.animSpeed);
+                    $s.slideDown(opts.animSpeed, function() {
                         $s.addClass('keyworded');
+
+                        self._updateCoverage( );
                     });
                 });
             }
@@ -891,11 +922,13 @@ $.Summary.prototype = {
                         $s.removeClass('keyworded');
                         if (! $s.hasClass('highlight'))
                         {
-                            $s.slideUp(500, function() {
+                            $s.slideUp(opts.animSpeed, function() {
                                 if ($s.parent().find(':visible').length < 1)
                                 {
                                     $s.parent().hide();
                                 }
+
+                                self._updateCoverage( );
                             });
                         }
                     }
