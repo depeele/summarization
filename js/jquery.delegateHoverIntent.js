@@ -84,5 +84,16 @@ $.fn.delegateHoverIntent = function(sel, cb) {
     }
 };
 
+/** @brief  Remove a hoverIntent delegate for the source element.
+ *  @param  sel     The selection to use for the delegate;
+ */
+$.fn.undelegateHoverIntent = function(sel) {
+    var $self   = this;
+
+    // Set up the mouseenter/leave delegate
+    $self.undelegate(sel, 'mouseenter mouseleave');
+    $self.undelegate(sel, 'hover-in hover-out');
+};
+
 
 }(jQuery));

@@ -61,6 +61,7 @@ $.Summary.prototype = {
         self.$control         = $gp.find('.control-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
+        self.$coverage        = self.$control.find('.coverage .indicator');
 
         rangy.init();
         //self.cssApply   = rangy.createCssClassApplier('tagged', true);
@@ -273,6 +274,13 @@ $.Summary.prototype = {
         var opts    = self.options;
 
         self.$control.find('.buttons').buttonset();
+        self.$coverage.slider({
+            orientation:    'vertical',
+            range:          'min',
+            min:            0,
+            max:            100,
+            disabled:       true
+        });
 
         self.threshold( minThreshold, maxThreshold);
     },
@@ -331,6 +339,9 @@ $.Summary.prototype = {
          * visible regardless
         self.$p.filter(':has(.keyworded)').show();
          */
+        var coverage    = self.$s.filter('.toHighlight').length /
+                          self.$s.length;
+        self._updateCoverage( coverage );
 
         // Hide/Show paramgraphs
         self.$p.filter('.noShow')
@@ -397,6 +408,14 @@ $.Summary.prototype = {
      * "Private" methods
      *
      */
+
+    /** @brief  Update the coverage indicator.
+     *  @param  coverage    The new value (0..1);
+     */
+    _updateCoverage: function(coverage) {
+        var self    = this;
+        self.$coverage.slider('value', Math.round(coverage * 100, 2));
+    },
 
     /** @brief  Make this sentence "older".
      *  @param  $s      The jQuery DOM sentence element
@@ -535,6 +554,10 @@ $.Summary.prototype = {
             $this.css('display', '');
 
             $el.attr('title', 'collapse');
+
+            var coverage    = self.$s.filter(':visible').length /
+                              self.$s.length;
+            self._updateCoverage(coverage);
         };
 
         if ($s.data('isExpanding') || $s.hasClass('expanded'))
@@ -582,6 +605,10 @@ $.Summary.prototype = {
             $this.css('display', '');
 
             $el.attr('title', 'expand');
+
+            var coverage    = self.$s.filter(':visible').length /
+                              self.$s.length;
+            self._updateCoverage(coverage);
         };
         var collapseExpansion   = function($sib) {
             self._collapse($sib);
@@ -1031,12 +1058,22 @@ $.Summary.prototype = {
         var $parent = self.element.parent();
         var $gp     = $parent.parent();
 
-        $gp.undelegate('.controls input', 'change keydown');
+        $gp.undelegate('.controls input, .controls button', 'click');
 
-        $parent.undelegate('.rank', 'mouseenter mouseleave');
-        $parent.undelegate('.sentence', 'mouseenter mouseleave');
-        $parent.undelegate('.sentence .controls .su-icon', 'click');
-        $parent.undelegate('header keyword',  'click');
+        $parent.undelegateHoverIntent('.rank');
+        $parent.undelegateHoverIntent('.sentence');
+
+        $parent.undelegate('.sentence .controls .su-icon',
+                           'mouseenter mouseleave click');
+
+        $parent.undelegate('header .keyword', 'click');
+
+        $parent.undelegate('.sentence .selection-controls .su-icon',
+                           'mousedown mouseup');
+
+        $parent.undelegateHoverIntent('article .sentence .tagged');
+
+        $parent.undelegate('article .sentence', 'mouseup');
     }
 };
 
