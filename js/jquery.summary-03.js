@@ -757,21 +757,31 @@ $.Summary.prototype = {
             var $kw         = $(this);
             var toggleOn    = (! $kw.hasClass('ui-state-highlight'));
             var name        = $kw.attr('name');
-            var $kws        = $parent.find('article .keyword');
+            var $kws        = $parent.find('article p .keyword');
             var $hl         = $kws.filter('[name='+ name +']');
 
             if (toggleOn)
             {
+                /* Any sentence currently tagged as 'highlight' should now also
+                 * be marked 'old'
+                 */
+                self.$s.filter('.highlight').addClass('old', 500);
+
+                $kw.addClass('ui-state-highlight');
+
                 /* For each keyword that should be highlighted, highlight it
                  * and ensure that it's containing sentence and paragraph are
                  * visible.
                  */
                 $hl.each(function() {
                     var $el = $(this);
+                    var $s  = $el.parent();
                     $el.addClass('ui-state-highlight');
 
-                    $el.parent().addClass('keyworded');
-                    $el.parent().parent().show();
+                    $s.parent().slideDown(250);
+                    $s.slideDown(500, function() {
+                        $s.addClass('keyworded');
+                    });
                 });
             }
             else
@@ -781,15 +791,29 @@ $.Summary.prototype = {
                  */
                 $hl.each(function() {
                     var $el = $(this);
+                    var $s  = $el.parent();
                     $el.removeClass('ui-state-highlight');
 
-                    if ($el.parent().find('ui-state-highlight').length < 1)
+                    if ($s.find('ui-state-highlight').length < 1)
                     {
-                        $el.parent().removeClass('keyworded');
+                        $s.removeClass('keyworded');
+                        if (! $s.hasClass('highlight'))
+                        {
+                            $s.slideUp(500, function() {
+                                if ($s.parent().find(':visible').length < 1)
+                                {
+                                    $s.parent().hide();
+                                }
+                            });
+                        }
                     }
                 });
 
-                self.threshold(self.minThreshold, self.maxThreshold);
+                // Remove any 'old' class
+                self.$s.filter('.old').removeClass('old', 500);
+                //self.threshold(self.minThreshold, self.maxThreshold);
+
+                $kw.removeClass('ui-state-highlight');
             }
         });
 
