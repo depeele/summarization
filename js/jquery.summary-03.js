@@ -900,8 +900,13 @@ $.Summary.prototype = {
                     var $p  = $s.parent();
                     $el.addClass('ui-state-highlight');
 
-                    //$p.slideDown(opts.animSpeed);
-                    $p.removeClass('hidden', opts.animSpeed * 4);
+                    if (! $p.data('isOpening'))
+                    {
+                        $p.data('isOpening', true)
+                        $p.removeClass('hidden', opts.animSpeed, function() {
+                            $p.removeData('isOpening');
+                        });
+                    }
 
                     $s.slideDown(opts.animSpeed, function() {
                         $s.addClass('keyworded');
@@ -916,23 +921,30 @@ $.Summary.prototype = {
                  * it and then re-apply threshold to ensure a proper view
                  */
                 $hl.each(function() {
-                    var $el = $(this);
-                    var $s  = $el.parent();
+                    var $el     = $(this);
+                    var $s      = $el.parent();
+                    var $p      = $s.parent();
                     $el.removeClass('ui-state-highlight');
 
-                    if ($s.find('ui-state-highlight').length < 1)
+                    var nLeft   = $s.find('.keyword.ui-state-highlight').length;
+                    if (nLeft < 1)
                     {
+                        // No more keywords in this sentence
                         $s.removeClass('keyworded');
+
                         if (! $s.hasClass('highlight'))
                         {
                             $s.slideUp(opts.animSpeed, function() {
-                                var $p  = $s.parent();
-                                if ($p.find(':visible').length < 1)
-                                {
-                                    $p.addClass('hidden', opts.animSpeed);
-                                }
+                                nLeft = $p.find(':visible').length;
 
+                                $s.css('display', '');
                                 self._updateCoverage( );
+
+                                if (nLeft < 1)
+                                {
+                                    // No visible sentences in this paragraph
+                                    $p.addClass('hidden', opts.animSpeed / 4);
+                                }
                             });
                         }
                     }
