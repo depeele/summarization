@@ -8,7 +8,7 @@ body {
  */
 .control-pane {
   position:         fixed;
-  padding:          0.5em 0 0.5em 0.5em;
+  padding:          0.5em 0 0.5em 0.75em;
   min-height:       16px;
   min-width:        20px;
 }
