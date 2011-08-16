@@ -1,6 +1,5 @@
 body {
-  padding-right:  11em;
-  min-width:      800px;
+  padding-right:  13em;
 }
 
 /**************************************************************************
@@ -9,22 +8,29 @@ body {
  */
 .control-pane {
   position:         fixed;
-  top:              0;
-  right:            0;
-  padding:          0.5em 1em;
-  margin:           0;
-  font-size:        0.7em;
-  border:           1px solid #ccc;
-  background-color: #f5f1e8;
+  padding:          0.5em 0 0.5em 0.5em;
+  min-height:       16px;
+  min-width:        20px;
 }
 
+.control-pane .controls {
+  height:           auto;
+  margin-top:       0.75em;
+}
 .control-pane .controls .threshold,
-.control-pane .controls .buttons {
+.control-pane .controls .show,
+.control-pane .controls .coverage {
   display:          block;
-  font-size:        inherit;
-  margin:           0;
+  margin-top:       1em;
+  padding-left:     4.25em; /* For label.primary */
+}
+.control-pane .controls label.primary {
+  position:         absolute;
+  left:             0;
+  top:              1em;
+  font-size:        0.8em;
+
+  width:            4.25em;
+  text-align:       left;
 }
 
-.control-pane .controls .threshold {
-  margin-top:       1em;
-}

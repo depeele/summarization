@@ -296,7 +296,7 @@ $.Summary.prototype = {
         var self    = this;
         var opts    = self.options;
 
-        self.$control.find('.buttons').buttonset();
+        self.$control.find('.show,.buttons').buttonset();
         self.$coverage.slider({
             orientation:    'vertical',
             range:          'min',
@@ -732,6 +732,24 @@ $.Summary.prototype = {
         var $parent = self.element.parent();
         var $gp     = $parent.parent();
 
+
+        /*************************************************************
+         * Handle toggling the primary controls
+         *
+         */
+        $gp.delegate('.control-pane .toggle-controls', 'click',
+                     function() {
+            var $ctl    = $(this).siblings('.controls');
+
+            if ($ctl.is(":visible"))
+            {
+                $ctl.hide(opts.animSpeed/ 4);
+            }
+            else
+            {
+                $ctl.show(opts.animSpeed / 4);
+            }
+        });
 
         /*************************************************************
          * Handle clicks on control buttons.

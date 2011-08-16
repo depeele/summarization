@@ -1,6 +1,7 @@
 body {
   font:             16px/1.231 arial,helvetica,clean,sans-serif;
   background-color: #eee;
+  min-width:        800px;
 }
 
 .article-pane,
@@ -74,7 +75,7 @@ body {
  *
  */
 .article-pane article {
-  margin:           0;
+  margin:           0 0.2em;
   padding:          1em;
   border:           1px solid #ccc;
   background-color: #fff;
@@ -239,10 +240,26 @@ body {
  */
 .control-pane {
   position:         absolute;
-  top:              0.25em;
-  right:            2em;
-  padding:          0;
+  top:              0;
+  right:            0;
+
+  font-size:        0.7em;
+
+  padding:          0.5em 22px 0.5em 1em;
+  margin:           0;
+  min-height:       20px;
+
+  border:           1px solid #ccc;
+  background-color: #f5f1e8;
+
   z-index:          10;
+}
+
+.control-pane .toggle-controls {
+  position:         absolute;
+  top:              4px;
+  right:            4px;
+  cursor:           pointer;
 }
 
 /*******************
@@ -250,6 +267,8 @@ body {
  *
  */
 .control-pane .controls {
+  height:     6em;
+  overflow:   hidden;
 }
 .control-pane .controls label.primary,
 .control-pane .controls label.values {
@@ -260,35 +279,27 @@ body {
   font-size:    0.9em;
 }
 .control-pane .controls .threshold,
-.control-pane .controls .buttons,
+.control-pane .controls .show,
 .control-pane .controls .coverage {
   position:       relative;
   padding:        0;
   vertical-align: top;
   text-align:     center;
+
+  display:        inline-block;
+  margin:         0 1em 0 0;
 }
 
-.control-pane .controls .threshold,
-.control-pane .controls .buttons {
-  font-size:      0.8em;
-}
-.control-pane .controls .buttons {
-  margin:         0 2em;
-}
-.control-pane .controls .buttons .ui-button-text {
+.control-pane .controls .show .ui-button-text {
   padding:        0.25em 0.5em;
 }
 .control-pane .controls .threshold .buttons {
   margin:         0.4em;
 }
-.control-pane .controls .coverage {
-  margin-top:     1em;
-  padding-top:    1em;
-  border-top:     2px solid #ccc;
-}
 .control-pane .controls .coverage .indicator {
   display:        inline-block;
-  width:          4em;
+  width:          3em;
+  height:         4em;
 }
 .control-pane .controls .coverage .indicator .ui-slider-range {
   border-top:     1px dashed #bbb;
