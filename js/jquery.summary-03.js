@@ -391,7 +391,8 @@ $.Summary.prototype = {
                 /* Remove the highlight as well as any per-sentence expansion
                  * indicators.
                  */
-                $s.removeClass('highlight expanded expansion');
+                $s.removeClass('highlight expanded expansion')
+                  .css('display', '');
             });
         self.$s.filter('.toHighlight')
             .removeClass('toHighlight')
@@ -399,7 +400,8 @@ $.Summary.prototype = {
                 var $s  = $(this);
 
                 // Remove any per-sentence expansion indicators.
-                $s.removeClass('expanded expansion');
+                $s.removeClass('expanded expansion')
+                  .css('display', '');
 
                 // If the current senntence was already highlighted...
                 if ($s.hasClass('highlight'))
@@ -632,8 +634,8 @@ $.Summary.prototype = {
         var collapseDone        = function() {
             var $this = $(this);
 
-            $this.removeClass('expansion');
-            $this.css('display', '');
+            $this.removeClass('expansion')
+                 .css('display', '');
 
             $el.attr('title', 'expand');
 
@@ -927,7 +929,8 @@ $.Summary.prototype = {
                     }
 
                     $s.slideDown(opts.animSpeed, function() {
-                        $s.addClass('keyworded');
+                        $s.addClass('keyworded')
+                          .css('display', '');
 
                         self._updateCoverage( );
                     });
