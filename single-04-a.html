@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+
+  <title>Summarization Viewer</title>
+
+  <link rel="stylesheet" type="text/css" href="css/reset.css" />
+  <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.css" />
+  <link rel="stylesheet" type="text/css" href="css/layout.css" />
+  <link rel="stylesheet" type="text/css" href="css/sprites-16.css" />
+  <link rel="stylesheet" type="text/css" href="css/summary-04.css" />
+  <link rel="stylesheet" type="text/css" href="css/summary-04-fixed-controls.css" />
+
+ </head>
+ <body>
+  <div class='article-pane'>
+   <article id='article'></article>
+  </div>
+  <div class='control-pane ui-corner-bl'>
+   <div title='toggle controls'
+        class='toggle-controls su-icon su-icon-wrench'></div>
+   <div class='controls ui-layout-north'>
+    <div class='show'>
+     <label for="show" class='primary'>View</label>
+
+     <input name="view" id="view-all" type="radio" value="all" />
+     <label for="view-all">all</label>
+
+     <input name="view" id="view-starred" type="radio" value="starred" />
+     <label for="view-starred">starred</label>
+
+     <input name="view" id="view-normal" type="radio" value="normal"
+            checked="true" />
+     <label for="view-normal">normal</label>
+    </div>
+
+    <div class='threshold'>
+     <label for="threshold" class='primary'>Threshold</label>
+
+     <div class='buttons'>
+      <button name='threshold-down'
+              title='expand'><div
+             class='expand su-icon su-icon-expand' /></button>
+      <button name='threshold-up'
+              title='collapse'><div
+             class='collapse su-icon su-icon-collapse' /></button>
+     </div>
+     <label class='values'></label>
+    </div>
+
+    <div class='coverage'>
+     <label for='coverage' class='primary'>Visible Document</label>
+     <div class='indicator'></div>
+    </div>
+
+   </div>
+  </div>
+ </body>
+
+ <!-- Templates { -->
+ <!-- 'keywords' is an array of XML nodes -->
+ <script id='tmpl-header-keywords' type='text/x-jquery-tmpl'>
+  <div class='keywords'>
+   {{each keywords}}
+    <div class='keyword'
+          name='${$($value).attr('name')}'
+          rank='${$($value).attr('rank')}'>${$($value).text()}</div>
+   {{/each}}
+  </div>
+ </script>
+
+ <!-- 'node' is a jQuery object encapsulating an XML node -->
+ <script id='tmpl-sentence-text' type='text/x-jquery-tmpl'>
+  <span class='text'>${node.text()}</span>
+ </script>
+
+ <!-- 'node' is a jQuery object encapsulating an XML node -->
+ <script id='tmpl-sentence-keyword' type='text/x-jquery-tmpl'>
+  <span class='keyword'
+        name='${node.attr('name')}'>${node.text()}</span>
+ </script>
+
+ <script id='tmpl-sentence-rank' type='text/x-jquery-tmpl'>
+  <div class='rank'>${rank}</div>
+ </script>
+
+ <script id='tmpl-sentence-controls' type='text/x-jquery-tmpl'>
+  <div class='controls'><div
+       class='expand su-icon su-icon-expand' title='expand' /><div
+       class='star su-icon su-icon-star'     title='star' /><div
+       class='hide su-icon su-icon-cancel'   title='hide' /></div>
+ </script>
+
+ <script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>
+  <div class='selection-controls ui-corner-top'><div
+       class='tag su-icon su-state-reverse su-icon-tag'
+       title='tag' /></div>
+ </script>
+
+ <script id='tmpl-selection-remove-controls' type='text/x-jquery-tmpl'>
+  <div class='selection-controls ui-corner-top'><div
+       class='remove su-icon su-icon-cancel-blue ui-state-default'
+       title='remove tag' /></div>
+ </script>
+ <!-- Templates } -->
+
+ <script src='js/jquery.js'></script>
+ <script src='js/jquery.tmpl.min.js'></script>
+ <script src='js/jquery.delegateHoverIntent.js'></script>
+ <script src='js/jquery-ui.js'></script>
+ <script src='js/rangy.min.js'></script>
+ <script src='js/rangy/serializer.min.js'></script>
+ <script src='js/rangy/cssclassapplier.js'></script>
+ <script src='js/jquery.summary-04.js'></script>
+
+ <script>
+ (function($) {
+    $('#article').summary({
+        src:        'http://www.wired.com/wiredscience/2011/07/the-selfishness-of-trust/',
+        metadata:   'samples/0001.xml'
+    });
+ }(jQuery));
+ </script>
+</html>

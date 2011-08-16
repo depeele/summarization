@@ -1,0 +1,316 @@
+body {
+  font:             16px/1.231 arial,helvetica,clean,sans-serif;
+  background-color: #eee;
+  min-width:        800px;
+}
+
+.article-pane,
+.results-pane,
+.search-pane {
+  padding:          0;
+}
+
+/**************************************************************************
+ * Article Pane
+ *
+ */
+.article-pane {
+  width:        800px;
+  margin-left:  auto;
+  margin-right: auto;
+}
+
+/*******************
+ * Header
+ */
+.article-pane header {
+  display:        block;
+  padding:        1em;
+  margin-right:   0.5em;
+  border-bottom:  0.5em solid #ccc;
+}
+.article-pane header h1,
+.article-pane header .keywords {
+  display:      block;
+}
+.article-pane header author,
+.article-pane header time {
+  display:      inline-block;
+}
+
+.article-pane header h1 {
+  font-size:    1.2em;
+  font-weight:  bold;
+}
+.article-pane header author,
+.article-pane header time,
+.article-pane header .keywords {
+  font-size:    0.8em;
+  padding-left: 2em;
+  color:        #999;
+}
+.article-pane header time {
+  font-size:    0.7em;
+}
+.article-pane header author:before {
+  content:      'by ';
+}
+.article-pane header time {
+  font-style:   italic;
+}
+.article-pane header .keywords {
+  font-size:    0.8em;
+}
+.article-pane header .keywords .keyword {
+  display:    inline-block;
+  cursor:     pointer;
+  border:     1px solid #fff;
+}
+.article-pane header .keywords .keyword:before {
+  content:      ' / ';
+}
+
+/*******************
+ * Article
+ *
+ */
+.article-pane article {
+  margin:           0 0.2em;
+  padding:          1em;
+  border:           1px solid #ccc;
+  background-color: #fff;
+}
+
+.article-pane article section {
+  display:  block;
+  padding:  0.5em 0.5em 0.5em 0;
+  margin:   0;
+}
+
+.article-pane article section p {
+  display:    block;
+  padding:    0.2em 0.2em 0.2em 0;
+  margin:     0;
+  border:     1px solid transparent;
+}
+.article-pane article section p.hidden {
+  visibility: visible;
+  font-size:  1px;
+}
+
+.article-pane article section p .sentence {
+  position:   relative;
+  padding:    0.2em 0.2em 0.2em 70px;
+  margin:     0;
+  text-align: justify;
+  font-size:  1px;
+  color:      #ddd;
+}
+.article-pane article section p .sentence .text,
+.article-pane article section p .sentence .keyword,
+.article-pane article section p .sentence .selected,
+.article-pane article section p .sentence .tagged {
+  position:   relative;
+  border:     none;
+}
+.article-pane article section p .sentence .tagged {
+  font-weight:  normal;
+}
+
+.article-pane article section p .expanded,
+.article-pane article section p .expansion,
+.article-pane article section p .keyworded,
+.article-pane article section p .highlight {
+  display:    block;
+  font-size:  1em;
+  color:      #222;
+}
+.article-pane article section p .old-0,
+.article-pane article section p .expanded {
+  background-color: #eee;
+}
+
+/* Progressive age */
+.article-pane article section p .old-1  { background-color: #ddd; }
+.article-pane article section p .old-2  { background-color: #ccc; }
+.article-pane article section p .old-3  { background-color: #bbb; }
+.article-pane article section p .old-4  { background-color: #aaa; }
+.article-pane article section p .old-5  { background-color: #999; }
+.article-pane article section p .old-6  { background-color: #888; }
+.article-pane article section p .old-7  { background-color: #777; }
+
+.article-pane article section p .rank {
+  display:    none;
+}
+
+.article-pane article section .highlight .rank,
+.article-pane article section .expansion .rank {
+  display:    block;
+  position:   absolute;
+  top:        2px;
+  left:       52px;
+
+  font-size:  0.75em;
+  display:    block;
+
+  color:      #f6931f;
+
+  /* Make it unselectable */
+  -moz-user-select:   none;
+  -webkit-user-select:none;
+  -khtml-user-select: none;
+  user-select:        none;
+}
+
+.article-pane article section p .keyword {
+  border:     1px solid #fff;
+}
+
+.article-pane article section p .controls,
+.article-pane article section p .selection-controls {
+  position:   absolute;
+
+  display:    block;
+  z-index:    10;
+}
+.article-pane article section p .controls {
+  top:        2px;
+  left:       2px;
+}
+.article-pane article section p .selection-controls {
+  background-color: #999;
+  color:            #fff;
+  border:           none;
+  padding:          2px 2px 0 2px;
+}
+.article-pane article section p .sentence .tagged .selection-controls {
+  background-color: inherit;
+  border:           1px solid #aed0ea;  /* From .ui-state-default */
+  border-bottom:    none;
+}
+
+.article-pane article section p .controls .su-icon,
+.article-pane article section p .selection-controls .su-icon {
+  display:    inline-block;
+  cursor:     pointer;
+  border:     none;
+}
+.article-pane article section p .controls .su-icon {
+  visibility: hidden;
+}
+.article-pane article section p .ui-hover .controls .su-icon,
+.article-pane article section p .starred .controls .star,
+.article-pane article section p .hidden .controls .hide {
+  visibility: visible;
+}
+.article-pane article section p .ui-hover .controls .su-icon {
+  opacity:    0.6;
+}
+
+.article-pane article section p .starred .controls .star,
+.article-pane article section p .hidden .controls .hide {
+  opacity:    1.0;
+}
+
+/* When expanded, present the expand icon as collapse by mirroring
+ * .su-icon-collapse
+ */
+.article-pane article section p .expanded .controls .su-icon-expand {
+  background-position:  -16px 0;
+}
+
+/*******************
+ * Article:Normal
+ *
+ */
+.article-pane article section p .hidden {
+  display:    none;
+  visibility: visible;
+}
+
+/*******************
+ * Article:Starred
+ *
+ */
+
+/*******************
+ * Article:All
+ *
+ */
+.article-pane article.all section p .hidden {
+  display:    block;
+}
+
+/**************************************************************************
+ * Control Pane
+ *
+ */
+.control-pane {
+  position:         absolute;
+  top:              0;
+  right:            0;
+
+  font-size:        0.7em;
+
+  padding:          0.5em 22px 0.5em 1em;
+  margin:           0;
+  min-height:       20px;
+
+  border:           1px solid #ccc;
+  background-color: #f5f1e8;
+
+  z-index:          10;
+}
+
+.control-pane .toggle-controls {
+  position:         absolute;
+  top:              4px;
+  right:            4px;
+  cursor:           pointer;
+}
+
+/*******************
+ * Controls
+ *
+ */
+.control-pane .controls {
+  height:     6em;
+  overflow:   hidden;
+}
+.control-pane .controls label.primary,
+.control-pane .controls label.values {
+  display:      block;
+}
+.control-pane .controls .values {
+  color:        #f6931f;
+  font-size:    0.9em;
+}
+.control-pane .controls .threshold,
+.control-pane .controls .show,
+.control-pane .controls .coverage {
+  position:       relative;
+  padding:        0;
+  vertical-align: top;
+  text-align:     center;
+
+  display:        inline-block;
+  margin:         0 1em 0 0;
+}
+
+.control-pane .controls .show .ui-button-text {
+  padding:        0.25em 0.5em;
+}
+.control-pane .controls .threshold .buttons {
+  margin:         0.4em;
+}
+.control-pane .controls .coverage .indicator {
+  display:        inline-block;
+  width:          3em;
+  height:         4em;
+}
+.control-pane .controls .coverage .indicator .ui-slider-range {
+  border-top:     1px dashed #bbb;
+}
+.control-pane .controls .coverage .indicator .ui-slider-handle {
+  display:        none;
+}
