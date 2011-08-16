@@ -1,5 +1,6 @@
 body {
-  font:       16px/1.231 arial,helvetica,clean,sans-serif;
+  font:             16px/1.231 arial,helvetica,clean,sans-serif;
+  background-color: #eee;
 }
 
 .article-pane,
@@ -73,7 +74,10 @@ body {
  *
  */
 .article-pane article {
-  margin:     0 0.5em;
+  margin:           0;
+  padding:          1em;
+  border:           1px solid #ccc;
+  background-color: #fff;
 }
 
 .article-pane article section {
@@ -104,6 +108,7 @@ body {
 }
 .article-pane article section p .sentence .text,
 .article-pane article section p .sentence .keyword,
+.article-pane article section p .sentence .selected,
 .article-pane article section p .sentence .tagged {
   position:   relative;
   border:     none;
@@ -270,6 +275,9 @@ body {
 .control-pane .controls .buttons {
   margin:         0 2em;
 }
+.control-pane .controls .buttons .ui-button-text {
+  padding:        0.25em 0.5em;
+}
 .control-pane .controls .threshold .buttons {
   margin:         0.4em;
 }
@@ -284,4 +292,7 @@ body {
 }
 .control-pane .controls .coverage .indicator .ui-slider-range {
   border-top:     1px dashed #bbb;
+}
+.control-pane .controls .coverage .indicator .ui-slider-handle {
+  display:        none;
 }

@@ -70,10 +70,10 @@ $.Summary.prototype = {
         self.$coverage        = self.$control.find('.coverage .indicator');
 
         rangy.init();
-        //self.cssApply   = rangy.createCssClassApplier('tagged', true);
-        self.cssApply = rangy.createCssClassApplier(
+        self.cssTag    = rangy.createCssClassApplier(
                                     'ui-state-default tagged',
                                     true);
+        self.cssSelect = rangy.createCssClassApplier('selected', true);
 
         self._bindEvents();
 
@@ -992,7 +992,6 @@ $.Summary.prototype = {
                 // Count this a click
                 $ctl.removeData('mousedown');
 
-                var $s  = $(this);
                 var sel = rangy.getSelection();
                 var str = sel.toString();
 
@@ -1001,8 +1000,12 @@ $.Summary.prototype = {
 
                 if ($el.hasClass('tag'))
                 {
-                    // Toggle tagged for the current selection
-                    self.cssApply.toggleSelection( );
+                    // Toggle '.tagged' for the current selection
+                    self.cssTag.toggleSelection( );
+
+                    // Remove the 'selected' class
+                    var $s  = $(this).parents('.sentence:first');
+                    $s.find('.tagged').removeClass('selected');
                 }
                 else if ($el.hasClass('remove'))
                 {
@@ -1011,6 +1014,9 @@ $.Summary.prototype = {
 
                     $hl.after( $hl.text() ).remove();
                 }
+
+                sel.removeAllRanges();
+                $ctl.remove();
                 break;
             }
 
@@ -1032,12 +1038,6 @@ $.Summary.prototype = {
             var pos     = $el.position();
             var offset  = $el.offset();
             var width   = $el.width();
-            var mouseE  = e.originalEvent;
-            // Adjust the mouse coordinates to be relative to $el
-            var mouse   = {
-                x:  Math.abs(mouseE.pageX - offset.left),
-                y:  Math.abs(mouseE.pageY - offset.top)
-            };
 
             //console.log('.sentence hover: '+ e.type);
 
@@ -1045,17 +1045,12 @@ $.Summary.prototype = {
             {
             case 'hover-in':
                 // Add a new selection control just above the current selection
-                var left    = mouse.x - 12;
-                if (left < 0)                   { left = 0; }
-                else if ((left + 24) > width)   { left = width - 24; }
-
                 $('#tmpl-selection-remove-controls')
                     .tmpl()
                     .appendTo($el)
                     .css({
-                        top:    (Math.floor(mouse.y / opts.lineHeight) *
-                                opts.lineHeight) - opts.lineHeight - 3,
-                        left:   left
+                        top:    -22,
+                        left:   0
                     });
                 break;
 
@@ -1078,25 +1073,36 @@ $.Summary.prototype = {
             var sel = rangy.getSelection();
             var str = sel.toString();
 
-            console.log('mouseup: selection[ '+ str +' ]');
-
-            // Remove any existing selection controls
+            // Remove any existing selection controls and selection
             $parent.find('.selection-controls').remove();
+            $parent.find('.selected').each(function() {
+                var $sel    = $(this);
+                if ($sel.hasClass('keyword'))
+                {
+                    $sel.removeClass('selected');
+                }
+                else
+                {
+                    $sel.replaceWith( $sel.html() );
+                }
+            });
             if (str.length < 1)
             {
                 // No selection
                 return;
             }
 
+            // Apply '.selected'
+            self.cssSelect.applyToSelection();
+
             // Add a new selection control just above the current selection
-            var pos = $s.offset();
+            var $sel    = $s.find('.selected:first');
             $('#tmpl-selection-controls')
                 .tmpl()
-                .appendTo($s)
+                .appendTo($sel)
                 .css({
-                    top:    (Math.floor(e.offsetY / opts.lineHeight) *
-                               opts.lineHeight) - opts.lineHeight,
-                    left:   e.offsetX - 12
+                    top:    -22,
+                    left:   0
                 });
         });
 
