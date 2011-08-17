@@ -229,6 +229,9 @@ a {
   visibility: hidden;
 }
 
+.article-pane article section p .ui-hover .controls .su-icon {
+  opacity:    0.6;
+}
 .article-pane article section p .starred .controls .star,
 .article-pane article section p .hidden .controls .hide {
   opacity:    1.0;

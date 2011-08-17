@@ -452,7 +452,7 @@ $.Summary.prototype = {
     _toggleStar: function($s) {
         var self    = this;
         var opts    = self.options;
-        var $el     = $s.find('.controls .expand');
+        var $el     = $s.find('.controls .star');
         // (un)Star this sentence
         if ($s.data('isStarred'))
         {
