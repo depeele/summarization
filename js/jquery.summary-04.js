@@ -107,6 +107,7 @@ $.Summary.prototype = {
         // Find all sentences and bucket them based upon 'rank'
         self.$p     = self.element.find('p');
         self.$s     = self.$p.find('.sentence');
+        self.$kws   = self.element.find('.keyword');
         self.ranks  = [];
         self.$s.each(function() {
             var $el     = $(this);
@@ -730,6 +731,32 @@ $.Summary.prototype = {
                 {
                     self.threshold(newMin, self.maxThreshold);
                 }
+            }
+        });
+
+        /*************************************************************
+         * Hover over a keyword changes the color of all keywords
+         *
+         */
+        $gp.delegateHoverIntent('.keyword', function(e) {
+            var $kw     = $(this);
+            if ((e.type === 'hover-in') && $kw.hasClass('ui-state-highlight'))
+            {
+                // Ignore hover over keywords that are already highlighted
+                return;
+            }
+
+            var name    = $kw.attr('name');
+            var $kws    = self.$kws.filter('[name='+ name +']');
+            switch (e.type)
+            {
+            case 'hover-out':
+                $kws.removeClass('keyword-hover');
+                break;
+
+            case 'hover-in':
+                $kws.addClass('keyword-hover');
+                break;
             }
         });
 

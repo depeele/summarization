@@ -4,6 +4,14 @@ body {
   min-width:        800px;
 }
 
+a {
+  text-decoration:  none;
+}
+
+.keyword-hover {
+  color:  #f6931f;
+}
+
 .article-pane,
 .results-pane,
 .search-pane {
