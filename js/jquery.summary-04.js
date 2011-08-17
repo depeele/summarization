@@ -489,10 +489,12 @@ $.Summary.prototype = {
              */
             var expansion   = $s.hasClass('expansion');
             var hideDone    = function() {
+                /*
                 if ($s.parent().find(':not([class*="hidden"])').length < 1)
                 {
                     $s.parent().addClass('hidden', opts.animSpeed / 4);
                 }
+                // */
             };
 
             if (! expansion)
@@ -578,6 +580,10 @@ $.Summary.prototype = {
 
             $this.removeClass('expansion');
             $this.css('display', '');
+
+            // Ensure that sentence controls are hidden
+            $this.find('.controls .su-icon').css('opacity', '');
+            $this.find('.selection-controls').remove();
 
             $el.attr('title', 'expand');
         };
@@ -755,11 +761,11 @@ $.Summary.prototype = {
             var $s  = $(this);
             var $p  = $s.parents('p:first');
 
-            if ($p.hasClass('hidden') ||
-                ((! $s.hasClass('highlight')) &&
-                 (! $s.hasClass('expanded'))  &&
-                 (! $s.hasClass('expansion')) &&
-                 (! $s.hasClass('keyworded')))   )
+            if ( $s.data('isCollapsing')     ||
+                 ((! $s.hasClass('highlight')) &&
+                  (! $s.hasClass('expanded'))  &&
+                  (! $s.hasClass('expansion')) &&
+                  (! $s.hasClass('keyworded')))  )
             {
                 return;
             }
@@ -824,6 +830,56 @@ $.Summary.prototype = {
         });
 
         /*************************************************************
+         * Click handler for non-highlighted sentences
+         *
+         */
+        $parent.delegate('.sentence:not(.highlight,.expanded,.expansion)',
+                         'click', function(e) {
+            var $s  = $(this);
+            if ($s.hasClass('hide-expand'))
+            {
+                // Is there a highlighted neighbor near by?
+                var $sib    = $s.siblings('.highlight:first');
+                if ($sib.length < 1)
+                {
+                    /* No highlighted neighbor.  Use the nearest neighbor that
+                     * does NOT have '.hide-expand'
+                     */
+                    $sib = $s.siblings(':not(.hide-expand):first');
+
+                    if ($sib.length < 1)
+                    {
+                        /* NO sentences without '.hide-expand'
+                         * Remove 'hide-expand' from the target and toggle
+                         * it.
+                         */
+                        $s.removeClass('hide-expand');
+                        $sib = $s;
+
+                        console.log('un-highlighted sentence click - '
+                                    + 'NO sentences without hide-expand');
+                    }
+                    else
+                    {
+                        console.log('un-highlighted sentence click - '
+                                    + 'sibling without hide-expand');
+                    }
+                }
+                else
+                {
+                    console.log('un-highlighted sentence click - '
+                                + 'toggle nearest highlight');
+                }
+                self._toggleExpand($sib);
+            }
+            else
+            {
+                console.log('un-highlighted sentence click - toggle');
+                self._toggleExpand($s);
+            }
+        });
+
+        /*************************************************************
          * Clicking on a keyword shows all sentences with that keyword
          *
          */
@@ -852,6 +908,7 @@ $.Summary.prototype = {
                     var $p  = $s.parent();
                     $el.addClass('ui-state-highlight');
 
+                    /*
                     if (! $p.data('isOpening'))
                     {
                         $p.data('isOpening', true)
@@ -859,6 +916,7 @@ $.Summary.prototype = {
                             $p.removeData('isOpening');
                         });
                     }
+                    // */
 
                     $s.addClass('keyworded', opts.animSpeed);
                 });
@@ -884,11 +942,13 @@ $.Summary.prototype = {
 
                             $s.css('display', '');
 
+                            /*
                             if (nLeft < 1)
                             {
                                 // No visible sentences in this paragraph
                                 $p.addClass('hidden', opts.animSpeed / 4);
                             }
+                            // */
                         });
                     }
                 });
