@@ -63,7 +63,7 @@ $.Summary.prototype = {
         self.options  = opts;
         self.metadata = null;
 
-        var $gp = self.element.parent().parent();
+        var $gp     = self.element.parent().parent();
         self.$control         = $gp.find('.control-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
@@ -79,9 +79,15 @@ $.Summary.prototype = {
         // Kick off the retrieval of the metadata
         var getMetadata  = $.get(opts.metadata);
 
+        self.element.addClass('loading');
         getMetadata.success(function( data ) {
             self.metadata = data;
+
+            setTimeout(function() {
             self.render();
+
+            self.element.removeClass('loading');
+            }, 1000);
         });
         getMetadata.error(function() {
             alert("Cannot retrieve metadata '"+ opts.metadata +"'");
