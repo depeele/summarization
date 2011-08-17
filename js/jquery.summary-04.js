@@ -83,11 +83,9 @@ $.Summary.prototype = {
         getMetadata.success(function( data ) {
             self.metadata = data;
 
-            setTimeout(function() {
             self.render();
 
             self.element.removeClass('loading');
-            }, 1000);
         });
         getMetadata.error(function() {
             alert("Cannot retrieve metadata '"+ opts.metadata +"'");
