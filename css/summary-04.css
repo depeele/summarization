@@ -100,7 +100,7 @@ body {
 
 .article-pane article section p .sentence {
   position:   relative;
-  padding:    0.2em 0.2em 0.2em 70px;
+  padding:    0.1em 0.1em 0.1em 70px;
   margin:     0;
   text-align: justify;
   font-size:  1px;
@@ -147,6 +147,7 @@ body {
 
 .article-pane article section .highlight .rank,
 .article-pane article section .keyworded .rank,
+.article-pane article section .expanded .rank,
 .article-pane article section .expansion .rank {
   display:    block;
   position:   absolute;

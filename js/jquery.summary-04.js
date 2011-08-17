@@ -579,12 +579,16 @@ $.Summary.prototype = {
         var collapseDone        = function() {
             if ( --completionsNeeded > 0) { return; }
 
-            /* Ensure that sentence controls are hidden and NOT in "hover mode"
-             * and any selection controls are removed.
-             */
-            $s.removeClass('ui-hover');
-            $s.find('.controls .su-icon').css('opacity', '');
-            $s.find('.selection-controls').remove();
+            if (! $s.hasClass('highlight'))
+            {
+                /* The target sentence is NOT highlighted, so ensure that
+                 * sentence controls are hidden and NOT in "hover mode" and any
+                 * selection controls are removed.
+                 */
+                $s.removeClass('ui-hover');
+                $s.find('.controls .su-icon').css('opacity', '');
+                $s.find('.selection-controls').remove();
+            }
 
             // Change the expand/contract title back to "expand"
             $el.attr('title', 'expand');
