@@ -575,20 +575,26 @@ $.Summary.prototype = {
         var $el                 = $s.find('.controls .expand');
         var $prev               = $s.prev();
         var $next               = $s.next();
+        var completionsNeeded   = 1;
         var collapseDone        = function() {
-            var $this = $(this);
+            if ( --completionsNeeded > 0) { return; }
 
-            $this.removeClass('expansion');
-            $this.css('display', '');
+            /* Ensure that sentence controls are hidden and NOT in "hover mode"
+             * and any selection controls are removed.
+             */
+            $s.removeClass('ui-hover');
+            $s.find('.controls .su-icon').css('opacity', '');
+            $s.find('.selection-controls').remove();
 
-            // Ensure that sentence controls are hidden
-            $this.find('.controls .su-icon').css('opacity', '');
-            $this.find('.selection-controls').remove();
-
+            // Change the expand/contract title back to "expand"
             $el.attr('title', 'expand');
+
+            // Mark collapse completed
+            $s.removeData('isCollapsing');
         };
         var collapseExpansion   = function($sib) {
-            $sib.removeClass('expansion', opts.animSpeed);
+            completionsNeeded++;
+            $sib.removeClass('expansion', opts.animSpeed, collapseDone);
             if ($sib.hasClass('expanded'))
             {
                 self._collapse($sib);
@@ -625,9 +631,7 @@ $.Summary.prototype = {
             collapseExpansion($next);
         }
 
-        // Remove our marker indicating that this sentence is being collapsed
-        $s.removeData('isCollapsing');
-
+        collapseDone();
         return this;
     },
 
