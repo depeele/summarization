@@ -127,23 +127,24 @@ body {
 }
 .article-pane article section p .old-0,
 .article-pane article section p .expanded {
-  background-color: #eee;
+  background-color: #f9f9f9;
 }
 
 /* Progressive age */
-.article-pane article section p .old-1  { background-color: #ddd; }
-.article-pane article section p .old-2  { background-color: #ccc; }
-.article-pane article section p .old-3  { background-color: #bbb; }
-.article-pane article section p .old-4  { background-color: #aaa; }
-.article-pane article section p .old-5  { background-color: #999; }
-.article-pane article section p .old-6  { background-color: #888; }
-.article-pane article section p .old-7  { background-color: #777; }
+.article-pane article section p .old-1  { background-color: #f6f6f6; }
+.article-pane article section p .old-2  { background-color: #f3f3f3; }
+.article-pane article section p .old-3  { background-color: #f0f0f0; }
+.article-pane article section p .old-4  { background-color: #ededed; }
+.article-pane article section p .old-5  { background-color: #e9e9e9; }
+.article-pane article section p .old-6  { background-color: #e6e6e6; }
+.article-pane article section p .old-7  { background-color: #e3e3e3; }
 
 .article-pane article section p .rank {
   display:    none;
 }
 
 .article-pane article section .highlight .rank,
+.article-pane article section .keyworded .rank,
 .article-pane article section .expansion .rank {
   display:    block;
   position:   absolute;
@@ -203,8 +204,8 @@ body {
 .article-pane article section p .hidden .controls .hide {
   visibility: visible;
 }
-.article-pane article section p .ui-hover .controls .su-icon {
-  opacity:    0.6;
+.article-pane article section p .hide-expand .controls .expand {
+  visibility: hidden;
 }
 
 .article-pane article section p .starred .controls .star,

@@ -12,6 +12,7 @@
  */
 (function($) {
 
+/** @brief  Summary widget */
 $.fn.summary = function(options) {
     options = options || {};
 
@@ -21,6 +22,7 @@ $.fn.summary = function(options) {
         $el.data('summary', new $.Summary( $el, options ));
     });
 };
+
 
 /** @brief  The Summary class */
 $.Summary = function($el, options) {
@@ -44,9 +46,7 @@ $.Summary.prototype = {
 
         useColor:       false,      // Color sentences based upon rank?
         rankOpacity:    0.3,        // The default opacity for rank items
-        animSpeed:      200         /* Speed (in ms) of slideUp/Down and
-                                     * class-change animations
-                                     */
+        animSpeed:      200         // Speed (in ms) of animations
     },
 
     /** @brief  Initialize this new instance.
@@ -67,7 +67,6 @@ $.Summary.prototype = {
         self.$control         = $gp.find('.control-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
-        self.$coverage        = self.$control.find('.coverage .indicator');
 
         rangy.init();
         self.cssTag    = rangy.createCssClassApplier(
@@ -273,6 +272,7 @@ $.Summary.prototype = {
                             //$p.append( $sEl );
                         });
 
+
                         //$div.append($p);
                     });
 
@@ -297,14 +297,6 @@ $.Summary.prototype = {
         var opts    = self.options;
 
         self.$control.find('.show,.buttons').buttonset();
-        self.$coverage.slider({
-            orientation:    'vertical',
-            range:          'min',
-            min:            0,
-            max:            100,
-            disabled:       true
-        });
-
         self.threshold( minThreshold, maxThreshold);
     },
 
@@ -329,9 +321,8 @@ $.Summary.prototype = {
          * paragraphs as 'NOT shown'
          */
         self.$s.addClass('noHighlight');
-        self.$p.addClass('noShow');
-        self.$p.has('.keyworded').removeClass('noShow').addClass('toShow');
 
+        // Mark all sentences within the threshold range 'toHighlight'
         for (var idex = self.maxThreshold; idex >= self.minThreshold; idex--)
         {
             var ar  = self.ranks[idex];
@@ -351,70 +342,95 @@ $.Summary.prototype = {
                 // Mark this sentence as TO BE highlighted
                 $s.addClass('toHighlight')
                   .removeClass('noHighlight');
-
-                var $p  = $s.parent();
-                $p.addClass('toShow')
-                  .removeClass('noShow');
             }
         }
 
-        /* Ensure that any paragraph containing a 'keyworded' sentence is
-         * visible regardless
-        self.$p.filter(':has(.keyworded)').show();
+        /* Hide expansion controls for sentences that have no siblings that
+         * would be expanded.
          */
-        var coverage    = self.$s.filter('.toHighlight').length /
-                          self.$s.length;
-        self._updateCoverage( coverage );
+        self.$s.removeClass('hide-expand');
+        self.$p.each(function() {
+            var $p          = $(this);
+            var $ss         = $p.find('.sentence');
 
-        // Hide/Show paramgraphs
-        self.$p.filter('.noShow')
-            .removeClass('noShow')
-            .addClass('hidden', opts.animSpeed / 4);
-        self.$p.filter('.toShow')
-            .removeClass('toShow')
-            .removeClass('hidden', opts.animSpeed * 4);
+            if ($ss.length === 1)
+            {
+                // Only one sentence period -- Always hide
+                $ss.addClass('hide-expand');
+                return;
+            }
 
-        // Hide/Show sentences
-        self.$s.filter('.noHighlight')
-            .removeClass('noHighlight')
-            .removeClass('highlight expanded expansion',
-                          opts.animSpeed, function() {
+            $ss.each(function() {
                 var $s  = $(this);
-
-                if ($s.hasClass('highlight'))
+                var $pS = $s.prev();
+                var $nS = $s.next();
+                if ($pS.length < 1)
                 {
-                    /* The current sentence was previously highlighted so we
-                     * need to adjust the age (younger).
-                     */
-                    self._ageYounger($s);
+                    // First sentence
+                    if ($s.hasClass('noHighlight') ||   // is NOT highlighted
+                        ($nS.length < 1)           ||   // No next
+                        $nS.hasClass('toHighlight'))    // Next is highlighted
+                    {
+                        $s.addClass('hide-expand');
+                    }
+                }
+                else if ($nS.length < 1)
+                {
+                    // Last sentence
+                    if ($s.hasClass('noHighlight') ||   // is NOT highlighted
+                        ($pS.length < 1)           ||   // No previous
+                        $pS.hasClass('toHighlight'))    // Prev is highlighted
+                    {
+                        $s.addClass('hide-expand');
+                    }
+                }
+                else if ( $pS.hasClass('toHighlight') &&// Prev is highlighted
+                          $nS.hasClass('toHighlight') ) // Next is highlighted
+                {
+                    $s.addClass('hide-expand');
                 }
             });
+        });
+
+
+        // Hide sentences
+        self.$s.filter('.noHighlight')
+               .removeClass('noHighlight expanded expansion')
+               .filter('.highlight')
+               .removeClass('highlight', opts.animSpeed * 2, function() {
+                    var $s  = $(this);
+                    $s.younger()
+                      .removeData('isHighlighted');
+               });
+
+        // Show sentences
         self.$s.filter('.toHighlight')
             .removeClass('toHighlight')
-            .addClass('highlight', opts.animSpeed, function() {
+            .addClass('highlight', opts.animSpeed * 2, function() {
                 var $s  = $(this);
 
                 // Remove any per-sentence expansion indicators.
                 $s.removeClass('expanded expansion');
 
                 // If the current senntence was already highlighted...
-                if ($s.hasClass('highlight'))
+                if ($s.data('isHighlighted'))
                 {
-                    /* Already highlighted so we need to adjust the age
-                     *      expanding   (older)
-                     *      contracting (younger)
-                     */
+                    // Already highlighted so we need to adjust the age
+                    //      expanding   (older)
+                    //      contracting (younger)
                     if (isExpand)
                     {
                         // older
-                        self._ageOlder($s);
+                        $s.older();
                     }
                     else
                     {
                         // younger
-                        self._ageYounger($s);
+                        $s.younger();
                     }
                 }
+
+                $s.data('isHighlighted', true);
             });
     },
 
@@ -422,56 +438,6 @@ $.Summary.prototype = {
      * "Private" methods
      *
      */
-
-    /** @brief  Update the coverage indicator.
-     *  @param  coverage    The new value (0..1).  If NOT provided, use the
-     *                      percentage of sentences that are currently visible.
-     */
-    _updateCoverage: function(coverage) {
-        var self    = this;
-        if (coverage === undefined)
-        {
-            coverage = self.$s.filter(':not([class*="hidden"])').length /
-                       self.$s.length;
-        }
-
-        self.$coverage.slider('value', Math.round(coverage * 100, 2));
-    },
-
-    /** @brief  Make this sentence "older".
-     *  @param  $s      The jQuery DOM sentence element
-     */
-    _ageOlder: function($s) {
-        var self    = this;
-        var opts    = self.options;
-        var age     = $s.data('age');
-
-        // Increase and remember the current age
-        if (age >= 0)   { age++;   }
-        else            { age = 0; }
-
-        $s.data('age', age);
-
-        // Add the current age class
-        $s.addClass('old-'+ age, opts.animSpeed);
-    },
-
-    /** @brief  Make this sentence "younger".
-     *  @param  $s      The jQuery DOM sentence element
-     */
-    _ageYounger: function($s) {
-        var self    = this;
-        var opts    = self.options;
-        var age     = $s.data('age');
-        if (age === undefined)  { age = 0; }
-
-        // Remove the current age class
-        $s.removeClass('old-'+ age, opts.animSpeed);
-
-        // Decrease and remember the current age
-        if (age >= 0)   { age--; }
-        $s.data('age', age);
-    },
 
     /** @brief  Given a jQuery DOM sentence element (.sentence),
      *          toggle the 'star' setting.
@@ -569,8 +535,6 @@ $.Summary.prototype = {
             $this.css('display', '');
 
             $el.attr('title', 'collapse');
-
-            self._updateCoverage();
         };
 
         if ($s.data('isExpanding') || $s.hasClass('expanded'))
@@ -616,12 +580,13 @@ $.Summary.prototype = {
             $this.css('display', '');
 
             $el.attr('title', 'expand');
-
-            self._updateCoverage();
         };
         var collapseExpansion   = function($sib) {
-            self._collapse($sib);
             $sib.removeClass('expansion', opts.animSpeed);
+            if ($sib.hasClass('expanded'))
+            {
+                self._collapse($sib);
+            }
         };
 
         if ($s.data('isCollapsing'))
@@ -645,13 +610,13 @@ $.Summary.prototype = {
         // If the previous sibling is visible...
         if ($prev.hasClass('expansion'))
         {
-            $prev.removeClass('expansion', opts.animSpeed);
+            collapseExpansion($prev);
         }
 
         // If the next sibling is visible...
         if ($next.hasClass('expansion'))
         {
-            $next.removeClass('expansion', opts.animSpeed);
+            collapseExpansion($next);
         }
 
         // Remove our marker indicating that this sentence is being collapsed
@@ -859,8 +824,7 @@ $.Summary.prototype = {
         });
 
         /*************************************************************
-         * Clicking on a keyword hides all sentences except those
-         * with that keyword
+         * Clicking on a keyword shows all sentences with that keyword
          *
          */
         $parent.delegate('header .keyword', 'click', function() {
@@ -873,9 +837,7 @@ $.Summary.prototype = {
             if (toggleOn)
             {
                 // Make any sentence currently visible "older"
-                self.$s.filter(':not([class*="hidden"])').each(function() {
-                    self._ageOlder( $(this) );
-                });
+                self.$s.filter('.highlight,.expansion').older();
 
                 // Highlight the keyword control
                 $kw.addClass('ui-state-highlight');
@@ -898,9 +860,7 @@ $.Summary.prototype = {
                         });
                     }
 
-                    $s.addClass('keyworded', opts.animSpeed, function() {
-                        self._updateCoverage( );
-                    });
+                    $s.addClass('keyworded', opts.animSpeed);
                 });
             }
             else
@@ -923,7 +883,6 @@ $.Summary.prototype = {
                                         .length;
 
                             $s.css('display', '');
-                            self._updateCoverage( );
 
                             if (nLeft < 1)
                             {
@@ -935,9 +894,7 @@ $.Summary.prototype = {
                 });
 
                 // Remove any 'old' class
-                self.$s.filter('[class*=" old"]').each(function() {
-                    self._ageYounger( $(this) );
-                });
+                self.$s.filter('[class*=" old"]').younger();
 
                 // Remove the highlight from the keyword control
                 $kw.removeClass('ui-state-highlight');
@@ -1114,6 +1071,55 @@ $.Summary.prototype = {
 
         $parent.undelegate('article .sentence', 'mouseup');
     }
+};
+
+/***********************
+ * Age helpers.
+ *
+ */
+
+/** @brief  Make the target element "older".
+ *  @param  options     An object containing options:
+ *                          animSpeed   The speed of animation
+ */
+$.fn.older = function(options) {
+    options = $.extend({animSpeed: 100}, options || {});
+
+    return this.each(function() {
+        var $el = $(this);
+        
+        var age = $el.data('age');
+
+        // Increase and remember the current age
+        if (age >= 0)   { age++;   }
+        else            { age = 0; }
+
+        $el.data('age', age);
+
+        // Add the current age class
+        $el.addClass('old-'+ age, options.animSpeed);
+    });
+};
+
+/** @brief  Make the target element "younger".
+ *  @param  options     An object containing options:
+ *                          animSpeed   The speed of animation
+ */
+$.fn.younger = function(options) {
+    options = $.extend({animSpeed: 100}, options || {});
+
+    return this.each(function() {
+        var $el = $(this);
+        var age = $el.data('age');
+        if (age === undefined)  { age = 0; }
+
+        // Remove the current age class
+        $el.removeClass('old-'+ age, options.animSpeed);
+
+        // Decrease and remember the current age
+        if (age >= 0)   { age--; }
+        $el.data('age', age);
+    });
 };
 
 }(jQuery));
