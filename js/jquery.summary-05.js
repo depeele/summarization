@@ -322,7 +322,22 @@ $.Summary.prototype = {
         self.minThreshold = min;
         self.maxThreshold = max;
 
-        var str = min +' - ' + max;
+        self.refresh( isExpand );
+    },
+
+    /** @brief  Refresh the presentation based upon the current view and
+     *          thresholds.
+     *  @param  isExpand        Is this an
+     *                              expansion   (true),
+     *                              contraction (false) or
+     *                              neither     (undefined).
+     *
+     */
+    refresh: function(isExpand) {
+        var self        = this;
+        var opts        = self.options;
+
+        var str = self.minThreshold +' - ' + self.maxThreshold;
         self.$thresholdValues.text( str );
 
         /* Initially mark all sentences as 'NOT highlighted' and all
@@ -440,12 +455,12 @@ $.Summary.prototype = {
                     // Already highlighted so we need to adjust the age
                     //      expanding   (older)
                     //      contracting (younger)
-                    if (isExpand)
+                    if (isExpand === true)
                     {
                         // older
                         $s.older();
                     }
-                    else
+                    else if (isExpand === false)
                     {
                         // younger
                         $s.younger();
@@ -683,7 +698,7 @@ $.Summary.prototype = {
                     .addClass(view);
 
         // Re-apply the current threshold
-        self.threshold(self.minThreshold, self.maxThreshold);
+        self.refresh();
 
         return self;
     },
