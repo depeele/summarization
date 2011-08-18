@@ -1,0 +1,35 @@
+body {
+}
+
+/**************************************************************************
+ * Control Pane
+ *
+ */
+.control-pane {
+  position:         fixed;
+  padding:          0.5em 0 0.5em 0.75em;
+  min-height:       16px;
+  min-width:        20px;
+}
+
+.control-pane .controls {
+  height:           auto;
+  margin-top:       0.75em;
+}
+.control-pane .controls .threshold,
+.control-pane .controls .show,
+.control-pane .controls .coverage {
+  display:          block;
+  margin-top:       1em;
+  padding-left:     4.25em; /* For label.primary */
+}
+.control-pane .controls label.primary {
+  position:         absolute;
+  left:             0;
+  top:              1em;
+  font-size:        0.8em;
+
+  width:            4.25em;
+  text-align:       left;
+}
+

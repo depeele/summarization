@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+
+  <title>Summarization Viewer</title>
+
+  <link rel="stylesheet" type="text/css" href="css/reset.css" />
+  <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.css" />
+  <link rel="stylesheet" type="text/css" href="css/layout.css" />
+  <link rel="stylesheet" type="text/css" href="css/sprites-16.css" />
+  <link rel="stylesheet" type="text/css" href="css/summary-05.css" />
+  <link rel="stylesheet" type="text/css" href="css/summary-05-fixed-controls.css" />
+
+ </head>
+ <body>
+  <div class='margin-left'><!-- margin-left { -->
+  </div><!-- margin-left } -->
+  <div class='content-pane'><!-- content-pane { -->
+   <article id='article' class='loading'></article>
+  </div><!-- content-pane } -->
+  <div class='margin-right'><!-- margin-right { -->
+   <div class='control-pane ui-corner-bl'>
+    <div title='toggle controls'
+         class='toggle-controls su-icon su-icon-wrench'></div>
+    <div class='controls ui-layout-north'>
+     <div class='show'>
+      <label for="show" class='primary'>View</label>
+
+      <input name="view" id="view-normal" type="radio" value="normal"
+             checked="true" />
+      <label for="view-normal">normal</label>
+
+      <input name="view" id="view-tagged" type="radio" value="tagged" />
+      <label for="view-tagged">tagged</label>
+
+      <input name="view" id="view-starred" type="radio" value="starred" />
+      <label for="view-starred">starred</label>
+
+     </div>
+
+     <div class='threshold'>
+      <label for="threshold" class='primary'>Threshold</label>
+
+      <div class='buttons'>
+       <button name='threshold-all'
+               title='full document'><div
+              class='all su-icon su-icon-all' /></button>
+       <button name='threshold-down'
+               title='expand'><div
+              class='expand su-icon su-icon-expand' /></button>
+       <button name='threshold-up'
+               title='collapse'><div
+              class='collapse su-icon su-icon-collapse' /></button>
+       <button name='threshold-reset'
+               title='reset'><div
+              class='reset su-icon su-icon-reset' /></button>
+      </div>
+      <label class='values'></label>
+     </div>
+    </div>
+   </div>
+   <div class='notes-pane'>
+   </div>
+  </div><!-- margin-right } -->
+ </body>
+
+ <!-- Templates { -->
+ <!-- 'keywords' is an array of XML nodes -->
+ <script id='tmpl-header-keywords' type='text/x-jquery-tmpl'>
+  <div class='keywords'>
+   {{each keywords}}
+    <div class='keyword'
+          name='${$($value).attr('name')}'
+          rank='${$($value).attr('rank')}'>${$($value).text()}</div>
+   {{/each}}
+  </div>
+ </script>
+
+ <script id='tmpl-sentence' type='text/x-jquery-tmpl'>
+  <div class='sentence' rank='${rank}'>
+   <div class='controls'><div
+        class='expand su-icon su-icon-expand' title='expand' /><div
+        class='star su-icon su-icon-star'     title='star' /><div
+        class='rank'>${rank}</div>
+   </div>
+   <div class='content'></div>
+  </div>
+ </script>
+
+ <!-- 'node' is a jQuery object encapsulating an XML node -->
+ <script id='tmpl-sentence-text' type='text/x-jquery-tmpl'>
+  <span class='text'>${node.text()}</span>
+ </script>
+
+ <!-- 'node' is a jQuery object encapsulating an XML node -->
+ <script id='tmpl-sentence-keyword' type='text/x-jquery-tmpl'>
+  <span class='keyword'
+        name='${node.attr('name')}'>${node.text()}</span>
+ </script>
+
+ <script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>
+  <div class='selection-controls ui-corner-top'><div
+       class='tag su-icon su-state-reverse su-icon-tag'
+       title='tag' /></div>
+ </script>
+
+ <script id='tmpl-selection-remove-controls' type='text/x-jquery-tmpl'>
+  <div class='selection-controls ui-corner-top'><div
+       class='remove su-icon su-icon-cancel-blue ui-state-default'
+       title='remove tag' /></div>
+ </script>
+
+ <script id='tmpl-note' type='text/x-jquery-tmpl'>
+  <div class='note'>
+   <img class='avatar' src='${avatarUrl}' />
+   <div class='author'>${author}</div>
+   <div class='dateTime'>${dateTime}</div>
+   <div class='comment'>${comment}</div>
+   <div class='control'>
+    <button name='edit'>Edit</button>
+    <button name='delete'>Delete</button>
+   </div>
+  </div>
+ </script>
+
+ <script id='tmpl-notes' type='text/x-jquery-tmpl'>
+  <div class='notes'>
+   <div class='arrow-outer'></div>
+   <div class='arrow-inner'></div>
+   <div class='notes-body'><!-- one or more tmpl-note items -->
+    ${notes}
+   </div>
+   <div class='notes-input-pane'>
+    <textarea class='notes-reply'></textarea>
+	<div class='buttons'>
+	 <button name='replay'>Reply</button>
+	 <button name='cancel'>Cancel</button>
+	</div>
+   </div>
+  </div>
+ </script>
+ <!-- Templates } -->
+
+ <script src='js/jquery.js'></script>
+ <script src='js/jquery.tmpl.min.js'></script>
+ <script src='js/jquery.delegateHoverIntent.js'></script>
+ <script src='js/jquery-ui.js'></script>
+ <script src='js/rangy.min.js'></script>
+ <script src='js/rangy/serializer.min.js'></script>
+ <script src='js/rangy/cssclassapplier.js'></script>
+ <script src='js/jquery.summary-05.js'></script>
+
+ <script>
+ (function($) {
+    $('#article').summary({
+        src:        'http://www.wired.com/wiredscience/2011/07/the-selfishness-of-trust/',
+        metadata:   'samples/0001.xml'
+    });
+ }(jQuery));
+ </script>
+</html>

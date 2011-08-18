@@ -5,33 +5,48 @@
 }
 
 /* positioning */
-.su-icon-star                       { background-position:  0     0; }
-.su-icon-collapse                   { background-position:  -18px 0; }
-.su-icon-expand                     { background-position:  -36px 0; }
-.su-icon-cancel                     { background-position:  -54px 0; }
-.su-icon-tag                        { background-position:  -72px 0; }
+.su-icon-star                       { background-position:  0       0; }
+.su-icon-collapse                   { background-position:  -18px   0; }
+.su-icon-expand                     { background-position:  -36px   0; }
+.su-icon-cancel                     { background-position:  -54px   0; }
+.su-icon-tag                        { background-position:  -72px   0; }
+.su-icon-wrench                     { background-position:  -90px   0; }
+.su-icon-all                        { background-position:  -108px  0; }
+.su-icon-reset                      { background-position:  -126px  0; }
 
-.su-icon-star-blue                  { background-position:  0     -18px; }
-.su-icon-collapse-blue              { background-position:  -18px -18px; }
-.su-icon-expand-blue                { background-position:  -36px -18px; }
-.su-icon-cancel-blue                { background-position:  -54px -18px; }
-.su-icon-tag-blue                   { background-position:  -72px -18px; }
+.su-icon-star-blue                  { background-position:  0      -18px; }
+.su-icon-collapse-blue              { background-position:  -18px  -18px; }
+.su-icon-expand-blue                { background-position:  -36px  -18px; }
+.su-icon-cancel-blue                { background-position:  -54px  -18px; }
+.su-icon-tag-blue                   { background-position:  -72px  -18px; }
+.su-icon-wrench-blue                { background-position:  -90px  -18px; }
+.su-icon-all-blue                   { background-position:  -108px -18px; }
+.su-icon-reset-blue                 { background-position:  -126px -18px; }
 
-.su-icon-star-white                 { background-position:  0     -36px; }
-.su-icon-collapse-white             { background-position:  -18px -36px; }
-.su-icon-expand-white               { background-position:  -36px -36px; }
-.su-icon-cancel-white               { background-position:  -54px -36px; }
-.su-icon-tag-white                  { background-position:  -72px -36px; }
+.su-icon-star-white                 { background-position:  0      -36px; }
+.su-icon-collapse-white             { background-position:  -18px  -36px; }
+.su-icon-expand-white               { background-position:  -36px  -36px; }
+.su-icon-cancel-white               { background-position:  -54px  -36px; }
+.su-icon-tag-white                  { background-position:  -72px  -36px; }
+.su-icon-wrench-white               { background-position:  -90px  -36px; }
+.su-icon-all-white                  { background-position:  -108px -36px; }
+.su-icon-reset-white                { background-position:  -126px -36px; }
 
 /* state-based positioning */
-.su-state-active.su-icon-star       { background-position:  0     -18px; }
-.su-state-active.su-icon-collapse   { background-position:  -18px -18px; }
-.su-state-active.su-icon-expand     { background-position:  -36px -18px; }
-.su-state-active.su-icon-cancel     { background-position:  -54px -18px; }
-.su-state-active.su-icon-tag        { background-position:  -72px -18px; }
+.su-state-active.su-icon-star       { background-position:  0      -18px; }
+.su-state-active.su-icon-collapse   { background-position:  -18px  -18px; }
+.su-state-active.su-icon-expand     { background-position:  -36px  -18px; }
+.su-state-active.su-icon-cancel     { background-position:  -54px  -18px; }
+.su-state-active.su-icon-tag        { background-position:  -72px  -18px; }
+.su-state-active.su-icon-wrench     { background-position:  -90px  -18px; }
+.su-state-active.su-icon-all        { background-position:  -108px -18px; }
+.su-state-active.su-icon-reset      { background-position:  -126px -18px; }
 
-.su-state-reverse.su-icon-star      { background-position:  0     -36px; }
-.su-state-reverse.su-icon-collapse  { background-position:  -18px -36px; }
-.su-state-reverse.su-icon-expand    { background-position:  -36px -36px; }
-.su-state-reverse.su-icon-cancel    { background-position:  -54px -36px; }
-.su-state-reverse.su-icon-tag       { background-position:  -72px -36px; }
+.su-state-reverse.su-icon-star      { background-position:  0      -36px; }
+.su-state-reverse.su-icon-collapse  { background-position:  -18px  -36px; }
+.su-state-reverse.su-icon-expand    { background-position:  -36px  -36px; }
+.su-state-reverse.su-icon-cancel    { background-position:  -54px  -36px; }
+.su-state-reverse.su-icon-tag       { background-position:  -72px  -36px; }
+.su-state-reverse.su-icon-wrench    { background-position:  -90px  -36px; }
+.su-state-reverse.su-icon-all       { background-position:  -108px -36px; }
+.su-state-reverse.su-icon-reset     { background-position:  -126px -36px; }
