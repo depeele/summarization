@@ -947,16 +947,6 @@ $.Summary.prototype = {
                     var $p  = $s.parent();
                     $el.addClass('ui-state-highlight');
 
-                    /*
-                    if (! $p.data('isOpening'))
-                    {
-                        $p.data('isOpening', true)
-                        $p.removeClass('hidden', opts.animSpeed, function() {
-                            $p.removeData('isOpening');
-                        });
-                    }
-                    // */
-
                     $s.addClass('keyworded', opts.animSpeed);
                 });
             }
@@ -975,20 +965,7 @@ $.Summary.prototype = {
                     if (nLeft < 1)
                     {
                         // No more keywords in this sentence
-                        $s.removeClass('keyworded', opts.animSpeed, function() {
-                            nLeft = $p.find(':not([class*="hidden"])')
-                                        .length;
-
-                            $s.css('display', '');
-
-                            /*
-                            if (nLeft < 1)
-                            {
-                                // No visible sentences in this paragraph
-                                $p.addClass('hidden', opts.animSpeed / 4);
-                            }
-                            // */
-                        });
+                        $s.removeClass('keyworded', opts.animSpeed);
                     }
                 });
 

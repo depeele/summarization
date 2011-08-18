@@ -50,7 +50,7 @@ a {
  * Article
  *
  */
-article {
+.content-pane article {
   margin:           0 0.2em;
   padding:          1em;
   border:           1px solid #ccc;
@@ -60,50 +60,50 @@ article {
 /*******************
  * Header
  */
-article header {
+.content-pane header {
   display:        block;
   padding:        1em;
   margin-right:   0.5em;
   border-bottom:  0.5em solid #ccc;
 }
-article header h1,
-article header .keywords {
+.content-pane header h1,
+.content-pane header .keywords {
   display:      block;
 }
-article header author,
-article header time {
+.content-pane header author,
+.content-pane header time {
   display:      inline-block;
 }
 
-article header h1 {
+.content-pane header h1 {
   font-size:    1.2em;
   font-weight:  bold;
 }
-article header author,
-article header time,
-article header .keywords {
+.content-pane header author,
+.content-pane header time,
+.content-pane header .keywords {
   font-size:    0.8em;
   padding-left: 2em;
   color:        #999;
 }
-article header time {
+.content-pane header time {
   font-size:    0.7em;
 }
-article header author:before {
+.content-pane header author:before {
   content:      'by ';
 }
-article header time {
+.content-pane header time {
   font-style:   italic;
 }
-article header .keywords {
+.content-pane header .keywords {
   font-size:    0.8em;
 }
-article header .keywords .keyword {
+.content-pane header .keywords .keyword {
   display:    inline-block;
   cursor:     pointer;
   border:     1px solid #fff;
 }
-article header .keywords .keyword:before {
+.content-pane header .keywords .keyword:before {
   content:      ' / ';
 }
 
@@ -112,13 +112,13 @@ article header .keywords .keyword:before {
  *
  */
 
-article section {
+.content-pane article section {
   display:  block;
   padding:  0.5em 0.5em 0.5em 0;
   margin:   0;
 }
 
-article section p {
+.content-pane article section p {
   display:      block;
   padding:      0.1em;
 
@@ -131,12 +131,12 @@ article section p {
 
   cursor:       pointer;
 }
-article section p.hidden {
+.content-pane article section p.hidden {
   visibility: visible;
   font-size:  1px;
 }
 
-article section p .sentence {
+.content-pane article section p .sentence {
   position:   relative;
   padding:    0.1em 0.1em 0.1em 0;
   margin:     0;
@@ -144,49 +144,49 @@ article section p .sentence {
   font-size:  1px;
   color:      #ddd;
 }
-article section p .sentence .text,
-article section p .sentence .keyword,
-article section p .sentence .selected,
-article section p .sentence .tagged {
+.content-pane article section p .sentence .text,
+.content-pane article section p .sentence .keyword,
+.content-pane article section p .sentence .selected,
+.content-pane article section p .sentence .tagged {
   position:   relative;
   border:     none;
 }
-article section p .sentence .tagged {
+.content-pane article section p .sentence .tagged {
   font-weight:  normal;
 }
 
-article section p .expanded,
-article section p .expansion,
-article section p .keyworded,
-article section p .highlight {
+.content-pane article section p .expanded,
+.content-pane article section p .expansion,
+.content-pane article section p .keyworded,
+.content-pane article section p .highlight {
   display:    block;
   font-size:  1em;
   color:      #222;
   cursor:     text;
 }
-article section p .old-0,
-article section p .expanded {
+.content-pane article section p .old-0,
+.content-pane article section p .expanded {
   background-color: #f0f0f0;
 }
 
 /* Progressive age */
-article section p .old-1  { background-color: #ebebeb; }
-article section p .old-2  { background-color: #e6e6e6; }
-article section p .old-3  { background-color: #e1e1e1; }
-article section p .old-4  { background-color: #dcdcdc; }
-article section p .old-5  { background-color: #d7d7d7; }
-article section p .old-6  { background-color: #d2d2d2; }
-article section p .old-7  { background-color: #cdcdcd; }
-article section p .old-8  { background-color: #c8c8c8; }
+.content-pane article section p .old-1  { background-color: #ebebeb; }
+.content-pane article section p .old-2  { background-color: #e6e6e6; }
+.content-pane article section p .old-3  { background-color: #e1e1e1; }
+.content-pane article section p .old-4  { background-color: #dcdcdc; }
+.content-pane article section p .old-5  { background-color: #d7d7d7; }
+.content-pane article section p .old-6  { background-color: #d2d2d2; }
+.content-pane article section p .old-7  { background-color: #cdcdcd; }
+.content-pane article section p .old-8  { background-color: #c8c8c8; }
 
-article section p .controls {
+.content-pane article section p .controls {
   display:    none;
 }
 
-article section .highlight .rank,
-article section .keyworded .rank,
-article section .expanded .rank,
-article section .expansion .rank {
+.content-pane article section .highlight .rank,
+.content-pane article section .keyworded .rank,
+.content-pane article section .expanded .rank,
+.content-pane article section .expansion .rank {
   display:    block;
   position:   absolute;
   top:        2px;
@@ -204,64 +204,66 @@ article section .expansion .rank {
   user-select:        none;
 }
 
-article section p .keyword {
+.content-pane article section p .keyword {
   border:     1px solid #fff;
 }
 
-article section p .controls,
-article section p .selection-controls {
+.content-pane article section p .controls,
+.content-pane article section p .selection-controls {
   position:   absolute;
 
   display:    block;
   z-index:    10;
 }
-article section p .controls {
+.content-pane article section p .controls {
   top:        2px;
   left:       -52px;
 
   width:      52px;
   height:     100%;
 }
-article section p .selection-controls {
+.content-pane article section p .selection-controls {
   background-color: #999;
   color:            #fff;
   border:           none;
   padding:          2px 2px 0 2px;
 }
-article section p .sentence .tagged .selection-controls {
+.content-pane article section p .sentence .tagged .selection-controls {
   background-color: inherit;
   border:           1px solid #aed0ea;  /* From .ui-state-default */
   border-bottom:    none;
 }
 
-article section p .controls .su-icon,
-article section p .selection-controls .su-icon {
+.content-pane article section p .controls .su-icon,
+.content-pane article section p .selection-controls .su-icon {
   display:    inline-block;
   cursor:     pointer;
   border:     none;
 }
-article section p .controls .su-icon {
+.content-pane article section p .controls .su-icon {
   visibility: hidden;
 }
-article section p .ui-hover .controls .su-icon,
-article section p .starred .controls .star {
+.content-pane article section p .ui-hover .controls .su-icon,
+.content-pane article section .highlight.starred .controls .star,
+.content-pane article section .expanded.starred .controls .star,
+.content-pane article section .expansion.starred .controls .star {
   visibility: visible;
 }
-article section p .hide-expand .controls .expand {
+.content-pane article section p .hide-expand .controls .expand {
   visibility: hidden;
 }
 
-article section p .ui-hover .controls .su-icon {
+.content-pane article section p .ui-hover .controls .su-icon {
   opacity:    0.6;
 }
-article section p .starred .controls .star {
+.content-pane article section p .starred .controls .star {
   opacity:    1.0;
 }
 
 /* When expanded, present the expand icon as collapse by mirroring
  * .su-icon-collapse
  */
-article section p .expanded .controls .su-icon-expand {
+.content-pane article section p .expanded .controls .su-icon-expand {
   background-position:  -16px 0;
 }
 
@@ -279,9 +281,6 @@ article section p .expanded .controls .su-icon-expand {
  * Article:Tagged
  *
  */
-article.tagged section p .starred .controls .star {
-  visibility: hidden;
-}
 
 /*******************
  * Article:All

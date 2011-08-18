@@ -70,9 +70,14 @@ $.Summary.prototype = {
 
         rangy.init();
         self.cssTag    = rangy.createCssClassApplier(
-                                    'ui-state-default tagged',
-                                    true);
-        self.cssSelect = rangy.createCssClassApplier('selected', true);
+                                    'ui-state-default tagged', {
+                                        normalize:      true,
+                                        elementTagName: 'em'
+                                    });
+        self.cssSelect = rangy.createCssClassApplier('selected', {
+                                        normalize:      true,
+                                        elementTagName: 'em'
+                                    });
 
         self._bindEvents();
 
@@ -325,27 +330,40 @@ $.Summary.prototype = {
          */
         self.$s.addClass('noHighlight');
 
-        // Mark all sentences within the threshold range 'toHighlight'
-        for (var idex = self.maxThreshold; idex >= self.minThreshold; idex--)
+        if (opts.view === 'tagged')
         {
-            var ar  = self.ranks[idex];
-            if (ar === undefined)   { continue; }
-
-            var nItems  = ar.length;
-            for (var jdex = 0; jdex < nItems; jdex++)
+            /* Show ALL sentences containing one or more tags regardless of
+             * threshold
+             */
+            self.$s.filter( ':has(.tagged)' )
+                    .addClass('toHighlight')
+                    .removeClass('noHighlight');
+        }
+        else if (opts.view === 'starred')
+        {
+            // Show ALL starred sentences regardless of threshold
+            self.$s.filter( '.starred' )
+                    .addClass('toHighlight')
+                    .removeClass('noHighlight');
+        }
+        else
+        {
+            // Show only sentences within the threshold range
+            for (var idex = self.maxThreshold;
+                    idex >= self.minThreshold;
+                        idex--)
             {
-                var $s      = ar[jdex];
-                var nTagged = $s.find('.tagged').length;
+                var ar  = self.ranks[idex];
+                if (ar === undefined)   { continue; }
 
-                if ( ((opts.view === 'tagged')  && (nTagged < 1)) ||
-                     ((opts.view === 'starred') && (! $s.data('isStarred'))) )
+                var nItems  = ar.length;
+                for (var jdex = 0; jdex < nItems; jdex++)
                 {
-                    continue;
+                    // Mark this sentence as TO BE highlighted
+                    var $s      = ar[jdex];
+                    $s.addClass('toHighlight')
+                      .removeClass('noHighlight');
                 }
-
-                // Mark this sentence as TO BE highlighted
-                $s.addClass('toHighlight')
-                  .removeClass('noHighlight');
             }
         }
 
@@ -450,8 +468,8 @@ $.Summary.prototype = {
      *  @return true | false
      */
     _isVisible: function($s) {
-        var cls = $s.attr('class');
-        return (cls && cls.match(/(highlight|expanded|expansion|keyworded)/));
+        return ($s.filter('.highlight,.expanded,.expansion,.keyworded')
+                        .length > 0);
     },
 
     /** @brief  Given a jQuery DOM sentence element (.sentence),
@@ -622,6 +640,54 @@ $.Summary.prototype = {
         return this;
     },
 
+    /** @brief  Change the view value.
+     *  @param  view    The new value ('normal', 'tagged', 'starred').
+     *
+     *  @return this for a fluent interface.
+     */
+    _changeView: function(view) {
+        var self        = this;
+        var opts        = self.options;
+        var $buttons    = self.$control.find(  '[name=threshold-up],'
+                                             + '[name=threshold-down]');
+
+        switch (view)
+        {
+        case 'tagged':
+            $buttons.button('disable');
+            self.$control.find('#view-tagged')
+                    .attr('checked', true)
+                    .button('refresh');
+            break;
+
+        case 'starred':
+            $buttons.button('disable');
+            self.$control.find('#view-starred')
+                    .attr('checked', true)
+                    .button('refresh');
+            break;
+
+        case 'normal':
+        default:
+            view = 'normal';
+            $buttons.button('enable');
+            self.$control.find('#view-normal')
+                    .attr('checked', true)
+                    .button('refresh');
+            break;
+        }
+
+        // Set the view value
+        opts.view = view;
+        self.element.removeClass('starred tagged normal')
+                    .addClass(view);
+
+        // Re-apply the current threshold
+        self.threshold(self.minThreshold, self.maxThreshold);
+
+        return self;
+    },
+
     /** @brief  Set the caret/cursor position within the given element
      *  @param  $el     The jQuery/DOM element representing the input control;
      *  @param  pos     The desired caret/cursor position;
@@ -664,42 +730,41 @@ $.Summary.prototype = {
             switch (name)
             {
             case 'view':
-                var val   = $el.val();
-                opts.view = val;
-                self.element.removeClass('all starred tagged normal')
-                            .addClass(val);
-                self.threshold(self.minThreshold, self.maxThreshold);
+                self._changeView( $el.val() );
                 break;
 
             case 'threshold-all':
-                newMin = 0;
+                // Set the minThreshold
+                self.minThreshold = 0;
+
+                // Force 'view' to 'normal' as well
+                self._changeView();
                 break;
 
             case 'threshold-reset':
-                newMin = self.origThreshold[0];
+                // Reset the minThreshold
+                self.minThreshold = self.origThreshold[0];
+
+                // Remove all aging
                 self.$s.removeClass( 'old-0 old-1 old-2 old-3 old-4 '
                                     +'old-5 old-6 old-7 old-8')
                        .removeData('age');
+
+                // Force 'view' to 'normal' as well
+                self._changeView();
                 break;
 
             case 'threshold-down':
+                // Decrease the minimum threshold
                 if (newMin > 9)                         { newMin -= 10; }
+                self.threshold(newMin, self.maxThreshold);
                 break;
 
             case 'threshold-up':
+                // Increase the minimum threshold
                 if (newMin < (self.maxThreshold - 9))   { newMin += 10; }
-            }
-
-            if ( name.match(/^threshold-/) )
-            {
-                if (newMin === self.minThreshold)
-                {
-                    $el.animate('flash');
-                }
-                else
-                {
-                    self.threshold(newMin, self.maxThreshold);
-                }
+                self.threshold(newMin, self.maxThreshold);
+                break;
             }
         });
 
@@ -765,8 +830,7 @@ $.Summary.prototype = {
             var $s  = $(this);
             var $p  = $s.parents('p:first');
 
-            if ( $s.data('isCollapsing')     ||
-                 (! self._isVisible($s)) )
+            if ( $s.data('isCollapsing') || (! self._isVisible($s)) )
             {
                 return;
             }
@@ -961,7 +1025,7 @@ $.Summary.prototype = {
                  */
                 $hl.each(function() {
                     var $el = $(this);
-                    var $s  = $el.parent();
+                    var $s  = $el.parents('.sentence:first');
                     var $p  = $s.parent();
                     $el.addClass('ui-state-highlight');
 
@@ -975,7 +1039,7 @@ $.Summary.prototype = {
                  */
                 $hl.each(function() {
                     var $el     = $(this);
-                    var $s      = $el.parent();
+                    var $s      = $el.parents('.sentence:first');
                     var $p      = $s.parent();
                     $el.removeClass('ui-state-highlight');
 
@@ -1024,7 +1088,7 @@ $.Summary.prototype = {
                     return;
                 }
 
-                // Count this a click
+                // Count this as a click
                 $ctl.removeData('mousedown');
 
                 var sel = rangy.getSelection();
@@ -1069,7 +1133,7 @@ $.Summary.prototype = {
         $parent.delegateHoverIntent('article .sentence .tagged',
                                     function(e) {
             var $el     = $(this);
-            var $s      = $el.parent();
+            var $s      = $el.parents('.sentence:first');
             var pos     = $el.position();
             var offset  = $el.offset();
             var width   = $el.width();
@@ -1095,7 +1159,6 @@ $.Summary.prototype = {
                 break;
             }
         });
-
 
         /*************************************************************
          * On mouseup, see if there is a selection.
