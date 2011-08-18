@@ -131,11 +131,6 @@ a {
 
   cursor:       pointer;
 }
-.content-pane article section p.hidden {
-  visibility: visible;
-  font-size:  1px;
-}
-
 .content-pane article section p .sentence {
   position:   relative;
   padding:    0.1em 0.1em 0.1em 0;
@@ -144,6 +139,14 @@ a {
   font-size:  1px;
   color:      #ddd;
 }
+.content-pane article section p.folded {
+  visibility: visible;
+  font-size:  1px;
+}
+.content-pane article section p.folded .sentence {
+  display:    none;
+}
+
 .content-pane article section p .sentence .text,
 .content-pane article section p .sentence .keyword,
 .content-pane article section p .sentence .selected,

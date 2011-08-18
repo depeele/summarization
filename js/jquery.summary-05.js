@@ -45,6 +45,7 @@ $.Summary.prototype = {
                                      */
 
         useColor:       false,      // Color sentences based upon rank?
+        useFolding:     false,      // Fold empty paragraphs?
         rankOpacity:    0.3,        // The default opacity for rank items
         animSpeed:      200         // Speed (in ms) of animations
     },
@@ -429,6 +430,18 @@ $.Summary.prototype = {
             });
         });
 
+        if (opts.useFolding)
+        {
+            // Find all paragraphs that contain ONLY '.noHighlight' entries
+            self.$p.removeClass('folded')
+                   .filter(':not(:has(.toHighlight))')
+                    .addClass('folded').each(function() {
+                        var $p  = $(this);
+                        var len = $p.text().length;
+
+                        $p.css('height', len / 100 +'px');
+                    });
+        }
 
         // Hide sentences
         self.$s.filter('.noHighlight')
@@ -519,6 +532,7 @@ $.Summary.prototype = {
     _expand: function($s) {
         var self        = this;
         var opts        = self.options;
+        var $p          = $s.parents('p:first');
         var $el         = $s.find('.controls .expand');
         var $prev       = $s.prev();
         var $next       = $s.next();
@@ -540,6 +554,15 @@ $.Summary.prototype = {
         // Mark this sentence as being expanded
         $s.data('isExpanding', true);
         $s.addClass('expanded', opts.animSpeed);
+
+        if (opts.useFolding)
+        {
+            if ($p.hasClass('folded'))
+            {
+                $p.removeClass('folded')
+                  .addClass('un-folded');
+            }
+        }
 
         // If the previous sibling is NOT visible...
         if (! self._isVisible( $prev ) )
@@ -564,6 +587,7 @@ $.Summary.prototype = {
     _collapse: function($s) {
         var self                = this;
         var opts                = self.options;
+        var $p                  = $s.parents('p:first');
         var $el                 = $s.find('.controls .expand');
         var $prev               = $s.prev();
         var $next               = $s.next();
@@ -584,6 +608,21 @@ $.Summary.prototype = {
 
             // Change the expand/contract title back to "expand"
             $el.attr('title', 'expand');
+
+            if (opts.useFolding)
+            {
+                if ($p.hasClass('un-folded'))
+                {
+                    /* If this was the last expanded sentence in this
+                     * paragraph, change the paragraph marking BACK to 'folded'
+                     */
+                    if ($p.find(':has(.highlight))').length < 1)
+                    {
+                        $p.removeClass('un-folded')
+                          .addClass('folded');
+                    }
+                }
+            }
 
             // Mark collapse completed
             $s.removeData('isCollapsing');
