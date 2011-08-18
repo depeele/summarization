@@ -443,6 +443,17 @@ $.Summary.prototype = {
      *
      */
 
+    /** @brief  Given a jQuery DOM sentence element (.sentence), determine
+     *          whether or not it is fully "visible".
+     *  @param  $s      The jQuery DOM sentence element
+     *
+     *  @return true | false
+     */
+    _isVisible: function($s) {
+        var cls = $s.attr('class');
+        return (cls && cls.match(/(highlight|expanded|expansion|keyworded)/));
+    },
+
     /** @brief  Given a jQuery DOM sentence element (.sentence),
      *          toggle the 'star' setting.
      *  @param  $s      The jQuery DOM sentence element
@@ -498,13 +509,13 @@ $.Summary.prototype = {
         $s.addClass('expanded', opts.animSpeed);
 
         // If the previous sibling is NOT visible...
-        if ( ! $prev.hasClass('highlight expanded expansion') )
+        if (! self._isVisible( $prev ) )
         {
             $prev.addClass('expansion', opts.animSpeed);
         }
         
         // If the next sibling NOT is visible...
-        if ( ! $next.hasClass('highlight expanded expansion') )
+        if (! self._isVisible( $next ) )
         {
             $next.addClass('expansion', opts.animSpeed, expandDone);
         }
@@ -755,10 +766,7 @@ $.Summary.prototype = {
             var $p  = $s.parents('p:first');
 
             if ( $s.data('isCollapsing')     ||
-                 ((! $s.hasClass('highlight')) &&
-                  (! $s.hasClass('expanded'))  &&
-                  (! $s.hasClass('expansion')) &&
-                  (! $s.hasClass('keyworded')))  )
+                 (! self._isVisible($s)) )
             {
                 return;
             }
@@ -804,17 +812,26 @@ $.Summary.prototype = {
          */
         $parent.delegate('.sentence .controls .su-icon', 'click',
                          function(e) {
-            var $el = $(this);
-            var $s  = $el.parents('.sentence:first');
+            var $el     = $(this);
+            var $s      = $el.parents('.sentence:first');
+            var handled = false;
             console.log('control click: '+ $el.attr('class'));
 
             if ($el.hasClass('star'))
             {
                 self._toggleStar($s);
+                handled = true;
             }
             else if ($el.hasClass('expand'))
             {
                 self._toggleExpand($s);
+                handled = true;
+            }
+
+            if (handled)
+            {
+                e.stopPropagation();
+                return false;
             }
         });
 
@@ -822,9 +839,60 @@ $.Summary.prototype = {
          * Click handler for non-highlighted sentences
          *
          */
-        $parent.delegate('.sentence:not(.highlight,.expanded,.expansion)',
-                         'click', function(e) {
-            var $s  = $(this);
+        $parent.delegate('p', 'click', function(e) {
+            // '.sentence:not(.highlight,.expanded,.expansion)',
+            var $p  = $(this);
+            var $t  = $(e.target);
+            var $s;
+
+            if ( (! $t.is('p')) && (! $t.hasClass('sentence')) )
+            {
+                $t = $t.parents('.sentence:first');
+            }
+
+            if ($t.hasClass('sentence'))
+            {
+                if (self._isVisible($t))
+                {
+                    // IGNORE clicks on visible sentences
+                    return;
+                }
+
+                // A sentence that isn't currently "visible"
+                $s = $t;
+            }
+            else
+            {
+                // Find the sentence nearest the click
+                var $ss = $p.find('.sentence');
+
+                $ss.each(function() {
+                    var $el     = $(this);
+                    var bounds  = $el.offset();
+
+                    // Expand the bounds slightly
+                    bounds.top    -= 2;
+                    bounds.left   -= 2;
+                    bounds.right  = bounds.left + $el.width()  + 4;
+                    bounds.bottom = bounds.top  + $el.height() + 4;
+
+                    if ( (e.pageX >= bounds.left)  &&
+                         (e.pageX <= bounds.right) &&
+                         (e.pageY >= bounds.top)   &&
+                         (e.pageY <= bounds.bottom) )
+                    {
+                        $s = $el;
+                        return false;
+                    }
+                });
+
+                if (($s === undefined) || (self._isVisible($s)))
+                {
+                    console.log('un-highlighted sentence click -- IGNORE');
+                    return;
+                }
+            }
+
             if ($s.hasClass('hide-expand'))
             {
                 // Is there a highlighted neighbor near by?
@@ -1081,6 +1149,8 @@ $.Summary.prototype = {
         var $gp     = $parent.parent();
 
         $gp.undelegate('.controls input, .controls button', 'click');
+
+        $parent.undelegate('p', 'click');
 
         $parent.undelegateHoverIntent('.rank');
         $parent.undelegateHoverIntent('.sentence');

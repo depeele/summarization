@@ -128,6 +128,8 @@ article section p {
   margin-bottom:0.1em;
 
   box-shadow:   1px 1px #eee;
+
+  cursor:       pointer;
 }
 article section p.hidden {
   visibility: visible;
@@ -141,7 +143,6 @@ article section p .sentence {
   text-align: justify;
   font-size:  1px;
   color:      #ddd;
-  cursor:     pointer;
 }
 article section p .sentence .text,
 article section p .sentence .keyword,
