@@ -164,20 +164,20 @@ a {
   color:      #222;
   cursor:     text;
 }
-.content-pane article section p .old-0,
-.content-pane article section p .expanded {
+.content-pane article section p .old-0 .content,
+.content-pane article section p .expanded .content {
   background-color: #f0f0f0;
 }
 
 /* Progressive age */
-.content-pane article section p .old-1  { background-color: #ebebeb; }
-.content-pane article section p .old-2  { background-color: #e6e6e6; }
-.content-pane article section p .old-3  { background-color: #e1e1e1; }
-.content-pane article section p .old-4  { background-color: #dcdcdc; }
-.content-pane article section p .old-5  { background-color: #d7d7d7; }
-.content-pane article section p .old-6  { background-color: #d2d2d2; }
-.content-pane article section p .old-7  { background-color: #cdcdcd; }
-.content-pane article section p .old-8  { background-color: #c8c8c8; }
+.content-pane article section p .old-1 .content { background-color: #ebebeb; }
+.content-pane article section p .old-2 .content { background-color: #e6e6e6; }
+.content-pane article section p .old-3 .content { background-color: #e1e1e1; }
+.content-pane article section p .old-4 .content { background-color: #dcdcdc; }
+.content-pane article section p .old-5 .content { background-color: #d7d7d7; }
+.content-pane article section p .old-6 .content { background-color: #d2d2d2; }
+.content-pane article section p .old-7 .content { background-color: #cdcdcd; }
+.content-pane article section p .old-8 .content { background-color: #c8c8c8; }
 
 .content-pane article section p .controls {
   display:    none;

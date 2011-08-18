@@ -32,6 +32,13 @@ time, mark, audio, video {
   font-size: 100%;
   font: inherit;
   vertical-align: baseline;
+
+  /* Make the box model nearly match across browsers
+  box-sizing:         border-box;
+  -moz-box-sizing:    border-box;
+  -webkit-box-sizing: border-box;
+  -ms-box-sizing:     border-box;
+  */
 }
 
 article, aside, details, figcaption, figure,
