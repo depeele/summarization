@@ -81,11 +81,6 @@ $.Summary.prototype = {
         self.$control.find('.show,.buttons').buttonset();
 
         rangy.init();
-        self.cssTag    = rangy.createCssClassApplier(
-                                    'ui-state-default tagged', {
-                                        normalize:      true,
-                                        elementTagName: 'em'
-                                    });
         self.cssSelect = rangy.createCssClassApplier('selected', {
                                         normalize:      true,
                                         elementTagName: 'em'
@@ -134,7 +129,9 @@ $.Summary.prototype = {
             opts.view          = state.view;
             
             self.starred       = (state.starred ? state.starred : []);
+            /*
             self.tagged        = (state.tagged  ? state.tagged  : []);
+            */
         }
 
         // Renter the XML
@@ -192,8 +189,16 @@ $.Summary.prototype = {
         }
         
         // If there were previous tags, mark them now
-        if (self.tagged.length > 0)
+        if (state.tagged && (state.tagged.length > 0))
         {
+            var nTagged = state.tagged.length;
+            for (var idex = 0; idex < nTagged; idex++)
+            {
+                var range   = state.tagged[idex];
+                if (! range)    { continue; }
+
+                self._rangeTag( range, true );
+            }
         }
 
         /* Ensure the view is properly set (without a refresh).
@@ -869,6 +874,163 @@ $.Summary.prototype = {
         return self;
     },
 
+    /** @brief  Given a range selection object, generate a corresponding
+     *          summary range object
+     *  @param  sel     The rangy selection object.  If not provided,
+     *                  retrieve the current rangy selection.
+     *
+     *  @return A range object.
+     */
+    _generateRange: function(sel) {
+        if (sel === undefined)  { sel = rangy.getSelection(); }
+
+        var self    = this;
+        var opts    = self.options;
+        var ranges  = sel.getAllRanges();
+
+        /* Compute the indices of the sentences, .text/.keyword
+         * children, and text offsents.
+         */
+        var start   = ranges[0];
+        var end     = ranges[ ranges.length - 1];
+        start = { el: start.startContainer, offset: start.startOffset };
+        end   = { el: end.endContainer,     offset: end.endOffset };
+
+        /* A sentence range is the sentence index, child index,
+         * and offset
+         *
+         * Grab the start and end sentence along with an array of
+         * sentences between the two.
+         */
+        var $ss = $(start.el).parents('.sentence:first');
+        var $se = $(end.el).parents('.sentence:first');
+        var sa  = self.$s.toArray().slice( self.$s.index($ss),
+                                           self.$s.index($se) + 1);
+
+        // Now, .text/.keyword elements
+        var $cs = $(start.el).parents('.text,.keyword').first();
+        var $ce = $(end.el).parents('.text,.keyword').first();
+        var $ca = $(sa).find('.text,.keyword');
+        var ca  = $ca.toArray().slice( $ca.index($cs),
+                                       $ca.index($ce) + 1);
+
+        var sRange  = {
+            start:  {
+                s:      self.$s.index( $ss ),
+                c:      $ca.index( $cs ),
+                offset: $cs.text().indexOf( $(start.el).text() ),
+            },
+            end:  {
+                s:      self.$s.index( $se ),
+                c:      $ca.index( $ce ),
+                offset: end.offset
+            }
+        };
+
+        if ((sRange.start.s === sRange.end.s) &&
+            (sRange.start.c === sRange.end.c))
+        {
+            sRange.end.offset += sRange.start.offset;
+        }
+
+        /* To retrieve the selected sentences:
+         *     var sa   = self.$s.toArray()
+         *                  .slice(sRange.start.s, sRange.end.s + 1);
+         *
+         * To retrieve the selected .text/.keyword elements:
+         *      var ca  = $(sa).find('.text,.keyword').toArray()
+         *                  .slice(sRange.start.c, sRange.end.c + 1);
+         */
+
+        return sRange;
+    },
+
+    /** @brief  Given a range object from _generateRange(), tag all items
+     *          within the range.
+     *  @param  range   A range object from _generateRange()
+     *  @param  noPut   If true, do NOT perform a _putState()
+     */
+    _rangeTag: function( range, noPut ) {
+        var self    = this;
+        var opts    = self.options;
+        var $sa     = $(self.$s.toArray()
+                        .slice(range.start.s, range.end.s + 1));
+        var $ca     = $($sa.find('.text,.keyword').toArray()
+                        .slice(range.start.c, range.end.c + 1));
+        var lastC   = $ca.length - 1;
+
+        if (range.id === undefined) { range.id = self.tagged.length; }
+        self.tagged[ range.id ] = range;
+
+        // tag all elements within $ca
+        $ca.each(function(idex) {
+            var $c      = $(this);
+            var text    = { start:'', body:$c.text(), end:'' };
+            var sub     = { start: 0, end: text.body.length };
+            if (idex === 0)
+            {
+                // First item: use range.start.offset
+                sub.start = range.start.offset;
+            }
+            else if (idex >= lastC)
+            {
+                // Last item: use range.end.offset
+                sub.end = range.end.offset;
+            }
+
+            text.start = text.body.substr( 0, sub.start );
+            text.end   = text.body.substr( sub.end );
+            text.body  = text.body.substr( sub.start, sub.end );
+
+            // Enclose everything between sub.start and sub.end with an 'em'
+            var $body   = $('<em />')
+                            .addClass('ui-state-default tagged')
+                            .text( text.body )
+                            .attr('tagId', range.id)
+                            .data('tagRange', range);
+            $c.empty()
+                .append( text.start )
+                .append( $body )
+                .append( text.end );
+        });
+
+        /*
+        self.cssTag    = rangy.createCssClassApplier(
+                                    'ui-state-default tagged', {
+                                        normalize:      true,
+                                        elementTagName: 'em'
+                                    });
+        // */
+
+        if (noPut !== true)
+        {
+            self._putState();
+        }
+    },
+    
+    /** @brief  Given a jQuery DOM element that has been tagged via
+     *          _rangeTag(), remove the tag for all items in the associated
+     *          range.
+     *  @param  $el     The jQuery DOM element that has been tagged.
+     */
+    _removeTag: function( $el ) {
+        var self    = this;
+        var opts    = self.options;
+        var range   = $el.data('tagRange');
+        var $ca     = self.$s.find('[tagId='+ range.id +']');
+
+        // untag all elements within $ca
+        $ca.each(function(idex) {
+            var $c  = $(this);
+            $c.replaceWith( $c.html() );
+        });
+
+        // Remove this item from our list of tagged items
+        self.tagged[ range.id ] = undefined;
+
+        self._putState();
+    },
+    
     /** @brief  Set the caret/cursor position within the given element
      *  @param  $el     The jQuery/DOM element representing the input control;
      *  @param  pos     The desired caret/cursor position;
@@ -899,7 +1061,7 @@ $.Summary.prototype = {
         });
 
         /*************************************************************
-         * Handle clicks on control buttons.
+         * Handle clicks on the page-level control buttons.
          *
          */
         $gp.delegate('.controls input, .controls button', 'click',
@@ -1137,7 +1299,9 @@ $.Summary.prototype = {
 
                 if (($s === undefined) || (self._isVisible($s)))
                 {
-                    console.log('un-highlighted sentence click -- IGNORE');
+                    /* The final target sentence is either unidentified or
+                     * already visible -- IGNORE
+                     */
                     return;
                 }
             }
@@ -1161,26 +1325,12 @@ $.Summary.prototype = {
                          */
                         $s.removeClass('hide-expand');
                         $sib = $s;
-
-                        console.log('un-highlighted sentence click - '
-                                    + 'NO sentences without hide-expand');
                     }
-                    else
-                    {
-                        console.log('un-highlighted sentence click - '
-                                    + 'sibling without hide-expand');
-                    }
-                }
-                else
-                {
-                    console.log('un-highlighted sentence click - '
-                                + 'toggle nearest highlight');
                 }
                 self._toggleExpand($sib);
             }
             else
             {
-                console.log('un-highlighted sentence click - toggle');
                 self._toggleExpand($s);
             }
         });
@@ -1274,33 +1424,28 @@ $.Summary.prototype = {
                 }
 
                 // Count this as a click
-                $ctl.removeData('mousedown');
-
-                var sel = rangy.getSelection();
-                var str = sel.toString();
-
-                console.log('control click: '+ $el.attr('class')
-                            +', selected[ '+ str +' ]');
+                var $target = $ctl.parent();
+                $ctl.removeData('mousedown')
+                    .remove();
 
                 if ($el.hasClass('tag'))
                 {
-                    // Toggle '.tagged' for the current selection
-                    self.cssTag.toggleSelection( );
+                    // Tag the current selection
+                    var sel = rangy.getSelection();
+                    range = self._generateRange( sel );
 
-                    // Remove the 'selected' class
-                    var $s  = $(this).parents('.sentence:first');
-                    $s.find('.tagged').removeClass('selected');
+                    // Remove the rangy selection selection
+                    self.cssSelect.undoToSelection();
+                    sel.removeAllRanges();
+                
+                    self._rangeTag( range );
                 }
-                else if ($el.hasClass('remove'))
+                else
                 {
-                    // Remove the current highligher
-                    var $hl = $el.parents('.tagged:first');
-
-                    $hl.after( $hl.text() ).remove();
+                    // Remove the tag
+                    self._removeTag( $target );
                 }
 
-                sel.removeAllRanges();
-                $ctl.remove();
                 break;
             }
 
