@@ -591,7 +591,7 @@ $.Summary.prototype = {
         var sNum    = self.$s.index($s);
         
         $s.addClass('starred');
-        opts.starred[sNum] = true;
+        self.starred[sNum] = true;
 
         return this;
     },
@@ -609,7 +609,7 @@ $.Summary.prototype = {
         var sNum    = self.$s.index($s);
         
         $s.removeClass('starred');
-        opts.starred[sNum] = false;
+        self.starred[sNum] = false;
 
         return this;
     },
