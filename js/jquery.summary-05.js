@@ -175,7 +175,31 @@ $.Summary.prototype = {
             self.origThreshold = threshold;
 
         }
+
+        // If there were previously starred sentences, mark them now
+        if (self.starred.length > 0)
+        {
+            // Remove any current star markings and apply those indicated by
+            // self.starred
+            self.$s.removeClass('starred');
+            $.each(self.starred, function(idex, val) {
+                if (val === true)
+                {
+                    var $s  = $( self.$s.get(idex) );
+                    $s.addClass('starred');
+                }
+            });
+        }
         
+        // If there were previous tags, mark them now
+        if (self.tagged.length > 0)
+        {
+        }
+
+        /* Ensure the view is properly set (without a refresh).
+         * The refresh will take place when we set the threshold.
+         */
+        self._changeView(opts.view, true);
         self.threshold( threshold.min, threshold.max);
     },
 
@@ -443,16 +467,6 @@ $.Summary.prototype = {
                     });
         }
         
-        if (self.starred.length > 0)
-        {
-            // Remove any current star markings and apply those indicated by
-            // self.starred
-            self.$s.removeClass('starred');
-            $.each(self.starred, function() {
-                $(this).addClass('starred');
-            });
-        }
-
         // Hide sentences
         self.$s.filter('.noHighlight')
                .removeClass('noHighlight expanded expansion')
@@ -804,11 +818,12 @@ $.Summary.prototype = {
     },
 
     /** @brief  Change the view value.
-     *  @param  view    The new value ('normal', 'tagged', 'starred').
+     *  @param  view        The new value ('normal', 'tagged', 'starred').
+     *  @param  noRefresh   If true, do NOT perform a refresh.
      *
      *  @return this for a fluent interface.
      */
-    _changeView: function(view) {
+    _changeView: function(view, noRefresh) {
         var self        = this;
         var opts        = self.options;
         var $buttons    = self.$control.find(  '[name=threshold-up],'
@@ -845,8 +860,11 @@ $.Summary.prototype = {
         self.element.removeClass('starred tagged normal')
                     .addClass(view);
 
-        // Re-apply the current threshold
-        self.refresh();
+        if (noRefresh !== true)
+        {
+            // Re-apply the current threshold
+            self.refresh();
+        }
 
         return self;
     },
