@@ -121,7 +121,8 @@ $.Summary.prototype = {
         if (self.metadata === null) { return; }
         
         // Retrieve the view state for the current meta-data URL
-        var state  = self._getState(opts.metadata);
+        var state   = self._getState(opts.metadata);
+        var tagged  = [];
         if (state)
         {
             opts.threshold.min = state.threshold.min;
@@ -129,9 +130,8 @@ $.Summary.prototype = {
             opts.view          = state.view;
             
             self.starred       = (state.starred ? state.starred : []);
-            /*
-            self.tagged        = (state.tagged  ? state.tagged  : []);
-            */
+
+            if (state.tagged)   { tagged = state.tagged; }
         }
 
         // Renter the XML
@@ -189,12 +189,12 @@ $.Summary.prototype = {
         }
         
         // If there were previous tags, mark them now
-        if (state.tagged && (state.tagged.length > 0))
+        if (tagged.length > 0)
         {
-            var nTagged = state.tagged.length;
+            var nTagged = tagged.length;
             for (var idex = 0; idex < nTagged; idex++)
             {
-                var range   = state.tagged[idex];
+                var range   = tagged[idex];
                 if (! range)    { continue; }
 
                 self._rangeTag( range, true );
