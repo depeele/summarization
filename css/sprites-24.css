@@ -33,6 +33,8 @@
 .su-icon-reset-white                { background-position:  -168px -48px; }
 
 /* state-based positioning */
+.starred .su-icon-star              { background-position:  0      -24px; }
+
 .su-state-active.su-icon-star       { background-position:  0      -24px; }
 .su-state-active.su-icon-collapse   { background-position:  -24px  -24px; }
 .su-state-active.su-icon-expand     { background-position:  -48px  -24px; }

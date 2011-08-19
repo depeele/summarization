@@ -36,6 +36,12 @@ $.Summary.prototype = {
                                      * summarization/characterization metadata
                                      */
 
+        threshold:      {           // The desired min/max threshold
+            min:        -1,         // If -1,-1, dynamically determine the
+            max:        -1          //  threshold based upon 'showSentences'
+        },
+        view:           'normal',   // The initial view (normal, tagged, starred)
+        
         showSentences:  5,          /* The minimum number of sentences to
                                      * present
                                      */
@@ -63,11 +69,16 @@ $.Summary.prototype = {
         self.element  = el;
         self.options  = opts;
         self.metadata = null;
+        self.starred  = [];
+        self.tagged   = [];
 
         var $gp     = self.element.parent().parent();
         self.$control         = $gp.find('.control-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
+        
+        // Initialize any widgets
+        self.$control.find('.show,.buttons').buttonset();
 
         rangy.init();
         self.cssTag    = rangy.createCssClassApplier(
@@ -80,6 +91,7 @@ $.Summary.prototype = {
                                         elementTagName: 'em'
                                     });
 
+        // Bind events
         self._bindEvents();
 
         // Kick off the retrieval of the metadata
@@ -89,6 +101,7 @@ $.Summary.prototype = {
         getMetadata.success(function( data ) {
             self.metadata = data;
 
+            // Perform the initial rendering of the xml
             self.render();
 
             self.element.removeClass('loading');
@@ -109,7 +122,20 @@ $.Summary.prototype = {
         var self    = this;
         var opts    = self.options;
 
+        // If we have NOT retrieved the XML meta-data, no rendering.
         if (self.metadata === null) { return; }
+        
+        // Retrieve the view state for the current meta-data URL
+        var state  = self._getState(opts.metadata);
+        if (state)
+        {
+            opts.threshold.min = state.threshold.min;
+            opts.threshold.max = state.threshold.max;
+            opts.view          = state.view;
+            
+            self.starred       = (state.starred ? state.starred : []);
+            self.tagged        = (state.tagged  ? state.tagged  : []);
+        }
 
         // Renter the XML
         self.renderXml( self.metadata );
@@ -121,7 +147,7 @@ $.Summary.prototype = {
         self.ranks  = [];
         self.$s.each(function() {
             var $el     = $(this);
-            var rank    = parseInt($el.attr('rank'));
+            var rank    = parseInt($el.attr('rank'), 10);
             if (isNaN(rank))                    { return; }
 
             if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
@@ -142,28 +168,15 @@ $.Summary.prototype = {
             self.ranks[rank].push($el);
         });
 
-        /* Find the highest rank that will include at least opts.showSentences
-         * sentences.
-         */
-        var num             = 0;
-        var minThreshold    = -1;
-        var maxThreshold    = 100;
-
-        for (var idex = self.ranks.length - 1; idex > 0; idex--)
+        var threshold   = opts.threshold;
+        if ((opts.threshold.min < 0) || (opts.threshold.max < 0))
         {
-            var ar = self.ranks[idex];
-            if (ar === undefined) { continue; }
+            threshold          = self._computeThreshold();
+            self.origThreshold = threshold;
 
-            num += ar.length;
-            if (num > opts.showSentences)
-            {
-                minThreshold = Math.floor(idex / 10) * 10;
-                break;
-            }
         }
-
-        self.origThreshold = [ minThreshold, maxThreshold ];
-        self.renderControl( minThreshold, maxThreshold );
+        
+        self.threshold( threshold.min, threshold.max);
     },
 
     /** @brief  Given XML content, convert it to stylable HTML.
@@ -297,31 +310,18 @@ $.Summary.prototype = {
 
     },
 
-    /** @brief  Render the summary dialog with controls.
-     *  @param  minThreshold    The threshold minimum.
-     *  @param  maxThreshold    The threshold maximum.
-     */
-    renderControl: function( minThreshold, maxThreshold ) {
-        var self    = this;
-        var opts    = self.options;
-
-        self.$control.find('.show,.buttons').buttonset();
-        self.threshold( minThreshold, maxThreshold);
-    },
-
     /** @brief  Change the rank threshold.
      *  @param  min     The minimum threshold.
      *  @param  max     The maximum threshold.
-     *
      */
     threshold: function( min, max) {
         var self        = this;
         var opts        = self.options;
-        var isExpand    = (min < self.minThreshold);
+        var isExpand    = (min < opts.threshold.min);
 
         // Update the threshold and threshold value presentation
-        self.minThreshold = min;
-        self.maxThreshold = max;
+        opts.threshold.min = min;
+        opts.threshold.max = max;
 
         self.refresh( isExpand );
     },
@@ -338,7 +338,7 @@ $.Summary.prototype = {
         var self        = this;
         var opts        = self.options;
 
-        var str = self.minThreshold +' - ' + self.maxThreshold;
+        var str = opts.threshold.min +' - ' + opts.threshold.max;
         self.$thresholdValues.text( str );
 
         /* Initially mark all sentences as 'NOT highlighted' and all
@@ -365,8 +365,8 @@ $.Summary.prototype = {
         else
         {
             // Show only sentences within the threshold range
-            for (var idex = self.maxThreshold;
-                    idex >= self.minThreshold;
+            for (var idex = opts.threshold.max;
+                    idex >= opts.threshold.min;
                         idex--)
             {
                 var ar  = self.ranks[idex];
@@ -442,6 +442,16 @@ $.Summary.prototype = {
                         $p.css('height', len / 100 +'px');
                     });
         }
+        
+        if (self.starred.length > 0)
+        {
+            // Remove any current star markings and apply those indicated by
+            // self.starred
+            self.$s.removeClass('starred');
+            $.each(self.starred, function() {
+                $(this).addClass('starred');
+            });
+        }
 
         // Hide sentences
         self.$s.filter('.noHighlight')
@@ -482,6 +492,8 @@ $.Summary.prototype = {
 
                 $s.data('isHighlighted', true);
             });
+          
+        self._putState();
     },
 
     /******************************************************************
@@ -489,6 +501,72 @@ $.Summary.prototype = {
      *
      */
 
+    /** @brief  Retrieve the current view state.
+     *  @param  url     The URL to retrieve view state for [ opts.metadata ];
+     */
+    _getState: function(url) {
+        var self    = this;
+        var opts    = self.options;
+        
+        if (url === undefined)  { url = opts.metadata; }
+        
+        return $.jStorage.get(url);
+    },
+
+    /** @brief  Store the current view state.
+     *  @param  url     The URL to retrieve view state for [ opts.metadata ];
+     */
+    _putState: function(url) {
+        var self    = this;
+        var opts    = self.options;
+        
+        if (url === undefined)  { url = opts.metadata; }
+        
+        // Remember the current settings
+        var state  = {
+            threshold:  opts.threshold,
+            view:       opts.view,
+            
+            starred:    self.starred,
+            tagged:     self.tagged
+        };
+        
+        $.jStorage.set(url, state);
+    },
+    
+    /** @brief  Compute the thresholds based upon opts.showSentences.
+     * 
+     *  @return The new threshold object {min: , max: }
+     */
+    _computeThreshold: function() {
+        var self        = this;
+        var opts        = self.options;
+        var num         = 0;
+        var threshold   = {
+            min:    -1,
+            max:    100
+        };
+
+
+        /* Find the highest rank that will include at least opts.showSentences
+         * sentences.
+         */
+        for (var idex = self.ranks.length - 1; idex > 0; idex--)
+        {
+            var ar = self.ranks[idex];
+            if (ar === undefined) { continue; }
+
+            num += ar.length;
+            if (num > opts.showSentences)
+            {
+                threshold.min = Math.floor(idex / 10) * 10;
+                break;
+            }
+        }
+        
+        return threshold;
+    },
+    
     /** @brief  Given a jQuery DOM sentence element (.sentence), determine
      *          whether or not it is fully "visible".
      *  @param  $s      The jQuery DOM sentence element
@@ -501,26 +579,57 @@ $.Summary.prototype = {
     },
 
     /** @brief  Given a jQuery DOM sentence element (.sentence),
+     *          turn ON the 'star' setting.
+     *  @param  $s      The jQuery DOM sentence element
+     *
+     */
+    _starOn: function($s) {
+        var self    = this;
+        var opts    = self.options;
+        
+        // Locate the paragraph/sentence number
+        var sNum    = self.$s.index($s);
+        
+        $s.addClass('starred');
+        opts.starred[sNum] = true;
+
+        return this;
+    },
+    
+    /** @brief  Given a jQuery DOM sentence element (.sentence),
+     *          turn OFF the 'star' setting.
+     *  @param  $s      The jQuery DOM sentence element
+     *
+     */
+    _starOff: function($s) {
+        var self    = this;
+        var opts    = self.options;
+        
+        // Locate the paragraph/sentence number
+        var sNum    = self.$s.index($s);
+        
+        $s.removeClass('starred');
+        opts.starred[sNum] = false;
+
+        return this;
+    },
+
+    /** @brief  Given a jQuery DOM sentence element (.sentence),
      *          toggle the 'star' setting.
      *  @param  $s      The jQuery DOM sentence element
      *
      */
     _toggleStar: function($s) {
         var self    = this;
-        var opts    = self.options;
-        var $el     = $s.find('.controls .star');
+        
         // (un)Star this sentence
-        if ($s.data('isStarred'))
+        if ($s.hasClass('starred'))
         {
-            $s.removeClass('starred')
-              .removeData('isStarred');
-            $el.removeClass('su-state-active');
+            self._starOff($s);
         }
         else
         {
-            $s.addClass('starred')
-              .data('isStarred', true);
-            $el.addClass('su-state-active');
+            self._starOn($s);
         }
 
         return this;
@@ -779,7 +888,7 @@ $.Summary.prototype = {
                      function() {
             var $el     = $(this);
             var name    = $el.attr('name');
-            var newMin  = self.minThreshold;
+            var newMin  = opts.threshold.min;
 
             switch (name)
             {
@@ -788,16 +897,20 @@ $.Summary.prototype = {
                 break;
 
             case 'threshold-all':
-                // Set the minThreshold
-                self.minThreshold = 0;
+                // Set the threshold.min
+                opts.threshold.min = 0;
 
                 // Force 'view' to 'normal' as well
                 self._changeView();
                 break;
 
             case 'threshold-reset':
-                // Reset the minThreshold
-                self.minThreshold = self.origThreshold[0];
+                // Reset the threshold.min
+                if (self.origThreshold === undefined)
+                {
+                    self.origThreshold = self._computeThreshold();
+                }
+                opts.threshold.min = self.origThreshold.min;
 
                 // Remove all aging
                 self.$s.removeClass( 'old-0 old-1 old-2 old-3 old-4 '
@@ -811,13 +924,13 @@ $.Summary.prototype = {
             case 'threshold-down':
                 // Decrease the minimum threshold
                 if (newMin > 9)                         { newMin -= 10; }
-                self.threshold(newMin, self.maxThreshold);
+                self.threshold(newMin, opts.threshold.max);
                 break;
 
             case 'threshold-up':
                 // Increase the minimum threshold
-                if (newMin < (self.maxThreshold - 9))   { newMin += 10; }
-                self.threshold(newMin, self.maxThreshold);
+                if (newMin < (opts.threshold.max - 9))   { newMin += 10; }
+                self.threshold(newMin, opts.threshold.max);
                 break;
             }
         });
