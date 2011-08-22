@@ -40,7 +40,7 @@ $.Summary.prototype = {
             min:        -1,         // If -1,-1, dynamically determine the
             max:        -1          //  threshold based upon 'showSentences'
         },
-        view:           'normal',   // The initial view (normal, tagged, starred)
+        view:           'normal',   // The initial view (normal,tagged,starred)
         
         showSentences:  5,          /* The minimum number of sentences to
                                      * present
@@ -70,7 +70,7 @@ $.Summary.prototype = {
         self.options  = opts;
         self.metadata = null;
         self.starred  = [];
-        self.tagged   = [];
+        self.notes    = [];
 
         var $gp     = self.element.parent().parent();
         self.$control         = $gp.find('.control-pane');
@@ -81,6 +81,11 @@ $.Summary.prototype = {
         self.$control.find('.show,.buttons').buttonset();
 
         rangy.init();
+        self.cssTag    = rangy.createCssClassApplier(
+                                    'ui-state-default tagged', {
+                                        normalize:      true,
+                                        elementTagName: 'em'
+                                    });
         self.cssSelect = rangy.createCssClassApplier('selected', {
                                         normalize:      true,
                                         elementTagName: 'em'
@@ -122,7 +127,7 @@ $.Summary.prototype = {
         
         // Retrieve the view state for the current meta-data URL
         var state   = self._getState(opts.metadata);
-        var tagged  = [];
+        var notes   = [];
         if (state)
         {
             opts.threshold.min = state.threshold.min;
@@ -131,7 +136,7 @@ $.Summary.prototype = {
             
             self.starred       = (state.starred ? state.starred : []);
 
-            if (state.tagged)   { tagged = state.tagged; }
+            if (state.notes)    { notes = state.notes; }
         }
 
         // Renter the XML
@@ -189,15 +194,21 @@ $.Summary.prototype = {
         }
         
         // If there were previous tags, mark them now
-        if (tagged.length > 0)
+        if (notes.length > 0)
         {
-            var nTagged = tagged.length;
-            for (var idex = 0; idex < nTagged; idex++)
+            var nNotes  = notes.length;
+            for (var idex = 0; idex < nNotes; idex++)
             {
-                var range   = tagged[idex];
-                if (! range)    { continue; }
+                var curNotes    = notes[idex];
+                if (! curNotes) { continue; }
 
-                self._rangeTag( range, true );
+                var $note   = self._addNotes( curNotes.range, true );
+                var nNote   = curNotes.notes.length;
+                for (var jdex = 0; jdex < nNote; jdex++)
+                {
+                    var note    = curNotes.notes[jdex];
+                    self._addNote($note, note, true);
+                }
             }
         }
 
@@ -547,7 +558,7 @@ $.Summary.prototype = {
             view:       opts.view,
             
             starred:    self.starred,
-            tagged:     self.tagged
+            notes:      self.notes
         };
         
         $.jStorage.set(url, state);
@@ -879,7 +890,7 @@ $.Summary.prototype = {
      *  @param  sel     The rangy selection object.  If not provided,
      *                  retrieve the current rangy selection.
      *
-     *  @return A range object.
+     *  @return A range string of the form 'ss/se:so,es/ee:eo'.
      */
     _generateRange: function(sel) {
         if (sel === undefined)  { sel = rangy.getSelection(); }
@@ -893,114 +904,105 @@ $.Summary.prototype = {
          */
         var start   = ranges[0];
         var end     = ranges[ ranges.length - 1];
-        start = { el: start.startContainer, offset: start.startOffset };
-        end   = { el: end.endContainer,     offset: end.endOffset };
 
         /* A sentence range is the sentence index, child index,
-         * and offset
+         * and offset in the form:
+         *      si/ci:offset
          *
          * Grab the start and end sentence along with an array of
          * sentences between the two.
          */
-        var $ss = $(start.el).parents('.sentence:first');
-        var $se = $(end.el).parents('.sentence:first');
-        var sa  = self.$s.toArray().slice( self.$s.index($ss),
-                                           self.$s.index($se) + 1);
-
-        // Now, .text/.keyword elements
-        var $cs = $(start.el).parents('.text,.keyword').first();
-        var $ce = $(end.el).parents('.text,.keyword').first();
-        var $ca = $(sa).find('.text,.keyword');
-        var ca  = $ca.toArray().slice( $ca.index($cs),
-                                       $ca.index($ce) + 1);
-
+        var $ss     = $(start.startContainer).parents('.sentence:first');
+        var $se     = $(end.endContainer).parents('.sentence:first');
         var sRange  = {
-            start:  {
-                s:      self.$s.index( $ss ),
-                c:      $ca.index( $cs ),
-                offset: $cs.text().indexOf( $(start.el).text() ),
-            },
-            end:  {
-                s:      self.$s.index( $se ),
-                c:      $ca.index( $ce ),
-                offset: end.offset
-            }
+            start:  self.$s.index( $ss ) +'/'
+                    + rangy.serializePosition(
+                                    start.startContainer,
+                                    start.startOffset,
+                                    $ss.find('.content')[0]).substr(2),
+            end:    self.$s.index( $se ) +'/'
+                    + rangy.serializePosition(
+                                    end.endContainer,
+                                    end.endOffset,
+                                    $se.find('.content')[0]).substr(2)
         };
 
-        if ((sRange.start.s === sRange.end.s) &&
-            (sRange.start.c === sRange.end.c))
-        {
-            sRange.end.offset += sRange.start.offset;
-        }
-
-        /* To retrieve the selected sentences:
-         *     var sa   = self.$s.toArray()
-         *                  .slice(sRange.start.s, sRange.end.s + 1);
-         *
-         * To retrieve the selected .text/.keyword elements:
-         *      var ca  = $(sa).find('.text,.keyword').toArray()
-         *                  .slice(sRange.start.c, sRange.end.c + 1);
-         */
-
-        return sRange;
+        return sRange.start +','+ sRange.end;
     },
 
     /** @brief  Given a range object from _generateRange(), tag all items
      *          within the range.
-     *  @param  range   A range object from _generateRange()
+     *  @param  range   A range string from _generateRange()
      *  @param  noPut   If true, do NOT perform a _putState()
+     *
+     *  @return The jQuery DOM element representing the tagged item.
      */
-    _rangeTag: function( range, noPut ) {
+    _addNotes: function( range, noPut ) {
         var self    = this;
         var opts    = self.options;
-        var $sa     = $(self.$s.toArray()
-                        .slice(range.start.s, range.end.s + 1));
-        var $ca     = $($sa.find('.text,.keyword').toArray()
-                        .slice(range.start.c, range.end.c + 1));
-        var lastC   = $ca.length - 1;
 
-        if (range.id === undefined) { range.id = self.tagged.length; }
-        self.tagged[ range.id ] = range;
+        // Generate notes with a single note.
+        var notes   = new $.Notes({id:self.notes.length, range:range});
+        self.notes[ notes.getId() ] = notes.serialize();
 
-        // tag all elements within $ca
-        $ca.each(function(idex) {
-            var $c      = $(this);
-            var text    = { start:'', body:$c.text(), end:'' };
-            var sub     = { start: 0, end: text.body.length };
-            if (idex === 0)
+        // Parse the incoming 'range' to generate a matching rangy selection.
+        var re      = /^([0-9]+)\/([0-9]+):([0-9]+)$/;
+        var parts   = range.split(/\s*,\s*/);
+        var start   = parts[0].match( re );
+        var end     = parts[1].match( re );
+        var $start  = $($(self.$s.get(start[1]))
+                            .find('.content')
+                            .children()[ start[2] ]);
+        var $end    = $($(self.$s.get(end[1]))
+                            .find('.content')
+                            .children()[ end[2] ]);
+        var sel     = rangy.getSelection();
+        sel.removeAllRanges();
+
+        var rRange  = rangy.createRange();
+        rRange.setStart($start[0].childNodes[0], start[3]);
+        rRange.setEnd($end[0].childNodes[0], end[3]);
+        sel.setSingleRange( rRange );
+
+        // Apply '.tagged' to the selection
+        self.cssTag.applyToSelection();
+
+        // Attach our $.Notes object to the FIRST element in the range.
+        var ranges  = sel.getAllRanges();
+        var $note   = $(ranges[0].startContainer).parent();
+        $note.data('summary-notes', notes);
+
+        /* Retrieve all '.tagged' items within the range and add a 'name'
+         * attribute identifying the notes to which the items belong.
+         */
+        var id      = notes.getId();
+        ranges[0].getNodes([3], function(node) {
+            var $parent = $(node).parent();
+            if ($parent.hasClass('tagged'))
             {
-                // First item: use range.start.offset
-                sub.start = range.start.offset;
+                $parent.attr('name', 'summary-notes-'+ id);
             }
-            else if (idex >= lastC)
-            {
-                // Last item: use range.end.offset
-                sub.end = range.end.offset;
-            }
-
-            text.start = text.body.substr( 0, sub.start );
-            text.end   = text.body.substr( sub.end );
-            text.body  = text.body.substr( sub.start, sub.end );
-
-            // Enclose everything between sub.start and sub.end with an 'em'
-            var $body   = $('<em />')
-                            .addClass('ui-state-default tagged')
-                            .text( text.body )
-                            .attr('tagId', range.id)
-                            .data('tagRange', range);
-            $c.empty()
-                .append( text.start )
-                .append( $body )
-                .append( text.end );
         });
+        sel.removeAllRanges();
 
-        /*
-        self.cssTag    = rangy.createCssClassApplier(
-                                    'ui-state-default tagged', {
-                                        normalize:      true,
-                                        elementTagName: 'em'
-                                    });
-        // */
+        if (noPut !== true)
+        {
+            self._putState();
+        }
+
+        return $note;
+    },
+
+    /** @brief  Given a jQuery DOM element representing a tagged item, add
+     *          a new note.
+     *  @param  $note   The jQUery DOM element representing the tagged item;
+     *  @param  note    The new $.Note;
+     *  @param  noPut   If true, do NOT perform a _putState()
+     */
+    _addNote: function( $note, note, noPut ) {
+        var notes   = $note.data('summary-notes');
+
+        notes.addNote( note );
 
         if (noPut !== true)
         {
@@ -1009,24 +1011,31 @@ $.Summary.prototype = {
     },
     
     /** @brief  Given a jQuery DOM element that has been tagged via
-     *          _rangeTag(), remove the tag for all items in the associated
+     *          _addNotes(), remove the tag for all items in the associated
      *          range.
      *  @param  $el     The jQuery DOM element that has been tagged.
      */
-    _removeTag: function( $el ) {
+    _removeNotes: function( $el ) {
         var self    = this;
         var opts    = self.options;
-        var range   = $el.data('tagRange');
-        var $ca     = self.$s.find('[tagId='+ range.id +']');
+        var notes   = $el.data('summary-notes');
 
-        // untag all elements within $ca
-        $ca.each(function(idex) {
-            var $c  = $(this);
-            $c.replaceWith( $c.html() );
+        if (! notes)    { return; }
+
+        var id      = notes.getId();
+        var $notes  = self.element.find('[name=summary-notes-'+ id +']');
+
+        $el.removeData('summary-notes');
+        notes.destroy();
+
+        //delete self.notes[ id ];
+        self.notes[ id ] = undefined;
+
+        // Remove the '.tagged' container
+        $notes.each(function() {
+            var $note   = $(this);
+            $note.replaceWith( $note.html() );
         });
-
-        // Remove this item from our list of tagged items
-        self.tagged[ range.id ] = undefined;
 
         self._putState();
     },
@@ -1432,18 +1441,23 @@ $.Summary.prototype = {
                 {
                     // Tag the current selection
                     var sel = rangy.getSelection();
-                    range = self._generateRange( sel );
 
                     // Remove the rangy selection selection
                     self.cssSelect.undoToSelection();
+
+                    // Generate a sentence-based range
+                    range = self._generateRange( sel );
+
+                    // Remove current selection
                     sel.removeAllRanges();
                 
-                    self._rangeTag( range );
+                    // Create notes
+                    self._addNotes( range );
                 }
                 else
                 {
-                    // Remove the tag
-                    self._removeTag( $target );
+                    // Remove all notes
+                    self._removeNotes( $target );
                 }
 
                 break;
@@ -1473,10 +1487,14 @@ $.Summary.prototype = {
             switch (e.type)
             {
             case 'hover-in':
-                // Add a new selection control just above the current selection
+                /* Find the FIRST item associated with the notes identified by
+                 * $el.name and add remove controls just above that item.
+                 */
+                var name    = $el.attr('name');
+                var $first  = self.element.find('[name='+ name +']:first');
                 $('#tmpl-selection-remove-controls')
                     .tmpl()
-                    .appendTo($el)
+                    .appendTo($first)
                     .css({
                         top:    -22,
                         left:   0
@@ -1524,7 +1542,7 @@ $.Summary.prototype = {
             self.cssSelect.applyToSelection();
 
             // Add a new selection control just above the current selection
-            var $sel    = $s.find('.selected:first');
+            var $sel    = self.element.find('.selected:first');
             $('#tmpl-selection-controls')
                 .tmpl()
                 .appendTo($sel)
