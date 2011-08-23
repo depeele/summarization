@@ -406,26 +406,29 @@ a {
 }
 .notes-body .note .avatar {
   position:     absolute;
-  left:         0;
-  top;          0;
+  left:         0.5em;
+  top;          0.5em;
 
   width:        24px;
   height:       24px;
 }
 .notes-body .note .author,
-.notes-body .note .dateTime {
+.notes-body .note .created {
   margin-left:  32px;
 }
 .notes-body .note .author {
   font-weight:  bold;
 }
-.notes-body .note .dateTime {
+.notes-body .note .created {
   margin-top:   0.5em;
   font-size:    0.8em;
 }
 .notes-body .note .comment {
 }
-.notes-body .note .control {
+.notes-body .note .control,
+.notes-input-pane .buttons {
+  text-align:   right;
+  padding-top:  0.5em;
 }
 
 /*******************
@@ -444,6 +447,8 @@ a {
 .notes-active .notes-input-pane {
   display:        block;
   border-top:     1px dashed #ffe764;
+  padding:        0.5em;
+  text-align:     right;
 }
 .notes-active .arrow-outer {
   display:        block;

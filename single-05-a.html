@@ -114,10 +114,10 @@
 
  <script id='tmpl-note' type='text/x-jquery-tmpl'>
   <div class='note'>
-   <img class='avatar' src='${avatarUrl}' />
-   <div class='author'>${author}</div>
-   <div class='dateTime'>${dateTime}</div>
-   <div class='comment'>${comment}</div>
+   <img class='avatar' src='${note.getAuthor().getAvatarUrl()}' />
+   <div class='author'>${note.getAuthor().getFullName()}</div>
+   <div class='created'>${note.getCreated()}</div>
+   <div class='comment'>${note.getText()}</div>
    <div class='control'>
     <button name='edit'>Edit</button>
     <button name='delete'>Delete</button>
@@ -130,7 +130,7 @@
    <div class='arrow-outer'></div>
    <div class='arrow-inner'></div>
    <div class='notes-body'>
-    <!-- note entries will be places here -->
+    <!-- note entries will be placed here -->
    </div>
    <div class='notes-input-pane'>
     <textarea class='notes-reply'></textarea>

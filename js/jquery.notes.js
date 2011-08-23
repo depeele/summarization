@@ -20,12 +20,14 @@
  *                      id:         The Unique ID of the user;
  *                      name:       The user name;
  *                      fullName:   The user's full name;
+ *                      avatarUrl:  The URL to the user's avatar image;
  */
 $.User  = function(props) {
     var defaults    = {
         id:         null,
-        name:       null,
-        fullName:   null
+        name:       'anonymous',
+        fullName:   'Anonymous',
+        avatarUrl:  'images/avatar.jpg'
     };
 
     return this.init( $.extend(defaults, true, props || {}) );
@@ -43,6 +45,11 @@ $.User.prototype = {
 
         return this;
     },
+
+    getId:          function() { return this.props.id; },
+    getName:        function() { return this.props.name; },
+    getFullName:    function() { return this.props.fullName; },
+    getAvatarUrl:   function() { return this.props.avatarUrl; },
 
     serialize: function() {
         return this.props;
@@ -73,7 +80,7 @@ $.User.prototype = {
 $.Note  = function(props) {
     var defaults    = {
         author: null,
-        text:   null,
+        text:   '',
         created:new Date()
     };
 
@@ -89,8 +96,8 @@ $.Note.prototype = {
     init: function(props) {
         this.props = props;
 
-        if ( (this.props.author !== null) &&
-             (! this.props.author instanceof $.User) )
+        if ( (this.props.author === null) ||
+             ($.isPlainObject(this.props.author)) )
         {
             this.props.author = new $.User( this.props.author );
         }
@@ -98,8 +105,20 @@ $.Note.prototype = {
         return this;
     },
 
+    getAuthor: function() { return this.props.author; },
+    getText:   function() { return this.props.text; },
+    getCreated:function() { return this.props.created; },
+
     serialize: function() {
-        return this.props;
+        var serialized  = {
+            author: (this.props.author
+                        ? this.props.author.serialize()
+                        : null),
+            text:   this.props.text,
+            created:this.props.created
+        };
+
+        return serialized;
     },
 
     destroy: function() {
@@ -153,7 +172,7 @@ $.Notes.prototype = {
         var noteInstances   = [];
         $.each(this.props.notes, function() {
             var note    = this;
-            if (! note instanceof $.Note)   { note = new $.Note(note); }
+            if ($.isPlainObject(note))  { note = new $.Note(note); }
 
             noteInstances.push( note );
         });
@@ -168,28 +187,21 @@ $.Notes.prototype = {
      *  @return this for a fluent interface.
      */
     addNote: function(note) {
-        if (! note instanceof $.Note)   { note = new $.Note(note); }
+        if ($.isPlainObject(note))      { note = new $.Note(note); }
 
         this.props.notes.push(note);
 
         return this;
     },
 
-    getId: function() {
-        return this.props.id;
-    },
-    getRange: function() {
-        return this.props.range;
-    },
-    getNotes: function() {
-        return this.props.notes;
-    },
+    getId: function()       { return this.props.id; },
+    getRange: function()    { return this.props.range; },
+    getNotes: function()    { return this.props.notes; },
+    getTags: function()     { return this.props.tags; },
+
     getNote: function(idex) {
         idex = idex || 0;
         return this.props.notes[idex];
-    },
-    getTags: function() {
-        return this.props.tags;
     },
     getTag: function(idex) {
         idex = idex || 0;
@@ -202,6 +214,7 @@ $.Notes.prototype = {
      */
     serialize: function() {
         var serialized  = {
+            id:     this.props.id,
             range:  this.props.range,
             notes:  [],
             tags:   this.props.tags

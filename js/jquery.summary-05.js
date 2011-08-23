@@ -74,6 +74,7 @@ $.Summary.prototype = {
 
         var $gp     = self.element.parent().parent();
         self.$control         = $gp.find('.control-pane');
+        self.$notes           = $gp.find('.notes-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
         
@@ -202,13 +203,8 @@ $.Summary.prototype = {
                 var curNotes    = notes[idex];
                 if (! curNotes) { continue; }
 
-                var $notes  = self._addNotes( curNotes.range, true );
-                var nNote   = curNotes.notes.length;
-                for (var jdex = 0; jdex < nNote; jdex++)
-                {
-                    var note    = curNotes.notes[jdex];
-                    self._addNote($notes, note, true);
-                }
+                var notes   = new $.Notes( curNotes );
+                self._addNotes( notes.getRange(), notes, true );
             }
         }
 
@@ -491,6 +487,9 @@ $.Summary.prototype = {
                     var $s  = $(this);
                     $s.younger()
                       .removeData('isHighlighted');
+
+                    // Hide any related notes.
+                    self._hideNotes($s);
                });
 
         // Show sentences
@@ -519,6 +518,9 @@ $.Summary.prototype = {
                         $s.younger();
                     }
                 }
+
+                // Reposition any associated notes.
+                self._syncNotesPosition( $s );
 
                 $s.data('isHighlighted', true);
             });
@@ -665,16 +667,69 @@ $.Summary.prototype = {
         return this;
     },
 
+    /** @brief  Hide any notes associated with the provided sentence.
+     *  @param  $s      The jQuery DOM element representing the target sentence.
+     */
+    _hideNotes: function($s) {
+        var self    = this;
+        var opts    = self.options;
+
+        $s.find('.tagged')
+            .each(function() {
+                var $tagged = $(this);
+                var $notes  = $tagged.data('notes-associate');
+
+                $notes.removeClass('notes-active')
+                      .fadeOut(opts.animSpeed);
+            });
+    },
+
+    /** @brief  Sync the position of any notes associated with the provided
+     *          sentence.
+     *  @param  $s      The jQuery DOM element representing the target sentence.
+     */
+    _syncNotesPosition: function($s) {
+        var self    = this;
+        var opts    = self.options;
+
+        $s.find('.tagged').each(function() {
+            var $tagged = $(this);
+            var $notes  = $tagged.data('notes-associate');
+            var tOffset = $tagged.offset();
+            var pOffset = self.$notes.offset();
+
+            console.log("_syncNotesPosition: "+ $notes.length +" notes");
+            $notes.fadeIn(opts.animSpeed)
+                  .animate({'top': (tOffset.top - pOffset.top)},
+                           opts.animSpeed);
+        });
+    },
+
+    /** @brief  For every "visible" sentence, ensure that any associated notes
+     *          are properly positioned along side.
+     */
+    _syncNotesPositions: function() {
+        var self        = this;
+        var opts        = self.options;
+        var $visible    = self.$s.filter(  '.highlight,.expanded,'
+                                         + '.expansion,.keyworded');
+
+        $visible.has('.tagged').each(function() {
+            self._syncNotesPosition( $(this) );
+        });
+    },
+
     /** @brief  Given a jQuery DOM sentence (.sentence), expand it.
      *  @param  $s      The jQuery DOM sentence element
      */
     _expand: function($s) {
-        var self        = this;
-        var opts        = self.options;
-        var $p          = $s.parents('p:first');
-        var $el         = $s.find('.controls .expand');
-        var $prev       = $s.prev();
-        var $next       = $s.next();
+        var self                = this;
+        var opts                = self.options;
+        var $p                  = $s.parents('p:first');
+        var $el                 = $s.find('.controls .expand');
+        var $prev               = $s.prev();
+        var $next               = $s.next();
+        var completionsNeeded   = 1;
         var expandDone  = function() {
             var $this = $(this);
 
@@ -682,6 +737,11 @@ $.Summary.prototype = {
             $this.css('display', '');
 
             $el.attr('title', 'collapse');
+
+            if ( --completionsNeeded < 1)
+            {
+                self._syncNotesPositions();
+            }
         };
 
         if ($s.data('isExpanding') || $s.hasClass('expanded'))
@@ -692,7 +752,7 @@ $.Summary.prototype = {
         
         // Mark this sentence as being expanded
         $s.data('isExpanding', true);
-        $s.addClass('expanded', opts.animSpeed);
+        $s.addClass('expanded', opts.animSpeed, expandDone);
 
         if (opts.useFolding)
         {
@@ -706,12 +766,14 @@ $.Summary.prototype = {
         // If the previous sibling is NOT visible...
         if (! self._isVisible( $prev ) )
         {
-            $prev.addClass('expansion', opts.animSpeed);
+            completionsNeeded++;
+            $prev.addClass('expansion', opts.animSpeed, expandDone);
         }
         
         // If the next sibling NOT is visible...
         if (! self._isVisible( $next ) )
         {
+            completionsNeeded++;
             $next.addClass('expansion', opts.animSpeed, expandDone);
         }
 
@@ -743,6 +805,9 @@ $.Summary.prototype = {
                 $s.removeClass('ui-hover');
                 $s.find('.controls .su-icon').css('opacity', '');
                 $s.find('.selection-controls').remove();
+
+                // For each 'tagged' item, hide the associated notes
+                self._hideNotes($s);
             }
 
             // Change the expand/contract title back to "expand"
@@ -763,12 +828,15 @@ $.Summary.prototype = {
                 }
             }
 
+            self._syncNotesPositions();
+
             // Mark collapse completed
             $s.removeData('isCollapsing');
         };
         var collapseExpansion   = function($sib) {
             completionsNeeded++;
             $sib.removeClass('expansion', opts.animSpeed, collapseDone);
+
             if ($sib.hasClass('expanded'))
             {
                 self._collapse($sib);
@@ -937,16 +1005,24 @@ $.Summary.prototype = {
      *          The elements within the range will also be wrapped in one or
      *          more '.tagged' containers.
      *  @param  range   A range string from _generateRange()
+     *  @param  notes   If provided, a $.Notes instance representing the
+     *                  existing notes (implies 'noPut');
      *  @param  noPut   If true, do NOT perform a _putState()
      *
      *  @return The jQuery DOM element representing the FIRST tagged item.
      */
-    _addNotes: function( range, noPut ) {
+    _addNotes: function( range, notes, noPut ) {
         var self    = this;
         var opts    = self.options;
+        if ( (! notes) || (! notes instanceof $.Notes) )
+        {
+            // Generate notes with a single note.
+            notes = new $.Notes({id:self.notes.length, range:range});
 
-        // Generate notes with a single note.
-        var notes   = new $.Notes({id:self.notes.length, range:range});
+            // And add a single new note.
+            notes.addNote( new $.Note() );
+        }
+
         self.notes[ notes.getId() ] = notes.serialize();
 
         // Parse the incoming 'range' to generate a matching rangy selection.
@@ -992,6 +1068,28 @@ $.Summary.prototype = {
         });
         sel.removeAllRanges();
 
+        /* Finally, generate a notes container in the right side-bar at the
+         * same vertical offset as $note.
+         */
+        var nOffset = $note.offset();
+        var pOffset = self.$notes.offset();
+        var $pNotes = $('#tmpl-notes')
+                        .tmpl()
+                        .appendTo(self.$notes)
+                        .css('top', (nOffset.top - pOffset.top))
+                        .attr('name', $note.attr('name'));
+
+        /* Provide data-based links between the tagged item within content and
+         * the associated notes in the notes pane.
+         */
+        $pNotes.data('notes-associate', $note);
+        $note.data('notes-associate',   $pNotes);
+
+        // If there are any existing notes, add them
+        $.each(notes.getNotes(), function() {
+            self._addNote($note, this, noPut);    
+        });
+
         if (noPut !== true)
         {
             self._putState();
@@ -1002,14 +1100,22 @@ $.Summary.prototype = {
 
     /** @brief  Given a jQuery DOM element representing a tagged item, add
      *          a new note.
-     *  @param  $note   The jQUery DOM element representing the tagged item;
+     *  @param  $note   The jQuery DOM element representing the tagged item;
      *  @param  note    The new $.Note;
      *  @param  noPut   If true, do NOT perform a _putState()
      */
     _addNote: function( $note, note, noPut ) {
+        var self    = this;
+        var opts    = self.options;
         var notes   = $note.data('summary-notes');
+        var $pNotes = $note.data('notes-associate').find('.notes-body');
 
-        notes.addNote( note );
+        var $pNote  = $('#tmpl-note')
+                        .tmpl( {note: note} )
+                        .appendTo( $pNotes );
+        $pNote.data('notes', notes)
+              .data('note',  note);
+
 
         if (noPut !== true)
         {
@@ -1030,7 +1136,14 @@ $.Summary.prototype = {
         if (! notes)    { return; }
 
         var id      = notes.getId();
-        var $notes  = self.element.find('[name=summary-notes-'+ id +']');
+        var name    = 'summary-notes-'+ id;
+        var $notes  = self.element.find('[name='+ name +']');
+        var $notesC = self.$notes.find('[name='+ name +']');
+
+        $notesC.removeData('tagged-item')
+               .fadeOut(opts.animSpeed, function() {
+                            $notesC.remove();
+                        });
 
         $el.removeData('summary-notes');
         notes.destroy();
@@ -1498,19 +1611,30 @@ $.Summary.prototype = {
                  * $el.name and add remove controls just above that item.
                  */
                 var name    = $el.attr('name');
-                var $first  = self.element.find('[name='+ name +']:first');
+                var $tagged = self.element.find('[name='+ name +']:first');
+                var $notes  = $tagged.data('notes-associate');
                 $('#tmpl-selection-remove-controls')
                     .tmpl()
-                    .appendTo($first)
+                    .appendTo($tagged)
                     .css({
                         top:    -22,
                         left:   0
                     });
+
+                $notes.addClass('notes-active', opts.animSpeed);
                 break;
 
             case 'hover-out':
                 // Remove the selection control
-                $s.find('.selection-controls').remove();
+                var $ctl    = $s.find('.selection-controls');
+                var $tagged = $ctl.parent();
+                var $notes  = $tagged.data('notes-associate');
+                
+                if ($notes)
+                {
+                    $notes.removeClass('notes-active', opts.animSpeed);
+                }
+                $ctl.remove();
                 break;
             }
         });
