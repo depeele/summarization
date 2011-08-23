@@ -202,12 +202,12 @@ $.Summary.prototype = {
                 var curNotes    = notes[idex];
                 if (! curNotes) { continue; }
 
-                var $note   = self._addNotes( curNotes.range, true );
+                var $notes  = self._addNotes( curNotes.range, true );
                 var nNote   = curNotes.notes.length;
                 for (var jdex = 0; jdex < nNote; jdex++)
                 {
                     var note    = curNotes.notes[jdex];
-                    self._addNote($note, note, true);
+                    self._addNote($notes, note, true);
                 }
             }
         }
@@ -885,8 +885,8 @@ $.Summary.prototype = {
         return self;
     },
 
-    /** @brief  Given a range selection object, generate a corresponding
-     *          summary range object
+    /** @brief  Given a rangy selection object, generate a corresponding
+     *          summary range string.
      *  @param  sel     The rangy selection object.  If not provided,
      *                  retrieve the current rangy selection.
      *
@@ -912,30 +912,34 @@ $.Summary.prototype = {
          * Grab the start and end sentence along with an array of
          * sentences between the two.
          */
-        var $ss     = $(start.startContainer).parents('.sentence:first');
-        var $se     = $(end.endContainer).parents('.sentence:first');
+        var $sStart = $(start.startContainer).parents('.sentence:first');
+        var $sEnd   = $(end.endContainer).parents('.sentence:first');
         var sRange  = {
-            start:  self.$s.index( $ss ) +'/'
+            start:  self.$s.index( $sStart ) +'/'
                     + rangy.serializePosition(
                                     start.startContainer,
                                     start.startOffset,
-                                    $ss.find('.content')[0]).substr(2),
-            end:    self.$s.index( $se ) +'/'
+                                    $sStart.find('.content')[0]),
+            end:    self.$s.index( $sEnd ) +'/'
                     + rangy.serializePosition(
                                     end.endContainer,
                                     end.endOffset,
-                                    $se.find('.content')[0]).substr(2)
+                                    $sEnd.find('.content')[0])
         };
+
+        console.log("_generateRange: "+ sRange.start +','+ sRange.end);
 
         return sRange.start +','+ sRange.end;
     },
 
-    /** @brief  Given a range object from _generateRange(), tag all items
-     *          within the range.
+    /** @brief  Given a range object from _generateRange(), create a new
+     *          $.Notes object to associate with all items within the range.
+     *          The elements within the range will also be wrapped in one or
+     *          more '.tagged' containers.
      *  @param  range   A range string from _generateRange()
      *  @param  noPut   If true, do NOT perform a _putState()
      *
-     *  @return The jQuery DOM element representing the tagged item.
+     *  @return The jQuery DOM element representing the FIRST tagged item.
      */
     _addNotes: function( range, noPut ) {
         var self    = this;
@@ -946,22 +950,25 @@ $.Summary.prototype = {
         self.notes[ notes.getId() ] = notes.serialize();
 
         // Parse the incoming 'range' to generate a matching rangy selection.
-        var re      = /^([0-9]+)\/([0-9]+):([0-9]+)$/;
-        var parts   = range.split(/\s*,\s*/);
-        var start   = parts[0].match( re );
-        var end     = parts[1].match( re );
-        var $start  = $($(self.$s.get(start[1]))
-                            .find('.content')
-                            .children()[ start[2] ]);
-        var $end    = $($(self.$s.get(end[1]))
-                            .find('.content')
-                            .children()[ end[2] ]);
-        var sel     = rangy.getSelection();
-        sel.removeAllRanges();
+        var re          = /^([0-9]+)\/([0-9\/]+:[0-9]+)$/;
+        var ranges      = range.split(/\s*,\s*/);
+        var rangeStart  = ranges[0].match( re );
+        var rangeEnd    = ranges[1].match( re );
+        var $sStart     = $(self.$s.get(rangeStart[1]));
+        var $sEnd       = $(self.$s.get(rangeEnd[1]));
+        var start       = rangy.deserializePosition(
+                                    rangeStart[2],
+                                    $sStart.find('.content')[0]);
+        var end         = rangy.deserializePosition(
+                                    rangeEnd[2],
+                                    $sEnd.find('.content')[0]);
+        var rRange      = rangy.createRange();
+        var sel         = rangy.getSelection();
 
-        var rRange  = rangy.createRange();
-        rRange.setStart($start[0].childNodes[0], start[3]);
-        rRange.setEnd($end[0].childNodes[0], end[3]);
+        rRange.setStart(start.node, start.offset);
+        rRange.setEnd(end.node, end.offset);
+
+        sel.removeAllRanges();
         sel.setSingleRange( rRange );
 
         // Apply '.tagged' to the selection
