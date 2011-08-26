@@ -1,69 +1,15 @@
 /** @file
  *
- *  A jQuery class/object representing a selected portion of an article DOM
- *  along with any notes and tags associated with that selected portion.
+ *  jQuery class/objects representing a single, user-generated note as well as
+ *  a group of one or more notes.
  *
  *  Requires:
  *      jquery.js
- *      rangy.js
- *      rangy/serializer.js
+ *      jquery.user.js
  */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global jQuery:false */
 (function($) {
-
-/******************************************************************************
- * User
- *
- */
-
-/** @brief  A single, uniquely identifiable user.
- *  @param  props   The properties of this user:
- *                      id:         The Unique ID of the user;
- *                      name:       The user name;
- *                      fullName:   The user's full name;
- *                      avatarUrl:  The URL to the user's avatar image;
- */
-$.User  = function(props) {
-    var defaults    = {
-        id:         null,
-        name:       'anonymous',
-        fullName:   'Anonymous',
-        avatarUrl:  'images/avatar.jpg'
-    };
-
-    return this.init( $.extend(defaults, true, props || {}) );
-};
-
-$.User.prototype = {
-    /** @brief  Initialize a new User instance.
-     *  @param  props   The properties of this note:
-     *                      id:         The Unique ID of the user;
-     *                      name:       The user name;
-     *                      fullName:   The user's full name;
-     */
-    init: function(props) {
-        this.props = props;
-
-        return this;
-    },
-
-    getId:          function() { return this.props.id; },
-    getName:        function() { return this.props.name; },
-    getFullName:    function() { return this.props.fullName; },
-    getAvatarUrl:   function() { return this.props.avatarUrl; },
-
-    serialize: function() {
-        return this.props;
-    },
-
-    destroy: function() {
-        var self    = this;
-        var props   = self.props;
-
-        delete props.id;
-        delete props.name;
-        delete props.fullName;
-    }
-};
 
 /******************************************************************************
  * Note
@@ -176,6 +122,13 @@ $.Notes.prototype = {
 
             noteInstances.push( note );
         });
+
+        if (noteInstances.length < 1)
+        {
+            // Create a single, empty note
+            noteInstances.push( new $.Note() );
+        }
+
         this.props.notes = noteInstances;
 
         return this;
@@ -239,7 +192,7 @@ $.Notes.prototype = {
         delete props.range;
         delete props.notes;
         delete props.tags;
-    },
+    }
 };
 
  }(jQuery));

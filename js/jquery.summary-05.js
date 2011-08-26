@@ -203,8 +203,8 @@ $.Summary.prototype = {
                 var curNotes    = notes[idex];
                 if (! curNotes) { continue; }
 
-                var notes   = new $.Notes( curNotes );
-                self._addNotes( notes.getRange(), notes, true );
+                var notesInst   = new $.Notes( curNotes );
+                self._addNotes( notesInst.getRange(), notesInst, true );
             }
         }
 
@@ -679,8 +679,7 @@ $.Summary.prototype = {
                 var $tagged = $(this);
                 var $notes  = $tagged.data('notes-associate');
 
-                $notes.removeClass('notes-active')
-                      .fadeOut(opts.animSpeed);
+                $notes.notes('hide');
             });
     },
 
@@ -695,6 +694,17 @@ $.Summary.prototype = {
         $s.find('.tagged').each(function() {
             var $tagged = $(this);
             var $notes  = $tagged.data('notes-associate');
+
+            if (! $notes)
+            {
+                $tagged.removeData('notes-associate');
+                $tagged.removeClass('.tagged');
+                return;
+            }
+
+            $notes.notes('show');
+
+            /*
             var tOffset = $tagged.offset();
             var pOffset = self.$notes.offset();
 
@@ -702,6 +712,7 @@ $.Summary.prototype = {
             $notes.fadeIn(opts.animSpeed)
                   .animate({'top': (tOffset.top - pOffset.top)},
                            opts.animSpeed);
+            // */
         });
     },
 
@@ -1014,16 +1025,20 @@ $.Summary.prototype = {
     _addNotes: function( range, notes, noPut ) {
         var self    = this;
         var opts    = self.options;
+        var notesId;
+
         if ( (! notes) || (! notes instanceof $.Notes) )
         {
-            // Generate notes with a single note.
-            notes = new $.Notes({id:self.notes.length, range:range});
+            notesId = (notes && (notes.id !== undefined)
+                        ? notes.id
+                        : self.notes.length);
 
-            // And add a single new note.
-            notes.addNote( new $.Note() );
+            notes = {id:notesId, range:range};
         }
-
-        self.notes[ notes.getId() ] = notes.serialize();
+        else
+        {
+            notesId = notes.getId();
+        }
 
         // Parse the incoming 'range' to generate a matching rangy selection.
         var re          = /^([0-9]+)\/([0-9\/]+:[0-9]+)$/;
@@ -1053,17 +1068,15 @@ $.Summary.prototype = {
         // Attach our $.Notes object to the FIRST element in the range.
         var ranges  = sel.getAllRanges();
         var $note   = $(ranges[0].startContainer).parent();
-        $note.data('summary-notes', notes);
 
         /* Retrieve all '.tagged' items within the range and add a 'name'
          * attribute identifying the notes to which the items belong.
          */
-        var id      = notes.getId();
         ranges[0].getNodes([3], function(node) {
             var $parent = $(node).parent();
             if ($parent.hasClass('tagged'))
             {
-                $parent.attr('name', 'summary-notes-'+ id);
+                $parent.attr('name', 'summary-notes-'+ notesId);
             }
         });
         sel.removeAllRanges();
@@ -1071,24 +1084,18 @@ $.Summary.prototype = {
         /* Finally, generate a notes container in the right side-bar at the
          * same vertical offset as $note.
          */
-        var nOffset = $note.offset();
-        var pOffset = self.$notes.offset();
-        var $pNotes = $('#tmpl-notes')
-                        .tmpl()
-                        .appendTo(self.$notes)
-                        .css('top', (nOffset.top - pOffset.top))
-                        .attr('name', $note.attr('name'));
+        var $notes  = $('<div />').notes({
+                        notes:      notes,
+                        position:   {of:$note }
+                      });
+        self.notes[ notesId ] = $notes.notes('serialize');
+        $note.data('summary-notes', $notes);
 
         /* Provide data-based links between the tagged item within content and
          * the associated notes in the notes pane.
          */
-        $pNotes.data('notes-associate', $note);
-        $note.data('notes-associate',   $pNotes);
-
-        // If there are any existing notes, add them
-        $.each(notes.getNotes(), function() {
-            self._addNote($note, this, noPut);    
-        });
+        $notes.data('notes-associate', $note);
+        $note.data('notes-associate',  $notes);
 
         if (noPut !== true)
         {
@@ -1107,15 +1114,9 @@ $.Summary.prototype = {
     _addNote: function( $note, note, noPut ) {
         var self    = this;
         var opts    = self.options;
-        var notes   = $note.data('summary-notes');
-        var $pNotes = $note.data('notes-associate').find('.notes-body');
+        var $notes  = $note.data('summary-notes');
 
-        var $pNote  = $('#tmpl-note')
-                        .tmpl( {note: note} )
-                        .appendTo( $pNotes );
-        $pNote.data('notes', notes)
-              .data('note',  note);
-
+        $notes.addNote(note);
 
         if (noPut !== true)
         {
@@ -1131,28 +1132,24 @@ $.Summary.prototype = {
     _removeNotes: function( $el ) {
         var self    = this;
         var opts    = self.options;
-        var notes   = $el.data('summary-notes');
+        var $notes  = $el.data('summary-notes');
 
-        if (! notes)    { return; }
+        if (! $notes)   { return; }
 
-        var id      = notes.getId();
+        var id      = $notes.notes('id');
         var name    = 'summary-notes-'+ id;
-        var $notes  = self.element.find('[name='+ name +']');
-        var $notesC = self.$notes.find('[name='+ name +']');
+        var $tags   = self.element.find('[name='+ name +']');
 
-        $notesC.removeData('tagged-item')
-               .fadeOut(opts.animSpeed, function() {
-                            $notesC.remove();
-                        });
+        $notes.removeData('tagged-item')
+              .notes('destroy');
 
         $el.removeData('summary-notes');
-        notes.destroy();
 
         //delete self.notes[ id ];
         self.notes[ id ] = undefined;
 
         // Remove the '.tagged' container
-        $notes.each(function() {
+        $tags.each(function() {
             var $note   = $(this);
             $note.replaceWith( $note.html() );
         });

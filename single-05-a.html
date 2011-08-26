@@ -112,8 +112,8 @@
        title='remove tag' /></div>
  </script>
 
+ <!-- The BODY of a note (without the outter <div class='note' /> ) -->
  <script id='tmpl-note' type='text/x-jquery-tmpl'>
-  <div class='note'>
    <img class='avatar' src='${note.getAuthor().getAvatarUrl()}' />
    <div class='author'>${note.getAuthor().getFullName()}</div>
    <div class='created'>${note.getCreated()}</div>
@@ -122,11 +122,11 @@
     <button name='edit'>Edit</button>
     <button name='delete'>Delete</button>
    </div>
-  </div>
  </script>
 
+ <!-- The BODY of a notes container
+        (without the outter <div class='notes' /> ) -->
  <script id='tmpl-notes' type='text/x-jquery-tmpl'>
-  <div class='notes'>
    <div class='arrow-outer'></div>
    <div class='arrow-inner'></div>
    <div class='notes-body'>
@@ -138,7 +138,6 @@
 	 <button name='replay'>Reply</button>
 	 <button name='cancel'>Cancel</button>
 	</div>
-   </div>
   </div>
  </script>
  <!-- Templates } -->
@@ -152,7 +151,9 @@
  <script src='js/rangy.js'></script>
  <script src='js/rangy/serializer.js'></script>
  <script src='js/rangy/cssclassapplier.js'></script>
+ <script src='js/jquery.user.js'></script>
  <script src='js/jquery.notes.js'></script>
+ <script src='js/ui.notes.js'></script>
  <script src='js/jquery.summary-05.js'></script>
 
  <script>
