@@ -55,6 +55,11 @@ $.Note.prototype = {
     getText:   function() { return this.props.text; },
     getCreated:function() { return this.props.created; },
 
+    setText:   function(text)
+    {
+        this.props.text = text;
+    },
+
     serialize: function() {
         var serialized  = {
             author: (this.props.author

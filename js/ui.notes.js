@@ -122,16 +122,23 @@ $.widget('ui.notes', {
         if (self.element.hasClass('notes-active'))      { return; }
 
         var $reply  = self.$buttons.filter('[name=reply]');
-        if (self.$reply.val().length > 0)
+        if ((! self.$reply.hasClass('hint')) &&
+            (self.$reply.val().length > 0))
         {
+            self.$buttons.show();
             $reply.button('enable');
         }
         else
         {
+            self.$buttons.hide();
             $reply.button('disable');
+            self.$reply.addClass('hint')
+                       .val( self.$reply.attr('title') );
         }
 
-        self.element.addClass('notes-active', opts.animSpeed);
+        self.element.addClass('notes-active', opts.animSpeed, function() {
+            //self.$reply.focus();
+        });
     },
 
     /** @brief  Mark this instance as 'inactive'
@@ -141,6 +148,9 @@ $.widget('ui.notes', {
         var opts    = self.options;
 
         if (! self.element.hasClass('notes-active'))    { return; }
+
+        // Cancel any note that is currently being edited
+        self.element.find('.note .buttons [name=cancel]').click();
 
         self.element.removeClass('notes-active', opts.animSpeed);
     },
@@ -277,19 +287,21 @@ $.widget('ui.notes', {
         var self    = this;
         var opts    = self.options;
 
-        /*****************************************************
-         * General click handler for document.  If we see
-         * this event, deactivate this notes widget.
-         *
-         */
-        $(document).bind('click.ui-notes', function(e) {
+        self._docClick = function(e) {
             var $target = $(e.target);
 
             if ($target !== self.element)
             {
                 self.deactivate();
             }
-        });
+        };
+
+        /*****************************************************
+         * General click handler for document.  If we see
+         * this event, deactivate this notes widget.
+         *
+         */
+        $(document).bind('click.ui-notes', self._docClick);
 
         /*****************************************************
          * Handle button clicks (reply/cancel) within the
@@ -307,10 +319,13 @@ $.widget('ui.notes', {
                     text:   self.$reply.val()
                 });
                 self.addNote(note);
+                self.$reply.val('');
                 break;
 
             case 'cancel':
-                self.deactivate();
+                self.$reply.val('');
+                self.$reply.blur();
+                //self.deactivate();
                 break;
             }
         });
@@ -324,7 +339,8 @@ $.widget('ui.notes', {
          */
         self.$reply.bind('keyup.ui-notes', function(e) {
             var $reply  = self.$buttons.filter('[name=reply]');
-            if (self.$reply.val().length > 0)
+            if ((! self.$reply.hasClass('hint')) &&
+                (self.$reply.val().length > 0))
             {
                 $reply.button('enable');
             }
@@ -360,6 +376,46 @@ $.widget('ui.notes', {
             // */
         });
 
+        /*****************************************************
+         * Handle focus/blur for the reply element
+         *
+         */
+        self.$reply.bind('focus', function(e) {
+             self.$buttons.show();
+
+             var $reply  = self.$buttons.filter('[name=reply]');
+             if (self.$reply.hasClass('hint'))
+             {
+                self.$reply.val('')
+                           .removeClass('hint');
+             }
+
+             if (self.$reply.val().length > 0)
+             {
+                 $reply.button('enable');
+             }
+             else
+             {
+                 $reply.button('disable');
+             }
+        });
+
+        self.$reply.bind('blur', function(e) {
+             var $reply  = self.$buttons.filter('[name=reply]');
+             if (self.$reply.val().length > 0)
+             {
+                 $reply.button('enable');
+             }
+             else
+             {
+                self.$reply.addClass('hint')
+                           .val( self.$reply.attr('title') );
+
+                self.$buttons.hide();
+                 $reply.button('disable');
+             }
+        });
+
         return self;
     },
 
@@ -370,7 +426,8 @@ $.widget('ui.notes', {
         self.element.unbind('.ui-notes');
         self.element.undelegate('.notes-input-pane button', '.ui-notes');
         self.$reply.unbind('.ui-notes');
-        $(document).unbind('.ui-notes');
+
+        $(document).unbind('click.ui-notes', self._docClick);
 
         return self;
     }
@@ -449,7 +506,11 @@ $.widget('ui.note', {
                 .addClass('note')
                 .append( $( opts.template ).tmpl( {note: opts.note} ) );
 
-        self.$buttons = self.element.find('.control button');
+        self.$comment     = self.element.find('.comment');
+        self.$editArea    = self.element.find('.edit');
+        self.$edit        = self.$editArea.find('textarea');
+        self.$buttons     = self.element.find('.buttons button');
+        self.$mainButtons = self.element.find('.buttons:last');
 
         self.$buttons.button();
 
@@ -478,11 +539,35 @@ $.widget('ui.note', {
             switch ($button.attr('name'))
             {
             case 'edit':
+                self.$edit.val( self.$comment.text() );
+                self.$comment.hide();
+                self.$mainButtons.css('display', 'none');
+                self.$editArea.show();
+                self.$edit.focus();
                 break;
 
             case 'delete':
                 //self.destroy();
-                self.element.remove();
+                self.element.slideUp(function() {
+                    self.element.remove();
+                });
+                break;
+
+            case 'save':
+                // Save any changes in self.$edit
+                opts.note.setText( self.$edit.val() );
+
+                self.$comment.text( opts.note.getText() );
+
+                self.element.trigger('changed');
+
+                // Fall-through to 'cancel' to restore non-edit mode
+
+            case 'cancel':
+                // Cancel 'edit'
+                self.$editArea.hide();
+                self.$comment.show();
+                self.$mainButtons.css('display', '');
                 break;
             }
         });

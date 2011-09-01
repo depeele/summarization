@@ -398,7 +398,8 @@ a {
 .notes .arrow-outer,
 .notes .arrow-inner,
 .notes-input-pane,
-.notes-body .note .control {
+.notes-body .note .buttons,
+.notes-body .note .edit {
   display:        none;
 }
 
@@ -435,7 +436,7 @@ a {
 }
 .notes-body .note .comment {
 }
-.notes-body .note .control,
+.notes-body .note .buttons,
 .notes-input-pane .buttons {
   text-align:   right;
   padding-top:  0.5em;
@@ -443,9 +444,13 @@ a {
   font-size:    0.8em;
 }
 
-.notes-body .note .control .ui-button-text,
+.notes-body .note .buttons .ui-button-text,
 .notes-input-pane .buttons .ui-button-text {
-  padding:      0.25em 0.5em;
+  padding:      0.2em 0.5em;
+}
+
+.notes-input-pane .hint {
+  color:        #aaa;
 }
 
 /*******************
@@ -469,7 +474,7 @@ a {
   border-top:     none;
 }
 
-.notes-active .notes-body .note .control,
+.notes-active .notes-body .note .buttons,
 .notes-active .notes-input-pane {
   display:        block;
 }

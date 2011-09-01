@@ -1582,17 +1582,21 @@ $.Summary.prototype = {
             var offset  = $el.offset();
             var width   = $el.width();
 
+            /* Using the 'name' attribute of the target element, locate
+             * all similarly named elements along with the ui.notes instance
+             * associated with them.
+             */
+            var name    = $el.attr('name');
+            var $tagged = self.element.find('[name='+ name +']:first');
+            var $notes  = $tagged.data('notes-associate');
+
             //console.log('.sentence hover: '+ e.type);
 
             switch (e.type)
             {
             case 'hover-in':
-                /* Find the FIRST item associated with the notes identified by
-                 * $el.name and add remove controls just above that item.
-                 */
-                var name    = $el.attr('name');
-                var $tagged = self.element.find('[name='+ name +']:first');
-                var $notes  = $tagged.data('notes-associate');
+                // Add selection controls just above the item.
+                self._ignoreHoverOut = false;
                 $('#tmpl-selection-remove-controls')
                     .tmpl()
                     .appendTo($tagged)
@@ -1601,28 +1605,33 @@ $.Summary.prototype = {
                         left:   0
                     });
 
-                $notes.addClass('notes-active', opts.animSpeed);
+                // Activate any associated notes
+                if ($notes)
+                {
+                    $notes.notes('activate');
+                }
                 break;
 
             case 'hover-out':
-                // Remove the selection control
-                var $ctl    = $s.find('.selection-controls');
-                var $tagged = $ctl.parent();
-                var $notes  = $tagged.data('notes-associate');
-                
-                if ($notes)
+                // De-active any associated notes
+                if ($notes && (self._ignoreHoverOut !== true))
                 {
-                    $notes.removeClass('notes-active', opts.animSpeed);
+                    $notes.notes('deactivate');
                 }
-                $ctl.remove();
+                self._ignoreHoverOut = false;
+
+                // Remove any selection controls.
+                $s.find('.selection-controls').remove();
                 break;
             }
         });
 
-        /* Squelch clicks within a tagged item to ensure that the associated
-         * ui.notes widget doesn't deactivate.
+        /* If the user clicks on the tagged item, note that any following
+         * 'hover-out' event should be ignored so the associated notes
+         * remain activated.
          */
         $parent.delegate('article .sentence .tagged', 'click', function(e) {
+            self._ignoreHoverOut = true;
             return false;
         });
 
