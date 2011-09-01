@@ -137,20 +137,49 @@ $.Notes.prototype = {
     /** @brief  Add a new note to this set of notes.
      *  @param  note    a $.Note instance or properties to create one.
      *
-     *  @return this for a fluent interface.
+     *  @return The note instance that was added.
      */
     addNote: function(note) {
         if ($.isPlainObject(note))      { note = new $.Note(note); }
 
         this.props.notes.push(note);
 
-        return this;
+        return note;
     },
 
-    getId: function()       { return this.props.id; },
-    getRange: function()    { return this.props.range; },
-    getNotes: function()    { return this.props.notes; },
-    getTags: function()     { return this.props.tags; },
+    /** @brief  Remove a note from this set of notes.
+     *  @param  note    a $.Note instance to remove.
+     *
+     *  @return this for a fluent interface.
+     */
+    removeNote: function(note) {
+        var self    = this;
+        if (note instanceof $.Note)
+        {
+            var targetIdex  = -1;
+            $.each(self.props.notes, function(idex) {
+                if (this === note)
+                {
+                    targetIdex = idex;
+                    return false;
+                }
+            });
+
+            if (targetIdex >= 0)
+            {
+                self.props.notes.splice(targetIdex, 1);
+                note.destroy();
+            }
+        }
+
+        return self;
+    },
+
+    getId: function()           { return this.props.id; },
+    getRange: function()        { return this.props.range; },
+    getNotes: function()        { return this.props.notes; },
+    getNotesCount: function()   { return this.props.notes.length; },
+    getTags: function()         { return this.props.tags; },
 
     getNote: function(idex) {
         idex = idex || 0;

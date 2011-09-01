@@ -198,14 +198,17 @@ $.Summary.prototype = {
         if (notes.length > 0)
         {
             var nNotes  = notes.length;
+
+            self._noPut = true;
             for (var idex = 0; idex < nNotes; idex++)
             {
                 var curNotes    = notes[idex];
                 if (! curNotes) { continue; }
 
                 var notesInst   = new $.Notes( curNotes );
-                self._addNotes( notesInst.getRange(), notesInst, true );
+                self._addNotes( notesInst.getRange(), notesInst);
             }
+            self._noPut = false;
         }
 
         /* Ensure the view is properly set (without a refresh).
@@ -1017,12 +1020,11 @@ $.Summary.prototype = {
      *          more '.tagged' containers.
      *  @param  range   A range string from _generateRange()
      *  @param  notes   If provided, a $.Notes instance representing the
-     *                  existing notes (implies 'noPut');
-     *  @param  noPut   If true, do NOT perform a _putState()
+     *                  existing notes;
      *
      *  @return The jQuery DOM element representing the FIRST tagged item.
      */
-    _addNotes: function( range, notes, noPut ) {
+    _addNotes: function( range, notes) {
         var self    = this;
         var opts    = self.options;
         var notesId;
@@ -1097,7 +1099,7 @@ $.Summary.prototype = {
         $notes.data('notes-associate', $note);
         $note.data('notes-associate',  $notes);
 
-        if (noPut !== true)
+        if (self._noPut !== true)
         {
             self._putState();
         }
@@ -1105,25 +1107,6 @@ $.Summary.prototype = {
         return $note;
     },
 
-    /** @brief  Given a jQuery DOM element representing a tagged item, add
-     *          a new note.
-     *  @param  $note   The jQuery DOM element representing the tagged item;
-     *  @param  note    The new $.Note;
-     *  @param  noPut   If true, do NOT perform a _putState()
-     */
-    _addNote: function( $note, note, noPut ) {
-        var self    = this;
-        var opts    = self.options;
-        var $notes  = $note.data('summary-notes');
-
-        $notes.addNote(note);
-
-        if (noPut !== true)
-        {
-            self._putState();
-        }
-    },
-    
     /** @brief  Given a jQuery DOM element that has been tagged via
      *          _addNotes(), remove the tag for all items in the associated
      *          range.
@@ -1636,6 +1619,14 @@ $.Summary.prototype = {
             }
         });
 
+        /* Squelch clicks within a tagged item to ensure that the associated
+         * ui.notes widget doesn't deactivate.
+         */
+        $parent.delegate('article .sentence .tagged', 'click', function(e) {
+            return false;
+        });
+
+
         /*************************************************************
          * On mouseup, see if there is a selection.
          *
@@ -1680,6 +1671,37 @@ $.Summary.prototype = {
                 });
         });
 
+        /*************************************************************
+         * Handle any 'changed' event on notes contained within
+         * our notes pane.
+         */
+        self.$notes.delegate('.notes', 'changed', function() {
+            var $notes  = $(this);
+            var notesCount  = $notes.notes('notesCount');
+
+            if (notesCount < 1)
+            {
+                /* There are no more notes.  Remove the Notes widget.
+                 * First, grab the associated "tagged" element, which is the
+                 * parameter needed for _removeNotes().
+                 */
+                var $el = $notes.data('notes-associate');
+
+                self._removeNotes($el);
+            }
+            else
+            {
+                // There are still notes.  (Re)serialize the notes.
+                var id      = $notes.notes('id');
+
+                self.notes[ id ] = $notes.notes('serialize');
+
+                if (self._noPut !== true)
+                {
+                    self._putState();
+                }
+            }
+        });
     },
 
     _unbindEvents: function() {
@@ -1703,8 +1725,11 @@ $.Summary.prototype = {
                            'mousedown mouseup');
 
         $parent.undelegateHoverIntent('article .sentence .tagged');
+        $parent.undelegate('article .sentence .tagged', 'click');
 
         $parent.undelegate('article .sentence', 'mouseup');
+
+        self.$notes.undelegate('.notes', 'changed');
     }
 };
 

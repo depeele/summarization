@@ -116,7 +116,7 @@
  <script id='tmpl-note' type='text/x-jquery-tmpl'>
    <img class='avatar' src='${note.getAuthor().getAvatarUrl()}' />
    <div class='author'>${note.getAuthor().getFullName()}</div>
-   <div class='created'>${note.getCreated()}</div>
+   <div class='created'>${ $.date2str(note.getCreated()) }</div>
    <div class='comment'>${note.getText()}</div>
    <div class='control'>
     <button name='edit'>Edit</button>
@@ -135,7 +135,7 @@
    <div class='notes-input-pane'>
     <textarea class='notes-reply'></textarea>
 	<div class='buttons'>
-	 <button name='replay'>Reply</button>
+	 <button name='reply'>Reply</button>
 	 <button name='cancel'>Cancel</button>
 	</div>
   </div>
@@ -143,11 +143,12 @@
  <!-- Templates } -->
 
  <script src='js/jquery.min.js'></script>
+ <script src='js/jquery.utils.js'></script>
  <script src='js/jquery.tmpl.min.js'></script>
  <script src='js/jquery.json.min.js'></script>
  <script src='js/jstorage.min.js'></script>
  <script src='js/jquery.delegateHoverIntent.js'></script>
- <script src='js/jquery-ui.min.js'></script>
+ <script src='js/jquery-ui.js'></script>
  <script src='js/rangy.js'></script>
  <script src='js/rangy/serializer.js'></script>
  <script src='js/rangy/cssclassapplier.js'></script>

@@ -58,15 +58,57 @@ $.widget('ui.notes', {
         return opts.notes.getId();
     },
 
+    /** @brief  Return the number of $.Note instances.
+     *
+     *  @return The count.
+     */
+    notesCount: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        return opts.notes.getNotesCount();
+    },
+
     /** @brief  Given a new $.Note instance, add the note to our container.
      *  @param  note    The new $.Note instance.
+     *
+     *  @return this for a fluent interface.
      */
     addNote: function(note) {
         var self    = this;
         var opts    = self.options;
 
         // Create and append a new ui.note widget
-        self.$body.append( $('<div />').note({note:note}) );
+        var $note   = $('<div />').note({note:note});
+        self.$body.append( $note );
+
+        if (self._isInitializing !== true)
+        {
+            var note    = $note.note('option', 'note');
+            opts.notes.addNote(note);
+
+            self.element.trigger('changed');
+        }
+
+        return self;
+    },
+
+    /** @brief  Given a ui.Note widget, remove the note from our container.
+     *  @param  $note   The jQuery DOM element that has a ui.Note widget
+     *                  attached.
+     *
+     *  @return this for a fluent interface.
+     */
+    removeNote: function($note) {
+        var self    = this;
+        var opts    = self.options;
+
+        // Create and append a new ui.note widget
+        var note    = $note.note('option', 'note');
+
+        opts.notes.removeNote(note);
+
+        self.element.trigger('changed');
 
         return self;
     },
@@ -77,6 +119,18 @@ $.widget('ui.notes', {
         var self    = this;
         var opts    = self.options;
 
+        if (self.element.hasClass('notes-active'))      { return; }
+
+        var $reply  = self.$buttons.filter('[name=reply]');
+        if (self.$reply.val().length > 0)
+        {
+            $reply.button('enable');
+        }
+        else
+        {
+            $reply.button('disable');
+        }
+
         self.element.addClass('notes-active', opts.animSpeed);
     },
 
@@ -85,6 +139,8 @@ $.widget('ui.notes', {
     deactivate: function() {
         var self    = this;
         var opts    = self.options;
+
+        if (! self.element.hasClass('notes-active'))    { return; }
 
         self.element.removeClass('notes-active', opts.animSpeed);
     },
@@ -144,6 +200,8 @@ $.widget('ui.notes', {
         var self    = this;
         var opts    = self.options;
 
+        self._isInitializing = true;
+
         self.$container = $( opts.container );
 
         if ( $.isPlainObject(opts.notes) )
@@ -159,6 +217,8 @@ $.widget('ui.notes', {
 
         self._widgetCreate()
             ._bindEvents();
+
+        self._isInitializing = false;
 
         return self;
     },
@@ -183,11 +243,15 @@ $.widget('ui.notes', {
                 .appendTo( self.$container )
                 .position( opts.position );
 
-        self.$body  = self.element.find('.notes-body');
+        self.$body    = self.element.find('.notes-body');
+        self.$reply   = self.element.find('.notes-reply');
+        self.$buttons = self.element.find('.notes-input-pane .buttons button');
+
+        self.$buttons.button();
 
         // Generate a ui.Note widget for each current $.Note instance
         $.each(opts.notes.getNotes(), function() {
-            self.addNote( this );
+            self.addNote( this, true );
         });
 
         return self;
@@ -200,7 +264,9 @@ $.widget('ui.notes', {
         var opts    = self.options;
 
         // Destroy all contained note instances
-        self.$body.find('.note').destroy();
+        self.$body.find('.note').note('destroy');
+
+        self.$buttons.button('destroy');
 
         self.element.empty();
 
@@ -211,12 +277,100 @@ $.widget('ui.notes', {
         var self    = this;
         var opts    = self.options;
 
+        /*****************************************************
+         * General click handler for document.  If we see
+         * this event, deactivate this notes widget.
+         *
+         */
+        $(document).bind('click.ui-notes', function(e) {
+            var $target = $(e.target);
+
+            if ($target !== self.element)
+            {
+                self.deactivate();
+            }
+        });
+
+        /*****************************************************
+         * Handle button clicks (reply/cancel) within the
+         * input pane.
+         *
+         */
+        self.element.delegate('.notes-input-pane button',
+                              'click.ui-notes', function(e) {
+            var $button = $(this);
+
+            switch ($button.attr('name'))
+            {
+            case 'reply':
+                var note    = new $.Note({
+                    text:   self.$reply.val()
+                });
+                self.addNote(note);
+                break;
+
+            case 'cancel':
+                self.deactivate();
+                break;
+            }
+        });
+
+        /*****************************************************
+         * Handle 'keyup' in the reply area.
+         *
+         * Enable/Disale the reply button based upon whether
+         * the new content is empty.
+         *
+         */
+        self.$reply.bind('keyup.ui-notes', function(e) {
+            var $reply  = self.$buttons.filter('[name=reply]');
+            if (self.$reply.val().length > 0)
+            {
+                $reply.button('enable');
+            }
+            else
+            {
+                $reply.button('disable');
+            }
+        });
+
+        /*****************************************************
+         * Handle click-to-activate
+         *
+         */
+        self.element.bind('click.ui-notes', function(e) {
+            self.activate();
+            return false;
+        });
+
+        /*****************************************************
+         * Handle the deletion of contained notes
+         *
+         */
+        self.$body.bind('destroyed', function(e, note) {
+            var $note   = $(e.target);
+
+            self.removeNote($note);
+
+            /*
+            // Locate the target note and remove it from opts.notes
+            opts.notes.removeNote(note);
+
+            self.element.trigger('changed');
+            // */
+        });
+
         return self;
     },
 
     _unbindEvents: function() {
         var self    = this;
         var opts    = self.options;
+
+        self.element.unbind('.ui-notes');
+        self.element.undelegate('.notes-input-pane button', '.ui-notes');
+        self.$reply.unbind('.ui-notes');
+        $(document).unbind('.ui-notes');
 
         return self;
     }
@@ -257,8 +411,8 @@ $.widget('ui.note', {
         self._unbindEvents()
             ._widgetDestroy();
 
-        // Let ui.notes handle this
-        //opts.note.destroy();
+        // Notify our container that this note has been destroyed.
+        self.element.trigger('destroyed', opts.note);
     },
 
     /*******************************
@@ -295,6 +449,10 @@ $.widget('ui.note', {
                 .addClass('note')
                 .append( $( opts.template ).tmpl( {note: opts.note} ) );
 
+        self.$buttons = self.element.find('.control button');
+
+        self.$buttons.button();
+
         return self;
     },
 
@@ -304,6 +462,7 @@ $.widget('ui.note', {
         var self    = this;
         var opts    = self.options;
 
+        self.$buttons.button('destroy');
         self.element.empty();
 
         return self;
@@ -313,12 +472,29 @@ $.widget('ui.note', {
         var self    = this;
         var opts    = self.options;
 
+        self.$buttons.bind('click.ui-note', function(e) {
+            var $button = $(this);
+
+            switch ($button.attr('name'))
+            {
+            case 'edit':
+                break;
+
+            case 'delete':
+                //self.destroy();
+                self.element.remove();
+                break;
+            }
+        });
+
         return self;
     },
 
     _unbindEvents: function() {
         var self    = this;
         var opts    = self.options;
+
+        self.$buttons.unbind('.ui-note');
 
         return self;
     }
