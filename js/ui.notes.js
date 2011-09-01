@@ -43,6 +43,8 @@ $.widget('ui.notes', {
 
         animSpeed:  200,    // The speed (in ms) of animations
 
+        hidden:     false,  // Initially hidden?
+
         // Template selector
         template:   '#tmpl-notes'
     },
@@ -250,8 +252,16 @@ $.widget('ui.notes', {
         self.element
                 .addClass('notes ui-corner-all')
                 .append( $( opts.template ).tmpl() )
-                .appendTo( self.$container )
-                .position( opts.position );
+                .appendTo( self.$container );
+
+        if (opts.hidden === true)
+        {
+            self.element.hide();
+        }
+        else
+        {
+            self.element.position( opts.position );
+        }
 
         self.$body    = self.element.find('.notes-body');
         self.$reply   = self.element.find('.notes-reply');

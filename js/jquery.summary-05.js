@@ -206,7 +206,9 @@ $.Summary.prototype = {
                 if (! curNotes) { continue; }
 
                 var notesInst   = new $.Notes( curNotes );
-                self._addNotes( notesInst.getRange(), notesInst);
+                var $tagged     = self._addNotes( notesInst.getRange(),
+                                                  notesInst,
+                                                  true );
             }
             self._noPut = false;
         }
@@ -810,6 +812,8 @@ $.Summary.prototype = {
         var collapseDone        = function() {
             if ( --completionsNeeded > 0) { return; }
 
+            $s.removeClass('expansion');
+
             if (! $s.hasClass('highlight'))
             {
                 /* The target sentence is NOT highlighted, so ensure that
@@ -1021,10 +1025,11 @@ $.Summary.prototype = {
      *  @param  range   A range string from _generateRange()
      *  @param  notes   If provided, a $.Notes instance representing the
      *                  existing notes;
+     *  @param  hide    If true, hide the notes widget once created.
      *
      *  @return The jQuery DOM element representing the FIRST tagged item.
      */
-    _addNotes: function( range, notes) {
+    _addNotes: function( range, notes, hide ) {
         var self    = this;
         var opts    = self.options;
         var notesId;
@@ -1069,7 +1074,7 @@ $.Summary.prototype = {
 
         // Attach our $.Notes object to the FIRST element in the range.
         var ranges  = sel.getAllRanges();
-        var $note   = $(ranges[0].startContainer).parent();
+        var $tagged = $(ranges[0].startContainer).parent();
 
         /* Retrieve all '.tagged' items within the range and add a 'name'
          * attribute identifying the notes to which the items belong.
@@ -1084,27 +1089,28 @@ $.Summary.prototype = {
         sel.removeAllRanges();
 
         /* Finally, generate a notes container in the right side-bar at the
-         * same vertical offset as $note.
+         * same vertical offset as $tagged.
          */
         var $notes  = $('<div />').notes({
                         notes:      notes,
-                        position:   {of:$note }
+                        position:   { of:$tagged },
+                        hidden:     (hide ? true : false)
                       });
         self.notes[ notesId ] = $notes.notes('serialize');
-        $note.data('summary-notes', $notes);
+        $tagged.data('summary-notes', $notes);
 
         /* Provide data-based links between the tagged item within content and
          * the associated notes in the notes pane.
          */
-        $notes.data('notes-associate', $note);
-        $note.data('notes-associate',  $notes);
+        $notes.data('notes-associate', $tagged);
+        $tagged.data('notes-associate',  $notes);
 
         if (self._noPut !== true)
         {
             self._putState();
         }
 
-        return $note;
+        return $tagged;
     },
 
     /** @brief  Given a jQuery DOM element that has been tagged via
@@ -1133,8 +1139,8 @@ $.Summary.prototype = {
 
         // Remove the '.tagged' container
         $tags.each(function() {
-            var $note   = $(this);
-            $note.replaceWith( $note.html() );
+            var $tagged = $(this);
+            $tagged.replaceWith( $tagged.html() );
         });
 
         self._putState();
