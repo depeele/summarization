@@ -116,7 +116,7 @@
  <script id='tmpl-note' type='text/x-jquery-tmpl'>
    <img class='avatar' src='${note.getAuthor().getAvatarUrl()}' />
    <div class='author'>${note.getAuthor().getFullName()}</div>
-   <div class='created'>{{html $.date2str(note.getCreated()) }}</div>
+   <div class='created'>${ $.prettyDate(note.getCreated()) }</div>
    <div class='comment'>${note.getText()}</div>
    <div class='edit'>
     <textarea class='edit-comment'></textarea>

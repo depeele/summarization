@@ -123,4 +123,70 @@
         return date;
     };
 
+    /** @brief  Given a number, return the ordinal suffix for that number.
+     *  @param  num     The number.
+     *
+     *  @return The number with the appropriate ordinal suffix string.
+     */
+    $.ordinal = function(num) {
+        var suffix  = 'th';
+        if ( ((num % 100) < 11) || ((num % 100) > 13) )
+        {
+            switch (num % 10)
+            {
+            case 1: suffix = 'st';  break;
+            case 2: suffix = 'nd';  break;
+            case 3: suffix = 'rd';  break;
+            }
+        }
+
+        return num + suffix;
+    };
+
+    /** @brief  Month Strings. */
+    $.months    = [
+        "January",      "Febrary",  "March",    "April",
+        "May",          "June",     "July",     "August",
+        "September",    "October",  "November", "December"
+    ];
+
+    /** @brief  Takes a date/time and returns a string representing how long
+     *          ago the date occurred.
+     *  @param  date        The Date instance or ISO Date string to convert.
+     *                      If not provided, use the current date/time.
+     *
+     *  @return The date string.
+     */
+    $.prettyDate = function(date) {
+        if (date === undefined)
+        {
+            date = new Date();
+        }
+        if ( ! (date instanceof Date) )
+        {
+            date = new Date(date);
+        }
+        var diff    = (( (new Date()).getTime() - date.getTime()) / 1000);
+        var dayDiff = Math.floor(diff / 86400);
+
+        if ( isNaN(dayDiff) || (dayDiff < 0) || (dayDiff >= 31))
+        {
+            var day = date.getDate();
+
+            return $.months[date.getMonth()]  //.substr(0,3)
+                    +' '+  $.ordinal(day)
+                    +', '+ date.getFullYear();
+        }
+
+        return dayDiff == 0 && (
+                    diff < 60    && "just now"                               ||
+                    diff < 120   && "1 minute ago"                           ||
+                    diff < 3600  && Math.floor( diff / 60 )  +" minutes ago" ||
+                    diff < 7200  && "1 hour ago"                             ||
+                    diff < 86400 && Math.floor( diff / 3600) +" hours ago")  ||
+               dayDiff == 1      && "Yesterday"                              ||
+               dayDiff <  7      && dayDiff                  +" days ago"    ||
+               dayDiff <  31     && Math.ceil( dayDiff/ 7 )  +" weeks ago";
+    };
+
 }(jQuery));

@@ -486,15 +486,20 @@ $.Summary.prototype = {
         
         // Hide sentences
         self.$s.filter('.noHighlight')
-               .removeClass('noHighlight expanded expansion')
+               .removeClass('noHighlight expanded expansion', function() {
+                    var $s  = $(this);
+
+                    // Hide any associated notes
+                    self._syncNotesPosition( $s );
+               })
                .filter('.highlight')
                .removeClass('highlight', opts.animSpeed * 2, function() {
                     var $s  = $(this);
                     $s.younger()
                       .removeData('isHighlighted');
 
-                    // Hide any related notes.
-                    self._hideNotes($s);
+                    // Hide any associated notes
+                    self._syncNotesPosition( $s );
                });
 
         // Show sentences
@@ -524,7 +529,7 @@ $.Summary.prototype = {
                     }
                 }
 
-                // Reposition any associated notes.
+                // Sync the position of associated notes
                 self._syncNotesPosition( $s );
 
                 $s.data('isHighlighted', true);
@@ -672,22 +677,6 @@ $.Summary.prototype = {
         return this;
     },
 
-    /** @brief  Hide any notes associated with the provided sentence.
-     *  @param  $s      The jQuery DOM element representing the target sentence.
-     */
-    _hideNotes: function($s) {
-        var self    = this;
-        var opts    = self.options;
-
-        $s.find('.tagged')
-            .each(function() {
-                var $tagged = $(this);
-                var $notes  = $tagged.data('notes-associate');
-
-                $notes.notes('hide');
-            });
-    },
-
     /** @brief  Sync the position of any notes associated with the provided
      *          sentence.
      *  @param  $s      The jQuery DOM element representing the target sentence.
@@ -695,6 +684,7 @@ $.Summary.prototype = {
     _syncNotesPosition: function($s) {
         var self    = this;
         var opts    = self.options;
+        var visible = self._isVisible($s);
 
         $s.find('.tagged').each(function() {
             var $tagged = $(this);
@@ -707,7 +697,7 @@ $.Summary.prototype = {
                 return;
             }
 
-            $notes.notes('show');
+            $notes.notes( (visible ? 'show' : 'hide') );
 
             /*
             var tOffset = $tagged.offset();
@@ -727,10 +717,16 @@ $.Summary.prototype = {
     _syncNotesPositions: function() {
         var self        = this;
         var opts        = self.options;
+        /*
         var $visible    = self.$s.filter(  '.highlight,.expanded,'
                                          + '.expansion,.keyworded');
 
         $visible.has('.tagged').each(function() {
+            self._syncNotesPosition( $(this) );
+        });
+        // */
+
+        self.$s.each(function() {
             self._syncNotesPosition( $(this) );
         });
     },
@@ -823,9 +819,6 @@ $.Summary.prototype = {
                 $s.removeClass('ui-hover');
                 $s.find('.controls .su-icon').css('opacity', '');
                 $s.find('.selection-controls').remove();
-
-                // For each 'tagged' item, hide the associated notes
-                self._hideNotes($s);
             }
 
             // Change the expand/contract title back to "expand"
