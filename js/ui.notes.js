@@ -377,13 +377,6 @@ $.widget('ui.notes', {
             var $note   = $(e.target);
 
             self.removeNote($note);
-
-            /*
-            // Locate the target note and remove it from opts.notes
-            opts.notes.removeNote(note);
-
-            self.element.trigger('changed');
-            // */
         });
 
         /*****************************************************

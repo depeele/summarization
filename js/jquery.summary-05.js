@@ -331,15 +331,8 @@ $.Summary.prototype = {
                             {
                                 opts.lineHeight = $sEl.height();
                             }
-
-                            //$p.append( $sEl );
                         });
-
-
-                        //$div.append($p);
                     });
-
-                    //self.element.append( $div );
                 });
                 break;
 
@@ -698,16 +691,6 @@ $.Summary.prototype = {
             }
 
             $notes.notes( (visible ? 'show' : 'hide') );
-
-            /*
-            var tOffset = $tagged.offset();
-            var pOffset = self.$notes.offset();
-
-            console.log("_syncNotesPosition: "+ $notes.length +" notes");
-            $notes.fadeIn(opts.animSpeed)
-                  .animate({'top': (tOffset.top - pOffset.top)},
-                           opts.animSpeed);
-            // */
         });
     },
 
@@ -717,14 +700,6 @@ $.Summary.prototype = {
     _syncNotesPositions: function() {
         var self        = this;
         var opts        = self.options;
-        /*
-        var $visible    = self.$s.filter(  '.highlight,.expanded,'
-                                         + '.expansion,.keyworded');
-
-        $visible.has('.tagged').each(function() {
-            self._syncNotesPosition( $(this) );
-        });
-        // */
 
         self.$s.each(function() {
             self._syncNotesPosition( $(this) );
