@@ -479,17 +479,16 @@ $.Summary.prototype = {
         
         // Hide sentences
         self.$s.filter('.noHighlight')
-               .removeClass('noHighlight expanded expansion', function() {
+               .removeClass('noHighlight highlight expanded expansion',
+                            opts.animSpeed * 2,
+                            function() {
                     var $s  = $(this);
 
-                    // Hide any associated notes
-                    self._syncNotesPosition( $s );
-               })
-               .filter('.highlight')
-               .removeClass('highlight', opts.animSpeed * 2, function() {
-                    var $s  = $(this);
-                    $s.younger()
-                      .removeData('isHighlighted');
+                    if ($s.data('isHighlighted'))
+                    {
+                        $s.younger()
+                          .removeData('isHighlighted');
+                    }
 
                     // Hide any associated notes
                     self._syncNotesPosition( $s );
