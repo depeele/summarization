@@ -1,0 +1,534 @@
+body {
+  font:             16px/1.231 arial,helvetica,clean,sans-serif;
+  background-color: #eee;
+
+  display:          table;
+  margin-left:      auto;
+  margin-right:     auto;
+}
+
+a {
+  text-decoration:  none;
+}
+
+.keyword-hover {
+  color:  #f6931f;
+}
+
+.loading {
+  background-position:  0     0;
+  background-image:     url('images/loading.gif');
+  background-repeat:    no-repeat;
+  background-position:  50%;
+
+  min-height:           25px;
+}
+
+/**************************************************************************
+ * Primary Structure
+ *
+ * Optimized for a minimum 1024x768 with 24 pixels
+ * for window decoration and vertical scrollbar
+ * (i.e. a client/document width of 1000 pixels)
+ */
+.margin-left,
+.content-pane,
+.margin-right {
+  display:  table-cell;
+}
+
+.margin-left {
+  min-width:  55px;
+}
+.content-pane {
+  width:      700px;
+  min-width:  700px;
+  max-width:  700px;
+}
+.margin-right {
+  min-width:  240px;
+}
+
+/**************************************************************************
+ * Article
+ *
+ */
+.content-pane article {
+  margin:           0 0.2em;
+  padding:          1em;
+  border:           1px solid #ccc;
+  background-color: #fff;
+}
+
+/*******************
+ * Header
+ */
+.content-pane header {
+  display:        block;
+  padding:        1em;
+  margin-right:   0.5em;
+  border-bottom:  0.5em solid #ccc;
+}
+.content-pane header h1,
+.content-pane header .keywords {
+  display:      block;
+}
+.content-pane header author,
+.content-pane header time {
+  display:      inline-block;
+}
+
+.content-pane header h1 {
+  font-size:    1.2em;
+  font-weight:  bold;
+}
+.content-pane header author,
+.content-pane header time,
+.content-pane header .keywords {
+  font-size:    0.8em;
+  padding-left: 2em;
+  color:        #999;
+}
+.content-pane header time {
+  font-size:    0.7em;
+}
+.content-pane header author:before {
+  content:      'by ';
+}
+.content-pane header time {
+  font-style:   italic;
+}
+.content-pane header .keywords {
+  font-size:    0.8em;
+}
+.content-pane header .keywords .keyword {
+  display:    inline-block;
+  cursor:     pointer;
+  border:     1px solid #fff;
+}
+.content-pane header .keywords .keyword:before {
+  content:      ' / ';
+}
+
+/*******************
+ * Section
+ *
+ */
+
+.content-pane article section {
+  display:  block;
+  padding:  0.5em 0.5em 0.5em 0;
+  margin:   0;
+}
+
+.content-pane article section p {
+  display:      block;
+  padding:      0.1em;
+
+  margin:       0;
+  margin-left:  54px; /* For sentence controls */
+  margin-top:   0.1em;
+  margin-bottom:0.1em;
+
+  box-shadow:   1px 1px #eee;
+
+  cursor:       pointer;
+}
+.content-pane article section p .sentence {
+  position:   relative;
+  padding:    0.1em 0.25em 0.1em 0;
+  margin:     0;
+  text-align: justify;
+  font-size:  1px;
+  color:      #ddd;
+}
+.content-pane article section p.folded {
+  visibility: visible;
+  font-size:  1px;
+}
+.content-pane article section p.folded .sentence {
+  display:    none;
+}
+
+.content-pane article section p .sentence .text,
+.content-pane article section p .sentence .keyword,
+.content-pane article section p .sentence .selected,
+.content-pane article section p .sentence .tagged {
+  position:   relative;
+  border:     none;
+}
+.content-pane article section p .sentence .tagged {
+  font-weight:  normal;
+}
+
+.content-pane article section p .expanded,
+.content-pane article section p .expansion,
+.content-pane article section p .keyworded,
+.content-pane article section p .highlight {
+  display:    block;
+  font-size:  1em;
+  color:      #222;
+  cursor:     text;
+}
+.content-pane article section p .old-0 .content,
+.content-pane article section p .expanded .content {
+  background-color: #f0f0f0;
+}
+
+/* Progressive age */
+.content-pane article section p .old-1 .content { background-color: #ebebeb; }
+.content-pane article section p .old-2 .content { background-color: #e6e6e6; }
+.content-pane article section p .old-3 .content { background-color: #e1e1e1; }
+.content-pane article section p .old-4 .content { background-color: #dcdcdc; }
+.content-pane article section p .old-5 .content { background-color: #d7d7d7; }
+.content-pane article section p .old-6 .content { background-color: #d2d2d2; }
+.content-pane article section p .old-7 .content { background-color: #cdcdcd; }
+.content-pane article section p .old-8 .content { background-color: #c8c8c8; }
+
+.content-pane article section p .controls {
+  display:    none;
+}
+
+.content-pane article section .highlight .rank,
+.content-pane article section .keyworded .rank,
+.content-pane article section .expanded .rank,
+.content-pane article section .expansion .rank {
+  display:    block;
+  position:   absolute;
+  top:        2px;
+  left:       36px;
+
+  font-size:  0.75em;
+  display:    block;
+
+  color:      #f6931f;
+
+  /* Make it unselectable */
+  -moz-user-select:   none;
+  -webkit-user-select:none;
+  -khtml-user-select: none;
+  user-select:        none;
+}
+
+.content-pane article section p .keyword {
+  border:     1px solid #fff;
+}
+
+.content-pane article section p .controls,
+.content-pane article section p .selection-controls {
+  position:   absolute;
+
+  display:    block;
+  z-index:    10;
+}
+.content-pane article section p .controls {
+  top:        2px;
+  left:       -52px;
+
+  width:      52px;
+  height:     100%;
+}
+.content-pane article section p .selection-controls {
+  background-color: #999;
+  color:            #fff;
+  border:           none;
+  padding:          2px 2px 0 2px;
+}
+.content-pane article section p .sentence .tagged .selection-controls {
+  background-color: inherit;
+  border:           1px solid #aed0ea;  /* From .ui-state-default */
+  border-bottom:    none;
+}
+
+.content-pane article section p .controls .su-icon,
+.content-pane article section p .selection-controls .su-icon {
+  display:    inline-block;
+  cursor:     pointer;
+  border:     none;
+}
+.content-pane article section p .controls .su-icon {
+  visibility: hidden;
+}
+.content-pane article section p .ui-hover .controls .su-icon,
+.content-pane article section .highlight.starred .controls .star,
+.content-pane article section .expanded.starred .controls .star,
+.content-pane article section .expansion.starred .controls .star {
+  visibility: visible;
+}
+.content-pane article section p .hide-expand .controls .expand {
+  visibility: hidden;
+}
+
+.content-pane article section p .ui-hover .controls .su-icon {
+  opacity:    0.6;
+}
+.content-pane article section p .starred .controls .star {
+  opacity:    1.0;
+}
+
+/* When expanded, present the expand icon as collapse by mirroring
+ * .su-icon-collapse
+ */
+.content-pane article section p .expanded .controls .su-icon-expand {
+  background-position:  -16px 0;
+}
+
+/*******************
+ * Article:Normal
+ *
+ */
+
+/*******************
+ * Article:Starred
+ *
+ */
+
+/*******************
+ * Article:Tagged
+ *
+ */
+
+/*******************
+ * Article:All
+ *
+ */
+
+/**************************************************************************
+ * Control Pane (within .margin-right)
+ *
+ */
+.control-pane {
+  position:         fixed;
+  top:              11em;
+  width:            55px;
+
+  font-size:        0.7em;
+
+  margin:           0;
+
+  z-index:          10;
+}
+
+.control-pane .toggle-controls {
+  position:         absolute;
+  top:              4px;
+  right:            4px;
+  cursor:           pointer;
+}
+
+/*******************
+ * Controls
+ *
+ */
+.control-pane .controls {
+  overflow:   hidden;
+  text-align: center;
+}
+.control-pane .controls label.primary,
+.control-pane .controls label.values {
+  display:      block;
+}
+.control-pane .controls label.primary {
+  font-size:        0.8em;
+}
+.control-pane .controls .values {
+  color:        #f6931f;
+  font-size:    0.9em;
+}
+.control-pane .controls .threshold,
+.control-pane .controls .filter,
+.control-pane .controls .coverage {
+  position:       relative;
+  padding:        0;
+  vertical-align: top;
+  text-align:     center;
+
+  display:        block;
+  margin:         1em 0 0 0;
+}
+
+.control-pane .controls .filter .checkbox {
+  cursor:         pointer;
+}
+.control-pane .controls .filter .checkbox span {
+  display:        block;
+  margin:         0 auto;
+}
+.control-pane .controls .filter .ui-state-default {
+  background:   transparent;
+  border-color: transparent;
+  opacity:      0.6;
+}
+.control-pane .controls .filter .ui-state-hover {
+  opacity:    1.0;
+}
+.control-pane .controls .threshold .buttons {
+  margin:         0.4em;
+}
+.control-pane .controls .threshold .buttons button {
+  margin:         0;
+}
+.control-pane .controls .threshold .buttons .ui-button-text {
+  padding:        0.4em;
+  line-height:    1;
+}
+.control-pane .controls .coverage .indicator {
+  display:        inline-block;
+  width:          3em;
+  height:         4em;
+}
+.control-pane .controls .coverage .indicator .ui-slider-range {
+  border-top:     1px dashed #bbb;
+}
+.control-pane .controls .coverage .indicator .ui-slider-handle {
+  display:        none;
+}
+
+/**************************************************************************
+ * Notes Pane (within .margin-right)
+ *
+ */
+.notes-pane {
+  position:         absolute;
+  top:              10em;
+
+  z-index:          11;
+}
+
+/*******************
+ * Notes
+ *
+ */
+.notes {
+  display:          block;
+  position:         absolute;
+  left:             10px;
+
+  font-size:        0.7em;
+  width:            210px;
+  
+  border:           1px solid #bac8e6;
+  background-color: #fff;
+
+  z-index:          10;
+
+  cursor:           pointer;
+}
+
+.notes .arrow-outer,
+.notes .arrow-inner,
+.notes-input-pane,
+.notes-body .note .buttons,
+.notes-body .note .edit {
+  display:        none;
+}
+
+.notes .notes-body {
+}
+
+.notes-body .note {
+  position:       relative;
+  padding:        0.5em;
+
+  border-top:     1px dashed #ccc;
+}
+.notes-body .note:first-child {
+  border-top:     none;
+}
+.notes-body .note .avatar {
+  position:     absolute;
+  left:         0.5em;
+  top;          0.5em;
+
+  width:        24px;
+  height:       24px;
+}
+.notes-body .note .author,
+.notes-body .note .created {
+  margin-left:  32px;
+}
+.notes-body .note .author {
+  font-weight:  bold;
+}
+.notes-body .note .created {
+  margin-top:   0.5em;
+  font-size:    0.8em;
+}
+.notes-body .note .comment {
+}
+.notes-body .note .buttons,
+.notes-input-pane .buttons {
+  text-align:   right;
+  padding-top:  0.5em;
+
+  font-size:    0.8em;
+}
+
+.notes-body .note .buttons .ui-button-text,
+.notes-input-pane .buttons .ui-button-text {
+  padding:      0.2em 0.5em;
+}
+
+.notes-input-pane .hint {
+  color:        #aaa;
+}
+
+/*******************
+ * Notes (active)
+ *
+ */
+.notes-active {
+  left:             -10px;
+
+  border:           1px solid #ffe764;
+  background-color: #fffce9;
+
+  box-shadow:       2px 2px 8px #ccc;
+  z-index:          11;
+}
+
+.notes-active .notes-body .note {
+  border-top:       1px dashed #ffe764;
+}
+.notes-active .notes-body .note:first-child {
+  border-top:     none;
+}
+
+.notes-active .notes-body .note .buttons,
+.notes-active .notes-input-pane {
+  display:        block;
+}
+
+.notes-active .notes-input-pane {
+  border-top:     1px dashed #ffe764;
+  padding:        0.5em;
+  text-align:     right;
+}
+.notes-active .arrow-outer {
+  display:        block;
+  position:       absolute;
+  left:           -15px;
+  top:            -1px;
+
+  height:         0;
+  width:          0;
+
+  border-top:     none;
+  border-bottom:  14px solid transparent;
+  border-left:    none;
+  border-right:   14px solid #ffe764;
+}
+.notes-active .arrow-inner {
+  display:        block;
+  position:       absolute;
+  left:           -13px;
+  top:            0;
+
+  height:         0;
+  width:          0;
+
+  border-top:     none;
+  border-bottom:  14px solid transparent;
+  border-left:    none;
+  border-right:   14px solid #fffce9;
+}

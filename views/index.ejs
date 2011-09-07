@@ -1,0 +1,151 @@
+<div class='margin-left'><!-- margin-left { -->
+ <div class='control-pane ui-corner-br'><!-- control-pane { -->
+  <div class='controls ui-layout-north'><!-- controls { -->
+   <div class='filter'>
+    <label for="filter" class='primary'>Filter</label>
+    <input name="filter" id="filter-tagged"
+           type="checkbox" value="tagged" />
+    <label for="filter-tagged">sentences with notes:</label>
+
+    <input name="filter" id="filter-starred"
+           type="checkbox" value="starred" />
+    <label for="filter-starred">starred sentences:</label>
+
+   </div>
+
+   <div class='threshold'>
+    <label for="threshold" class='primary'>Threshold</label>
+    <label class='values'></label>
+
+    <div class='buttons'>
+     <button  name='threshold-all'
+              title='full document'><div
+             class='all su-icon su-icon-all' /></button
+     ><button name='threshold-down'
+             title='expand'><div
+             class='expand su-icon su-icon-expand' /></button
+     ><button name='threshold-up'
+             title='collapse'><div
+             class='collapse su-icon su-icon-collapse' /></button
+     ><button name='threshold-reset'
+             title='reset to original threshold'><div
+             class='reset su-icon su-icon-reset' /></button>
+    </div>
+   </div>
+  </div><!-- controls } -->
+ </div><!-- control-pane } -->
+</div><!-- margin-left } -->
+<div class='content-pane'><!-- content-pane { -->
+ <article id='article' class='loading'></article>
+</div><!-- content-pane } -->
+<div class='margin-right'><!-- margin-right { -->
+ <div class='notes-pane'>
+ </div>
+</div><!-- margin-right } -->
+
+<!-- Templates { -->
+<!-- 'keywords' is an array of XML nodes -->
+<script id='tmpl-header-keywords' type='text/x-jquery-tmpl'>
+ <div class='keywords'>
+  {{each keywords}}
+   <div class='keyword'
+         name='${$($value).attr('name')}'
+         rank='${$($value).attr('rank')}'>${$($value).text()}</div>
+  {{/each}}
+ </div>
+</script>
+
+<script id='tmpl-sentence' type='text/x-jquery-tmpl'>
+ <div class='sentence' rank='${rank}'>
+  <div class='controls'><div
+       class='expand su-icon su-icon-expand' title='expand' /><div
+       class='star su-icon su-icon-star'     title='star' /><div
+       class='rank'>${rank}</div>
+  </div>
+  <div class='content'></div>
+ </div>
+</script>
+
+<!-- 'node' is a jQuery object encapsulating an XML node -->
+<script id='tmpl-sentence-text' type='text/x-jquery-tmpl'>
+ <span class='text'>${node.text()}</span>
+</script>
+
+<!-- 'node' is a jQuery object encapsulating an XML node -->
+<script id='tmpl-sentence-keyword' type='text/x-jquery-tmpl'>
+ <span class='keyword'
+       name='${node.attr('name')}'>${node.text()}</span>
+</script>
+
+<script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>
+ <div class='selection-controls ui-corner-top'><div
+      class='tag su-icon su-state-reverse su-icon-tag'
+      title='tag' /></div>
+</script>
+
+<script id='tmpl-selection-remove-controls' type='text/x-jquery-tmpl'>
+ <div class='selection-controls ui-corner-top'><div
+      class='remove su-icon su-icon-cancel-blue ui-state-default'
+      title='remove tag' /></div>
+</script>
+
+<!-- The BODY of a note (without the outter <div class='note' /> ) -->
+<script id='tmpl-note' type='text/x-jquery-tmpl'>
+  <img class='avatar' src='${note.getAuthor().getAvatarUrl()}' />
+  <div class='author'>${note.getAuthor().getFullName()}</div>
+  <div class='created'>${ $.prettyDate(note.getCreated()) }</div>
+  <div class='comment'>${note.getText()}</div>
+  <div class='edit'>
+   <textarea class='edit-comment'></textarea>
+   <div class='buttons'>
+    <button name='save'>save</button>
+    <button name='cancel'>cancel</button>
+	</div>
+  </div>
+  <div class='buttons'>
+   <button name='edit'>edit</button>
+   <button name='delete'>delete</button>
+  </div>
+</script>
+
+<!-- The BODY of a notes container
+       (without the outter <div class='notes' /> ) -->
+<script id='tmpl-notes' type='text/x-jquery-tmpl'>
+  <div class='arrow-outer'></div>
+  <div class='arrow-inner'></div>
+  <div class='notes-body'>
+   <!-- note entries will be placed here -->
+  </div>
+  <div class='notes-input-pane'>
+   <textarea class='notes-reply' title="Reply to this comment..."></textarea>
+	<div class='buttons'>
+	 <button name='reply'>reply</button>
+	 <button name='cancel'>cancel</button>
+	</div>
+ </div>
+</script>
+<!-- Templates } -->
+
+<script src='js/jquery.min.js'></script>
+<script src='js/jquery.utils.js'></script>
+<script src='js/jquery.tmpl.min.js'></script>
+<script src='js/jquery.json.min.js'></script>
+<script src='js/jstorage.min.js'></script>
+<script src='js/jquery.delegateHoverIntent.js'></script>
+<script src='js/jquery-ui.js'></script>
+<script src='js/rangy.js'></script>
+<script src='js/rangy/serializer.js'></script>
+<script src='js/rangy/cssclassapplier.js'></script>
+<script src='js/jquery.user.js'></script>
+<script src='js/jquery.notes.js'></script>
+<script src='js/ui.checkbox.js'></script>
+<script src='js/ui.notes.js'></script>
+<script src='js/jquery.summary-06.js'></script>
+
+<script>
+(function($) {
+    $('#article').summary({
+        metadata:   'samples/0001.xml'
+    });
+}(jQuery));
+</script>
