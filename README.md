@@ -18,3 +18,5 @@ To use node.js as the server that provides access o this web-app:
 - start the node-based server
 
     `node app.js`
+
+- visit the host/port specified in `config.json`
