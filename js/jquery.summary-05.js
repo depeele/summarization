@@ -235,8 +235,12 @@ $.Summary.prototype = {
          * element.
          */
         var $header     = $('<header />').appendTo( self.element );
+        var $doc        = $xml.find('document');
+        var src         = $doc.attr('src');
 
-        $xml.find('document').children().each(function() {
+        if (src) { opts.src = src; }
+
+        $doc.children().each(function() {
             var $el = $(this);
 
             switch (this.nodeName)
