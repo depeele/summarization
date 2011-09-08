@@ -1,5 +1,18 @@
+<script>
+/* Use 'true' to ensure this is loaded in source order
+ * (i.e. added to the TAIL of the Req processing queue instead of being pushed
+ *       to the HEAD).
+ */
+Req(true, 'summary', function() {
+	// Initialize the application
+    jQuery('#article').summary({
+    	metadata:   'samples/0001.xml'
+    });
+});
+</script>
 <div class='margin-left'><!-- margin-left { -->
- <div class='control-pane ui-corner-br'><!-- control-pane { -->
+ <div class='control-pane ui-corner-br'
+      style='display:none;'><!-- control-pane { -->
   <div class='controls ui-layout-north'><!-- controls { -->
    <div class='filter'>
     <label for="filter" class='primary'>Filter</label>
@@ -126,26 +139,4 @@
 </script>
 <!-- Templates } -->
 
-<script src='js/jquery.min.js'></script>
-<script src='js/jquery.utils.js'></script>
-<script src='js/jquery.tmpl.min.js'></script>
-<script src='js/jquery.json.min.js'></script>
-<script src='js/jstorage.min.js'></script>
-<script src='js/jquery.delegateHoverIntent.js'></script>
-<script src='js/jquery-ui.js'></script>
-<script src='js/rangy.js'></script>
-<script src='js/rangy/serializer.js'></script>
-<script src='js/rangy/cssclassapplier.js'></script>
-<script src='js/jquery.user.js'></script>
-<script src='js/jquery.notes.js'></script>
-<script src='js/ui.checkbox.js'></script>
-<script src='js/ui.notes.js'></script>
-<script src='js/jquery.summary-06.js'></script>
-
-<script>
-(function($) {
-    $('#article').summary({
-        metadata:   'samples/0001.xml'
-    });
-}(jQuery));
 </script>

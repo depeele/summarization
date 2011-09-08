@@ -10,6 +10,70 @@
   <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.css" />
   <link rel="stylesheet" type="text/css" href="css/sprites-16.css" />
   <link rel="stylesheet" type="text/css" href="css/summary-06.css" />
+
+  <script src='js/req.min.js'></script>
+  <script>
+// Define script dependencies
+Req.assets = {
+    'preloadImages':{ src: 'js/preloadImages.js' },
+    'jquery':       {
+        src:    'js/jquery.min.js',
+
+        // script.onload handler that runs as soon as the script has loaded
+        onload: function () {
+            // be strict about jQuery usage.
+            var $ = jQuery.noConflict();
+
+            // Setup an easy-to-use Req.js plugin for jQuery ($.Req)
+            $.fn.Req = function(){
+                var args = arguments, t = this;
+                if (t.length)
+                {
+                    Req.apply(null, $.map(args, function(a) {
+                        return $.isFunction(a)
+                                ? function(){a.call(t);}
+                                : a;
+                    }) );
+                }
+                return t;
+            };
+        }
+    },
+    'rangy':        { src: 'js/rangy.min.js' },
+    'rangy.serializer':
+                    { src: 'js/rangy/serializer.min.js',
+                                                    req: ['rangy'] },
+    'rangy.cssClassApplier':
+                    { src: 'js/rangy/cssclassapplier.min.js',
+                                                    req: ['rangy'] },
+
+    'utils':        { src: 'js/jquery.utils.js',    req: ['jquery'] },
+    'tmpl':         { src: 'js/jquery.tmpl.min.js', req: ['jquery'] },
+    'json':         { src: 'js/jquery.json.min.js', req: ['jquery'] },
+    'jstorage':     { src: 'js/jstorage.min.js',    req: ['jquery'] },
+    'delegateHoverIntent':
+                    { src: 'js/jquery.delegateHoverIntent.js',
+                                                    req: ['jquery'] },
+    'user':         { src: 'js/jquery.user.js',     req: ['jquery'] },
+    'notes':        { src: 'js/jquery.notes.js',    req: ['jquery'] },
+    'jquery-ui':    { src: 'js/jquery-ui.min.js',   req: ['jquery'] },
+
+    'ui.checkbox':  { src: 'js/ui.checkbox.js',     req: ['jquery-ui'] },
+    'ui.notes':     { src: 'js/ui.notes.js',        req: ['jquery-ui'] },
+
+    'summary':      { src: 'js/jquery.summary-06.js',
+                      req: [ 'jquery',
+                             'rangy.serializer', 'rangy.cssClassApplier',
+                             'utils', 'tmpl', 'json', 'jstorage',
+                             'delegateHoverIntent', 'user', 'notes',
+                             'ui.notes', 'ui.checkbox' ] }
+};
+
+Req('preloadImages', function() {
+        // Preload global images/sprites
+        preloadImages('css/images/loading.gif', 'css/images/icons-16.png');
+});
+  </script>
  </head>
  <body>
   <%- body %>

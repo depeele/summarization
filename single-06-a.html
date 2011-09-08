@@ -2,20 +2,91 @@
 <html lang="en">
  <head>
   <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 
   <title>Summarization Viewer</title>
 
   <link rel="stylesheet" type="text/css" href="css/reset.css" />
   <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.css" />
-  <link rel="stylesheet" type="text/css" href="css/layout.css" />
   <link rel="stylesheet" type="text/css" href="css/sprites-16.css" />
   <link rel="stylesheet" type="text/css" href="css/summary-06.css" />
 
+  <script src='js/req.min.js'></script>
+  <script>
+// Define script dependencies
+Req.assets = {
+    'preloadImages':{ src: 'js/preloadImages.js' },
+    'jquery':       {
+        src:    'js/jquery.min.js',
+
+        // script.onload handler that runs as soon as the script has loaded
+        onload: function () {
+            // be strict about jQuery usage.
+            var $ = jQuery.noConflict();
+
+            // Setup an easy-to-use Req.js plugin for jQuery ($.Req)
+            $.fn.Req = function(){
+                var args = arguments, t = this;
+                if (t.length)
+                {
+                    Req.apply(null, $.map(args, function(a) {
+                        return $.isFunction(a)
+                                ? function(){a.call(t);}
+                                : a;
+                    }) );
+                }
+                return t;
+            };
+        }
+    },
+    'rangy':        { src: 'js/rangy.min.js' },
+    'rangy.serializer':
+                    { src: 'js/rangy/serializer.min.js',
+                                                    req: ['rangy'] },
+    'rangy.cssClassApplier':
+                    { src: 'js/rangy/cssclassapplier.min.js',
+                                                    req: ['rangy'] },
+
+    'utils':        { src: 'js/jquery.utils.js',    req: ['jquery'] },
+    'tmpl':         { src: 'js/jquery.tmpl.min.js', req: ['jquery'] },
+    'json':         { src: 'js/jquery.json.min.js', req: ['jquery'] },
+    'jstorage':     { src: 'js/jstorage.min.js',    req: ['jquery'] },
+    'delegateHoverIntent':
+                    { src: 'js/jquery.delegateHoverIntent.js',
+                                                    req: ['jquery'] },
+    'user':         { src: 'js/jquery.user.js',     req: ['jquery'] },
+    'notes':        { src: 'js/jquery.notes.js',    req: ['jquery'] },
+    'jquery-ui':    { src: 'js/jquery-ui.min.js',   req: ['jquery'] },
+
+    'ui.checkbox':  { src: 'js/ui.checkbox.js',     req: ['jquery-ui'] },
+    'ui.notes':     { src: 'js/ui.notes.js',        req: ['jquery-ui'] },
+
+    'summary':      { src: 'js/jquery.summary-06.js',
+                      req: [ 'jquery',
+                             'rangy.serializer', 'rangy.cssClassApplier',
+                             'utils', 'tmpl', 'json', 'jstorage',
+                             'delegateHoverIntent', 'user', 'notes',
+                             'ui.notes', 'ui.checkbox' ] }
+};
+
+Req('preloadImages', function() {
+        // Preload global images/sprites
+        preloadImages('css/images/loading.gif', 'css/images/icons-16.png');
+    },
+    'summary', function() {
+        // Initialize the application
+        jQuery('#article').summary({
+            metadata:   'samples/0001.xml'
+        });
+    }
+);
+  </script>
  </head>
  <body>
   <div class='margin-left'><!-- margin-left { -->
-   <div class='control-pane ui-corner-br'><!-- control-pane { -->
+   <div class='control-pane ui-corner-br' style='display:none;'><!-- control-pane { -->
     <div class='controls ui-layout-north'><!-- controls { -->
      <div class='filter'>
       <label for="filter" class='primary'>Filter</label>
@@ -117,7 +188,7 @@
     <div class='buttons'>
      <button name='save'>save</button>
      <button name='cancel'>cancel</button>
-	</div>
+    </div>
    </div>
    <div class='buttons'>
     <button name='edit'>edit</button>
@@ -135,35 +206,11 @@
    </div>
    <div class='notes-input-pane'>
     <textarea class='notes-reply' title="Reply to this comment..."></textarea>
-	<div class='buttons'>
-	 <button name='reply'>reply</button>
-	 <button name='cancel'>cancel</button>
-	</div>
+    <div class='buttons'>
+     <button name='reply'>reply</button>
+     <button name='cancel'>cancel</button>
+    </div>
   </div>
  </script>
  <!-- Templates } -->
-
- <script src='js/jquery.min.js'></script>
- <script src='js/jquery.utils.js'></script>
- <script src='js/jquery.tmpl.min.js'></script>
- <script src='js/jquery.json.min.js'></script>
- <script src='js/jstorage.min.js'></script>
- <script src='js/jquery.delegateHoverIntent.js'></script>
- <script src='js/jquery-ui.js'></script>
- <script src='js/rangy.js'></script>
- <script src='js/rangy/serializer.js'></script>
- <script src='js/rangy/cssclassapplier.js'></script>
- <script src='js/jquery.user.js'></script>
- <script src='js/jquery.notes.js'></script>
- <script src='js/ui.checkbox.js'></script>
- <script src='js/ui.notes.js'></script>
- <script src='js/jquery.summary-06.js'></script>
-
- <script>
- (function($) {
-    $('#article').summary({
-        metadata:   'samples/0001.xml'
-    });
- }(jQuery));
- </script>
 </html>

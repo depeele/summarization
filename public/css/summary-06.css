@@ -159,6 +159,8 @@ a {
 }
 .content-pane article section p .sentence .tagged {
   font-weight:  normal;
+  background:   #d7ebf9 url(theme/images/ui-bg_glass_80_d7ebf9_1x400.png) 50% 50% repeat-x;
+  color:        #2779aa;
 }
 
 .content-pane article section p .expanded,

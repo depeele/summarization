@@ -98,6 +98,7 @@ $.Summary.prototype = {
             titleOff:   'click to filter',
             hideLabel:  true
         });
+        self.$control.show();
 
         rangy.init();
         self.cssTag    = rangy.createCssClassApplier(
