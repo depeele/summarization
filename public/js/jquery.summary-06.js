@@ -81,6 +81,9 @@ $.Summary.prototype = {
         self.$buttons   = self.$control.find('.buttons button').button();
         self.$filters   = self.$control.find('.filter :checkbox');
 
+        self.$control.find('.buttons .expansion').buttonset();
+        //self.$control.find('.buttons .global').buttonset();
+
         var $tagged     = self.$filters.filter('#filter-tagged');
         var $starred    = self.$filters.filter('#filter-starred');
 

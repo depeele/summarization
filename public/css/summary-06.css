@@ -331,11 +331,16 @@ a {
   display:      block;
 }
 .control-pane .controls label.primary {
-  font-size:        0.8em;
+  color:        #ccc;
+}
+.margin-left:hover .control-pane .controls label.primary {
+  color:        #999;
+  cursor:       text;
 }
 .control-pane .controls .values {
   color:        #f6931f;
   font-size:    0.9em;
+  cursor:       text;
 }
 .control-pane .controls .threshold,
 .control-pane .controls .filter,
@@ -362,13 +367,20 @@ a {
   opacity:      0.6;
 }
 .control-pane .controls .filter .ui-state-hover {
-  opacity:    1.0;
+  opacity:      1.0;
 }
 .control-pane .controls .threshold .buttons {
-  margin:         0.4em;
+  margin:       0;
+}
+.control-pane .controls .threshold .buttons .expansion,
+.control-pane .controls .threshold .buttons .global {
+  margin:       0 0.4em;
+}
+.control-pane .controls .threshold .buttons .expansion {
+  margin:       0;
 }
 .control-pane .controls .threshold .buttons button {
-  margin:         0;
+  margin:       0;
 }
 .control-pane .controls .threshold .buttons .ui-button-text {
   padding:        0.4em;
