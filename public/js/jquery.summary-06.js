@@ -426,6 +426,7 @@ $.Summary.prototype = {
                 }
             }
         }
+        else
         {
             if (opts.filter.indexOf('tagged') >= 0)
             {
@@ -512,15 +513,14 @@ $.Summary.prototype = {
 
         // Show sentences
         self.$s.filter('.toHighlight')
-            .removeClass('toHighlight')
+            .removeClass('toHighlight expanded expansion')
             .addClass('highlight', opts.animSpeed * 2, function() {
-                var $s  = $(this);
-
-                // Remove any per-sentence expansion indicators.
-                $s.removeClass('expanded expansion');
+                var $s              = $(this);
+                var wasHighlighted  = $s.data('isHighlighted');
+                $s.data('isHighlighted', true);
 
                 // If the current senntence was already highlighted...
-                if ($s.data('isHighlighted'))
+                if (wasHighlighted)
                 {
                     // Already highlighted so we need to adjust the age
                     //      expanding   (older)
@@ -539,8 +539,6 @@ $.Summary.prototype = {
 
                 // Sync the position of associated notes
                 self._syncNotesPosition( $s );
-
-                $s.data('isHighlighted', true);
             });
           
         self._putState();
