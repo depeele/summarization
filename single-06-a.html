@@ -88,7 +88,7 @@ Req('preloadImages', function() {
   <div class='margin-left'><!-- margin-left { -->
    <div class='control-pane ui-corner-br' style='display:none;'><!-- control-pane { -->
     <div class='controls ui-layout-north'><!-- controls { -->
-     <div class='filter'>
+     <div class='filter'><!-- filter { -->
       <label for="filter" class='primary'>Filter</label>
       <input name="filter" id="filter-tagged"
              type="checkbox" value="tagged" />
@@ -97,32 +97,31 @@ Req('preloadImages', function() {
       <input name="filter" id="filter-starred"
              type="checkbox" value="starred" />
       <label for="filter-starred">starred sentences:</label>
+     </div><!-- filter { -->
 
-     </div>
-
-     <div class='threshold'>
+     <div class='threshold'><!-- threshold { -->
       <label for="threshold" class='primary'>Threshold</label>
       <label class='values'></label>
 
       <div class='buttons'>
-	   <div class='expansion'>
+       <div class='expansion'>
         <button name='threshold-down'
                title='expand'><div
                class='expand su-icon su-icon-expand' /></button
        ><button name='threshold-up'
                title='collapse'><div
                class='collapse su-icon su-icon-collapse' /></button>
-	   </div>
-	   <div class='global'>
+       </div>
+       <div class='global'>
         <button  name='threshold-all'
                 title='full document'><div
                class='all su-icon su-icon-all' /></button
        ><button name='threshold-reset'
                title='reset to original threshold'><div
                class='reset su-icon su-icon-reset' /></button>
-	   </div>
+       </div>
       </div>
-     </div>
+     </div><!-- threshold } -->
     </div><!-- controls } -->
    </div><!-- control-pane } -->
   </div><!-- margin-left } -->
