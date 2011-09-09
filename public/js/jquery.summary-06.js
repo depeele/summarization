@@ -339,15 +339,33 @@ $.Summary.prototype = {
                                 var $node   = $(this);
                                 switch (this.nodeName)
                                 {
+                                case 'w':
                                 case '#text':
-                                    $('#tmpl-sentence-text')
-                                        .tmpl( {node:$node} )
-                                        .appendTo( $sC );
+                                    if ($node.attr('keyword'))
+                                    {
+                                        $('#tmpl-sentence-keyword')
+                                            .tmpl( {
+                                                keyword:$node.attr('keyword'),
+                                                text:   $node.text()
+                                            } )
+                                            .appendTo( $sC );
+                                    }
+                                    else
+                                    {
+                                        $('#tmpl-sentence-text')
+                                            .tmpl( {
+                                                text:   $node.text()
+                                            } )
+                                            .appendTo( $sC );
+                                    }
                                     break;
 
                                 case 'keyword':
                                     $('#tmpl-sentence-keyword')
-                                        .tmpl( {node:$node} )
+                                        .tmpl( {
+                                            keyword:$node.attr('name'),
+                                            text:   $node.text()
+                                        } )
                                         .appendTo( $sC );
                                     break;
                                 }

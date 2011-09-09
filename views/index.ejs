@@ -6,7 +6,7 @@
 var docId = (window.location.search
               ? window.location.search
                   .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.xml)?$/, '$1')
-              : '0001');
+              : '0001a');
 
 Req(true, 'summary', function() {
     var $ = jQuery.noConflict();
@@ -89,15 +89,13 @@ Req(true, 'summary', function() {
  </div>
 </script>
 
-<!-- 'node' is a jQuery object encapsulating an XML node -->
 <script id='tmpl-sentence-text' type='text/x-jquery-tmpl'>
- <span class='text'>${node.text()}</span>
+ <span class='text'>${text}</span>
 </script>
 
-<!-- 'node' is a jQuery object encapsulating an XML node -->
 <script id='tmpl-sentence-keyword' type='text/x-jquery-tmpl'>
  <span class='keyword'
-       name='${node.attr('name')}'>${node.text()}</span>
+       name='${keyword}'>${text}</span>
 </script>
 
 <script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>

@@ -1,0 +1,191 @@
+<document
+ src="http://www.wired.com/wiredscience/2011/07/the-selfishness-of-trust/">
+ <title>The Collapse of Political Trust</title>
+ <author>Jonah Lehrer</author>
+ <!--
+  <time pubdate datetime="2011-07-27T17:40-05:00">
+   July 27, 2011 5:40pm
+  </time>
+ -->
+ <published><date>July 27, 2011</date><time>5:40 pm</time></published>
+ <keywords>
+  <keyword name='politics' rank='.8'>Politics</keyword>
+  <keyword name='trust' rank='.9'>Trust</keyword>
+ </keywords>
+
+ <body>
+  <section>
+   <p>
+    <s rank='.1'>American <w keyword='politics'>politics</w> makes me sad.</s>
+    <s rank='.7'>One can’t help but imagine the history books of the future,
+    highlighting this moment as an example of why the decline began, how a
+    country this rich and free developed such a dysfunctional <w
+    keyword='politics'>political</w> system.</s>
+   </p>
+
+   <p>
+    <s rank='.1'>But this post is not a lament for a bygone <w
+    keyword='politics'>politics</w>, because lord knows there are enough of
+    those.</s>
+    <s rank='.1'>Instead, I think the current breakdown in Washington
+    highlights the fragility of a human capability we’ve long taken for
+    granted: <w keyword='trust'>trust</w>.</s>
+    <s rank='.9'>While economists have begun focusing on <w
+    keyword='trust'>trust</w> as a crucial factor in economic development – a
+    country without <w keyword='trust'>trust</w> can’t build the institutions
+    that make growth possible – <w keyword='trust'>trust</w> is also an
+    essential component of effective <w keyword='politics'>politics</w>.</s>
+    <s rank='.3'>Democracies, after all, depend on compromise.</s>
+    <s rank='.3'>And compromise requires <w keyword='trust'>trust</w>.</s>
+   </p>
+
+   <p>
+    <s rank='.1'>At the moment, the neuroscience of <w
+    keyword='trust'>trust</w> remains extremely provisional.</s>
+    <s rank='.4'>We still don’t know why some societies are awash in <w
+    keyword='trust'>trust</w> while others are forced to do without, subsisting
+    on nothing but the instinctive faith in close friends and family.</s>
+    <s rank='.4'>We don’t know why some people are so much more <w
+    keyword='trust'>trusting</w> than others or what happens when the bonds of
+    <w keyword='trust'>trust</w> are broken.</s>
+    <s rank='.1'>Nevertheless, there have been some interesting glimmers into
+    the formation of <w keyword='trust'>trust</w> in the brain.</s>
+   </p>
+
+   <p>
+    <s rank='.1'>Consider this elegant investigation of <w
+    keyword='trust'>trust</w>, led by Brooks King-Casas, Colin Camerer, Read
+    Montague, et. al.</s>
+    <s rank='.1'>The research was born out of a serious limitation of
+    conventional fMRI, which looks at the individual brain in splendid
+    isolation.</s>
+    <s rank='.1'>(A subject is put in a claustrophobic scanner and told to
+    perform a task.)</s>
+    <s rank='.3'>Humans, of course, are a social species – our behavior is
+    often influenced by the behavior of others – so the scientists pioneered a
+    technique known as hyper-scanning, which allows subjects in different fMRI
+    machines to interact in real time.</s>
+   </p>
+
+   <p>
+    <s rank='.2'>The experiment revolved around a simple economic game in which
+    getting the maximum reward required the strangers to <w
+    keyword='trust'>trust</w> one another.</s>
+    <s rank='.3'>However, if one of the players grew especially selfish, he or
+    she could always steal from the pot and erase the tenuous sense of <w
+    keyword='trust'>trust</w>.</s>
+    <s rank='.4'>By monitoring the players’ brains, the scientists were able to
+    predict whether or not someone would steal money several seconds before the
+    theft actually occurred.</s>
+    <s rank='.7'>The secret was a cortical area known as the caudate nucleus,
+    which closely tracked the payouts from the other player.</s>
+    <s rank='.1'>(The caudate is usually discussed in the context of addiction,
+    since it plays a central role in modulating our expectation of
+    pleasure.)</s>
+    <s rank='.1'>Montague noticed that whenever the caudate exhibited reduced
+    activity, <w keyword='trust'>trust</w> tended to break down.</s>
+   </p>
+
+   <p>
+    <s rank='.1'>But what exactly is the caudate computing?</s>
+    <s rank='.1'>How do we decide whom to <w keyword='trust'>trust</w>
+    with our money?</s>
+    <s rank='.6'>At first, the caudate didn’t get excited until the subjects
+    actually <w keyword='trust'>trusted</w> one another and garnered their
+    separate rewards.</s>
+    <s rank='.6'>But over time this brain area started to expect those rewards,
+    so that it fired long before the money actually arrived.</s>
+    <s rank='.1'>It’s only at this point – once we take those future benefits
+    for granted – that the bonds of <w keyword='trust'>trust</w> between the
+    players began to form.</s>
+   </p>
+
+   <p>
+    <s rank='.8'>The moral is that <w keyword='trust'>trust</w> is ultimately
+    about the expectation of rewards.</s>
+    <s rank='.4'>We see <w keyword='trust'>trust</w> as such a noble trait, but
+    it’s ultimately rooted in a greedy calculation, emanating from our primal
+    dopaminergic circuitry:</s>
+   </p>
+
+   <p>
+    <s rank='.8'>Taken together, these results suggest that the head of the
+    caudate nucleus receives or computes information about (i) the fairness of
+    a social partner’s decision and (ii) the intention to repay that decision
+    with <w keyword='trust'>trust</w>.</s>
+    <s rank='.5'>In early rounds of the game, the ”intention to <w
+    keyword='trust'>trust</w>” is evident only after an investment is
+    revealed.</s>
+    <s rank='.5'>With experience, this signal shifts to a time preceding the
+    revelation of the investment.</s>
+   </p>
+
+   <p>
+    <s rank='.6'>In other words, we don’t <w keyword='trust'>trust</w> people
+    because they seem nice or virtuous or <w keyword='trust'>trustworthy</w>,
+    whatever those adjectives mean.</s>
+    <s rank='.6'>We <w keyword='trust'>trust</w> them because they get us the
+    good stuff, delivering what Montague refers to as the “social juice” of
+    reciprocity.</s>
+    <s rank='.8'>When we say we <w keyword='trust'>trust</w> someone, what
+    we’re really saying is that they’re a reliable source of what we want.</s>
+    <s rank='.4'>I scratch your back, you scratch mine.</s>
+   </p>
+
+   <p>
+    <s rank='.1'>And this returns us to the present dysfunction in
+    Washington.</s>
+    <s rank='.9'>If <w keyword='trust'>trust</w> is about the distribution of
+    rewards – about learning to expect bonuses from others – then it’s going to
+    be a lot harder to share those rewards in an age of scarcity and
+    deficits.</s>
+    <s rank='.7'>For the first time in decades, congresspeople aren’t trading
+    pork barrel projects and tax breaks – they’re negotiating steep budget
+    cuts.</s>
+    <s rank='.8'>Those cuts might be necessary, but they’re aren’t going to
+    excite the caudate or generate that requisite burst of “social juice.</s>
+    <s rank='.1'>The traditional means of developing <w
+    keyword='trust'>trust</w> among Congresspeople have disappeared.</s>
+   </p>
+
+   <p>
+    <s rank='.1'>There are, of course, myriad reasons for the increasing
+    polarization of Congress.</s>
+    <s rank='.1'>But I can’t help but wonder if one of the reasons has to with
+    this newfound lack of favor trading, as it’s increasingly difficult for <w
+    keyword='politics'>politicians</w> to barter projects in exchange for
+    votes.</s>
+    <s rank='.1'>It’s easy to hate on Congressional pork and mock all those
+    silly projects that get snuck into bills.</s>
+    <s rank='.7'>But when we do without pork, we also deny our <w
+    keyword='politics'>politicians</w> a means of building <w
+    keyword='trust'>trusting</w> relationships across the aisle.</s>
+    <s rank='.5'>In this sense, those bridges to nowhere are a sort of
+    benevolent inefficiency, a form of waste that, just maybe, keeps us from
+    becoming a banana republic.</s>
+    <s rank='.1'>Such are the hazards of <w keyword='politics'>politics</w> in
+    age of cutting.</s>
+    <s rank='.7'>If <w keyword='trust'>trust</w> begins when we share the
+    treasure, what happens when there’s no treasure left to share?</s>
+   </p>
+
+   <p>
+    <s rank='.01'>PS. I also love Bill Clinton’s theory that the extreme
+    partisanship of Congress is largely due to…sleep deprivation.</s>
+   </p>
+
+   <p>
+    <s rank='.01'>PPS. For more on the hidden benefits of Congressional pork,
+    check out this paper by the <w keyword='politics'>political</w> scientists
+    John Ellwood and Eric Patashnik.</s>
+   </p>
+
+   <p>
+    <s rank='.01'>Image: President Barack Obama sits next to House Speaker John
+    Boehner of Ohio, left, in the Cabinet Room of the White House, Saturday,
+    July 23, 2011, in Washington, as they meet to discuss the debt. (AP
+    Photo/Carolyn Kaster)</s>
+   </p>
+  </section>
+ </body>
+</document>
