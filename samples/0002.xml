@@ -1,0 +1,483 @@
+<document
+ src="http://www.wired.com/dangerroom/2011/09/mcchrystal-network/">
+
+ <title>How Special Ops Copied al-Qaida to Kill It</title>
+ <author>Spencer Ackerman</author>
+ <!--
+  <time pubdate datetime="2011-09-09T06:30-05:00">
+   September 9, 2011 6:30am
+  </time>
+ -->
+ <published><date>September 9, 2011</date><time>6:30 am</time></published>
+ <keywords>
+  <keyword name='network' rank='.8'>Network</keyword>
+ </keywords>
+
+ <body>
+  <section>
+   <p>
+    <s>One of the greatest ironies of the 9/11 Era: while politicians, generals
+    and journalists lined up to denounce al-Qaida as a brutal band of fanatics,
+    one commander thought its organizational structure was kind of
+    brilliant.</s>
+    <s rank='.9'>He set to work rebuilding an obscure military entity into a
+    lethal, agile, secretive and highly <keyword
+    name='network'>networked</keyword> command — essentially, the U.S.’ very
+    own al-Qaida. It became the most potent weapon the U.S. has against another
+    terrorist attack.</s>
+   </p>
+
+   <p>
+    <s>That was the work of Stanley McChrystal.</s>
+    <s>McChrystal is best known as the general who lost his command in
+    Afghanistan after his staff shit-talked the Obama administration to Rolling
+    Stone.</s>
+    <s>Inescapable as that public profile may be, it doesn’t begin to capture
+    the impact he made on the military.</s>
+    <s>McChrystal’s fingerprints are all over the Joint Special Operations
+    Command, the elite force that eventually killed Osama bin Laden.</s>
+    <s>As the war on terrorism evolves into a series of global shadow wars,
+    JSOC and its partners are the ones who wage it.</s>
+   </p>
+
+   <p>
+    <s>These days, McChrystal travels around the country to talk about his
+    leadership style.</s>
+    <s>His insights reveal a lot about how the JSOC became the Obama team’s
+    go-to counterterrorism group.</s>
+    <s rank='.7'>“In bitter, bloody fights in both Afghanistan and Iraq,”
+    McChrystal has written, “it became clear to me and to many others that to
+    defeat a <keyword name='network'>networked</keyword> enemy we had to become
+    a <keyword name='network'>network</keyword> ourselves.”</s>
+   </p>
+
+   <p>
+    <s>McChrystal’s career also reveals a second irony: at the moment of his
+    greatest ascension, to overall command in Afghanistan, McChrystal couldn’t
+    take his own advice.</s>
+   </p>
+
+   <p>
+    <s>McChrystal declined to speak for this article.</s>
+    <s>He’s working on a book, due out in 2012, that will probably shed some
+    light on his tenure at JSOC.</s>
+    <s>This piece is drawn from his speeches, interviews I’ve conducted over
+    the years with special operations and intelligence veterans — usually off
+    the record — as well as two insightful new books: Counterstrike by Thom
+    Shanker and Eric Schmitt and Top Secret America by Dana Priest and William
+    Arkin.</s>
+   </p>
+   </section>
+   <section>
+    <h1>The <keyword name='network'>Networked</keyword> Ninja</h1>
+
+   <p>
+    <s>The historical problem special operations forces had, in the eyes of
+    high-level policymakers, is that they weren’t ninjas.</s>
+    <s>U.S. commandos trained constantly, but they didn’t have much combat
+    experience during the 1980s and 90s.</s>
+    <s>When the Clinton administration reviewed its options for attacking
+    al-Qaida’s Afghanistan safe houses in 1998, President Clinton vented
+    frustration: “You know, it would scare the shit out of al-Qaida if suddenly
+    a bunch of black ninjas rappelled out of helicopters into the middle of
+    their camp.”</s>
+   </p>
+
+   <p>
+    <s>JSOC certainly knew how to rappel.</s>
+    <s>The problem was it often didn’t know where to rappel, or where to send
+    their helicopters, or who the enemy was.</s>
+    <s>In 2002, a JSOC AC-130 helicopter gunship came to relieve a team of
+    commandos who’d come under attack while hunting Taliban leaders in Uruzgan
+    province.</s>
+    <s>It opened fire so indiscriminately that the low estimate of civilian
+    deaths is 48.</s>
+    <s>Hundreds may have been killed.</s>
+   </p>
+
+   <p>
+    <s>JSOC had minimal intelligence capabilities.</s>
+    <s>The CIA, the agency that knew Afghanistan the best and led the hunt for
+    al-Qaida, distrusted it.</s>
+    <s>It was hived off from the conventional military, whose low-level
+    commanders could be left to deal with angry civilians after one of JSOC’s
+    raids in Afghanistan or Iraq.</s>
+    <s>McChrystal took command in 2003, began examining al-Qaida, and had
+    something of a revelation.</s>
+   </p>
+
+   <aside><s>We had to become a <keyword name='network'>network</keyword>
+   ourselves.</s></aside>
+
+   <p>
+    <s>“[I]t became increasingly clear — often from intercepted communications
+    or the accounts of insurgents we had captured — that our enemy was a
+    constellation of fighters organized not by rank but on the basis of
+    relationships and acquaintances, reputation and fame,” McChrystal
+    remembered recently in Foreign Policy.</s>
+    <s>“We realized we had to have the rapid ability to detect nuanced changes,
+    whether the emergence of new personalities and alliances or sudden changes
+    in tactics.”</s>
+    <s>Think Bruce Wayne getting inspired by a bat to strike fear into the
+    hearts of criminals.</s>
+   </p>
+
+   <p>
+    <s>McChrystal set to work, as he put it, building JSOC’s <keyword
+    name='network'>network</keyword>.</s>
+    <s>One key node: CIA.</s>
+    <s>During a January speech, he recalled how he needed CIA’s help getting
+    intelligence on a Taliban leader he was hunting.</s>
+    <s>CIA was secretive, compartmentalized and suspicious of other
+    organizations meddling in its affairs — exactly what JSOC used to be
+    like.</s>
+    <s>So McChrystal took the rare step of going to CIA headquarters, hat in
+    hand.</s>
+    <s rank='.7'>As it turned out, CIA just needed a promise that JSOC
+    “wouldn’t go across the border” into Pakistan, jeopardizing its own
+    operations.</s>
+    <s>McChrystal agreed, the intel flowed, and the Taliban commander was
+    killed.</s>
+   </p>
+
+   <p>
+    <s>It was the beginning of a new relationship between JSOC and the vast spy
+    apparatus the U.S. built after 9/11.</s>
+    <s>CIA operatives and analysts would visit McChrystal’s base of operations
+    in Balad, Iraq to plan joint missions.</s>
+    <s>And not just them: satellite analysts from the National
+    Geospatial-Intelligence Agency, regional experts from the State Department,
+    and surveillance specialists from the National Security Agency were the
+    next people McChrystal effectively recruited.</s>
+    <s rank='.8'>McChrystal spent his commander’s discretionary fund not on
+    better guns, but on purchasing bandwidth so that all the nodes of his
+    <keyword name='network'>network</keyword> could speak to each other,
+    sometimes during missions.</s>
+   </p>
+
+   <p>
+    <s>Veterans of JSOC remember that as crucial.</s>
+    <s rank='.6'>An NSA-created linkup called the Real Time Regional Gateway
+    allowed operatives who seized scraps of intelligence from raids — a
+    terrorist’s cellphone contacts, receipts for bomb ingredients, even
+    geolocated terrorist cellphones — to send their crucial data to different
+    nodes across the <keyword name='network'>network</keyword>.</s>
+    <s>One analyst might not appreciate the significance of a given piece of
+    intel.</s>
+    <s rank='.8'>But once JSOC effectively became an experiment in intel
+    crowdsourcing, it soon got a bigger, deeper picture of the enemy it was
+    fighting — and essentially emulating.</s>
+   </p>
+
+   <p>
+    <s>“If you look at JSOC, you’re looking at arguably the single most
+    integrated, most truly joint command within the U.S. military,” says Andrew
+    Exum, who served in the Army’s Ranger Regiment in Iraq and Afghanistan in
+    2003 and 2004 and who advised McChrystal as a civilian in 2009.</s>
+    <s>McChrystal and his brain trust “were seeking to do and succeeding in
+    doing what many commanders and diplomats and government officials talk
+    about: tearing down the walls that exist between various departments,
+    agencies and military units.”</s>
+   </p>
+
+   <p>
+    <s>It also helped mitigate JSOC’s most horrific mistakes.</s>
+   </p>
+   </section>
+
+   <section>
+    <h1>‘No Blood, No Foul,’ No More</h1>
+
+   <p>
+    <s>Defense Secretary Donald Rumsfeld gave JSOC the authority to hold
+    prisoners for 90 days before transferring them to military detention
+    facilities.</s>
+    <s>That gave JSOC jailers nearly limitless authority over their
+    captives.</s>
+    <s>Unsurprisingly, some began abusing it, beating prisoners senseless in a
+    facility called Camp Nama — which Saddam Hussein used as a torture chamber
+    — where the slogan was, “No Blood, No Foul.”</s>
+   </p>
+
+   <p>
+    <s>Although no public investigation has ever been conducted into the abuses
+    at Nama, McChrystal reportedly said “This is how we lose” when he toured
+    the facility for the first time.</s>
+    <s>He assigned his top intelligence officer, then-Brig. Gen. Michael Flynn,
+    to professionalize JSOC interrogations.</s>
+    <s>Flynn reached out to trained interrogators throughout the U.S.
+    bureaucracy and even to around the world to provide instruction.</s>
+    <s>Subsequent interrogations of suspected al-Qaida captives in Iraq relied
+    on Saudis brought in when a Saudi national was nabbed, Egyptians when an
+    Egyptian was.</s>
+    <s>Priest and Arkin report that detainees would even be videoconferenced in
+    with their families — who’d plead with their sons to cooperate.</s>
+   </p>
+
+   <aside><s>This is how we lose.</s></aside>
+
+   <p>
+    <s>Think about that for a minute.</s>
+    <s>JSOC is the most secretive organization in the U.S. military.</s>
+    <s>Its detention and interrogation operations are among its most sensitive
+    missions.</s>
+    <s>And the family members of terrorist suspects actually got a glimpse
+    inside them, all as a method of building rapport.</s>
+    <s>Not only that, diplomats, NSA techs, intelligence analysts of all
+    stripes and foreign government officials became, effectively, JSOC
+    adjuncts, so JSOC could leverage their expertise.</s>
+    <s>Despite years of post-9/11 lip service to breaking down bureaucratic
+    barriers, JSOC actually did it, for the most important and secretive
+    operations the military undertook.</s>
+   </p>
+
+   <p>
+    <s rank='.5'>Flynn was arguably McChrystal’s most important partner in
+    building JSOC’s <keyword name='network'>network</keyword>.</s>
+    <s>“We once had a problem in terms of how we were going to track our units
+    on the ground using satellite technology.</s>
+    <s>It’s almost unthinkable today because of GPS, Blue Force Tracker and so
+    forth,” recalls Andrew Exum, now a senior fellow at the Center for a New
+    American Security, referring to a GPS receiver system that allows U.S.
+    troops to track the movements of their allies.</s>
+    <s>“I remember Gen. Flynn’s solution was to track down a really smart
+    engineer at Georgia Tech University, who developed a piece of software for
+    use by commercial aircraft.</s>
+    <s>It went outside the standard Army acquisition process — we’d still be
+    waiting for the equivalent of Navstar if [Flynn] hadn’t.</s>
+    <s>But the fact that he was comfortable interacting in the world outside of
+    the military in order to achieve an effect says a lot about him.”</s>
+   </p>
+
+   <p>
+    <s>McChrystal left JSOC in early 2008 to take a senior position working for
+    Adm. Mike Mullen, the Chairman of the Joint Chiefs of Staff.</s>
+    <s rank='.7'>The <keyword name='network'>network</keyword> he built was
+    getting results.</s>
+    <s rank='.9'>In June 2006, JSOC killed al-Qaida’s leader in Iraq, Abu Musab
+    al-Zarqawi.</s>
+    <s>(McChrystal had Zarqawi’s corpse brought to his office for personal
+    inspection.)</s>
+    <s>During the Iraq surge, JSOC raided suspected terrorist safe houses on a
+    nightly basis, something McChrystal’s friend David Petraeus would repeat in
+    Afghanistan.</s>
+    <s>McChrystal left JSOC in the hands of his friend and deputy, Vice Adm.
+    William McRaven — and the conclusion, from President George W. Bush, that
+    “JSOC is awesome.”</s>
+   </p>
+
+   <p>
+    <s>But McChrystal would never enjoy the same success again.</s>
+   </p>
+   </section>
+
+   <section>
+    <h1>The Un-<keyword name='network'>Networked</keyword> McChrystal</h1>
+
+   <p>
+    <s>Defense Secretary Robert Gates tapped McChrystal to lead the Afghanistan
+    war in May 2009.</s>
+    <s>JSOC veterans were thrilled.</s>
+    <s>“The man is unstoppable,” wrote one, using the pseudonym Dalton
+    Fury.</s>
+    <s>“McChrystal has few peers and makes even fewer mistakes.”</s>
+    <s>He was about to make a lot of them.</s>
+   </p>
+
+   <p>
+    <s rank='.5'>The McChrystal of JSOC enlisted people from across the
+    bureaucracy into his <keyword name='network'>network</keyword>.</s>
+    <s>That turned out to be much easier to do when running an organization
+    comprised of only a few thousand people.</s>
+    <s>Securing the buy-in of a multinational military coalition comprising
+    140,000 was far more challenging.</s>
+   </p>
+
+   <p>
+    <s>McChrystal had early successes coaxing Afghan President Hamid Karzai,
+    who resented the Obama administration’s arms-length relationship.</s>
+    <s>“His approach to President Karzai was humility,” recalls Exum, who
+    advised McChrystal that summer.</s>
+    <s>“He had the attitude of, ‘I’m here to support you, the Afghan
+    president.’”</s>
+   </p>
+
+   <p>
+    <s>Some in uniform weren’t so sure they enjoyed their commander’s
+    support.</s>
+    <s>McChrystal faced the unenviable task of curbing NATO’s accidental
+    civilian deaths — he called Afghan public opinion “strategically decisive”
+    —  while beating back an inflamed Taliban insurgency.</s>
+    <s>Two of his earliest moves to that end inadvertently made his troops
+    question his support.</s>
+    <s>One was his August counterinsurgency guidance, which instructed troops
+    to show outright deference to Afghans, down to giving them right of way on
+    the roads.</s>
+    <s>The other was his Tactical Directive, which sharply restricted the rules
+    of engagement for combat aircraft, something that alarmed troops who feared
+    a loss of crucial air support.</s>
+   </p>
+
+   <aside><s>I would love to kick McChrystal in the nuts.</s></aside>
+
+   <p>
+    <s>Both of those decisions were made for defensible reasons.</s>
+    <s>Losing the support of Afghanistan’s people was more destructive to the
+    war than losing any firefight to the Taliban.</s>
+    <s>But McChrystal didn’t sufficiently sell his decisions to his own troops,
+    explaining to them why they were ultimately in their interests.</s>
+    <s>“I would love to kick McChrystal in the nuts,” a Special Forces veteran
+    told Michael Hastings for his fateful McChrystal profile in Rolling
+    Stone.</s>
+    <s>“His rules of engagement put soldiers’ lives in even greater
+    danger.”</s>
+   </p>
+
+   <p>
+    <s rank='.5'>There was something else missing from McChrystal’s <keyword
+    name='network'>network</keyword>: the U.S.  embassy in Kabul.</s>
+    <s>While McChrystal and Amb. Karl Eikenberry, a former Afghanistan war
+    commander himself, supposedly enjoyed good relations, the embassy and NATO
+    sometimes seemed like they weren’t in the same country.</s>
+    <s>Then one of Eikenberry’s cables back to Washington casting doubt on
+    McChrystal’s desired troop surge leaked to the press.</s>
+    <s>That poisoned the well.</s>
+    <s>“Here’s one that covers his flank for the history books,” McChrystal
+    kvetched to Hastings.</s>
+    <s>“Now if we fail, they can say, ‘I told you so.’”</s>
+   </p>
+
+   <p>
+    <s rank='.6'>But the surge itself was causing a breach with the most
+    important node in McChrystal’s <keyword name='network'>network</keyword>:
+    the White House.</s>
+    <s>In the 2009 debates over sending more troops to Afghanistan, President
+    Obama reportedly felt like the military was boxing him into an unwise
+    escalation.</s>
+    <s>McChrystal, in London for one of his first public appearances, bluntly
+    remarked that he thought all other strategies were doomed.</s>
+    <s rank='.7'>Although McChrystal repeatedly defended the Obama team, the
+    press went wild with a narrative about an insubordinate commander, and not
+    without some justification.</s>
+    <s>Obama ultimately endorsed the surge, but it was, at best, a Pyrrhic
+    victory for McChrystal.</s>
+   </p>
+
+   <p>
+    <s>Nor were McChrystal’s battlefield moves showing the same success that
+    JSOC had demonstrated.</s>
+    <s>Through the summer and fall of 2009, Marines fought furiously through
+    Helmand Province, for little obvious gain.</s>
+    <s>That February, he and Karzai invaded the Helmand town of Marja,
+    proclaiming that he had a “government in a box” ready to establish order in
+    the cleared town.</s>
+    <s>Instead, fighting continued for months, without a significant Afghan
+    government presence.</s>
+   </p>
+
+   <p>
+    <s rank='.8'>All that meant that McChrystal, the consummate <keyword
+    name='network'>networker</keyword>, was out of allies when Hastings quoted
+    McChrystal’s aides making derogatory comments about the Obama team.</s>
+    <s>Quick to defend his loyal staff and take responsibility, McChrystal
+    immediately offered to resign.</s>
+    <s>Obama took him up on it.</s>
+    <s>A sterling career was unexpectedly over.</s>
+   </p>
+
+   <p>
+    <s>People close to McChrystal were mystified by the uncharacteristic,
+    self-marginalization.</s>
+    <s>“In every review of COIN best practices, ‘unity of effort’ tops the
+    list,” one of his advisers told Danger Room last year.</s>
+    <s>“Every.</s>
+    <s>Single.</s>
+    <s>Review.</s>
+    <s>And we’re totally fucking it up; fucking up the one thing that should be
+    in our control.”</s>
+    <s>The McChrystal of JSOC never needed to be reminded.</s>
+   </p>
+   </section>
+
+   <section>
+    <h1>The <keyword name='network'>Network</keyword> Strikes Back</h1>
+
+   <p>
+    <s>McChrystal and Obama have patched things up.</s>
+    <s>Obama tapped McChrystal to spearhead a White House effort to support
+    veterans’ families.</s>
+    <s>McChrystal has never expressed public bitterness about losing his
+    command, and even joked about his mistakes during his July 2010
+    retirement.</s>
+   </p>
+
+   <p>
+    <s>Some close to McChrystal say that what hurt him the most is that he had
+    to leave Afghanistan before he could implement a turnaround in the U.S.’
+    fortunes.</s>
+    <s>When his friend Petraeus took over the war, Petraeus reversed
+    McChrystal’s restrictions on airpower, leading to the biggest aerial
+    bombardment in the war thus far.</s>
+    <s>Petraeus also relied on McChrystal’s protege McRaven at JSOC for a
+    relentless pace of raids on Taliban forces.</s>
+    <s>Only by the time Petraeus relinquished command in July, the war — in the
+    view of the CIA, among others — was stalemated.</s>
+   </p>
+
+   <aside><s>JSOC is the single most truly joint command within the U.S.
+   military.</s></aside>
+
+   <p>
+    <s rank='.4'>But JSOC had just experienced its finest hour — the
+    fulfillment of the ultimate goal of McChrystal’s <keyword
+    name='network'>networking</keyword> strategy.</s>
+    <s rank='.8'>A Navy SEAL team killed Osama bin Laden.</s>
+    <s>The mission was planned by McRaven; ultimately quarterbacked by CIA
+    Director Leon Panetta; and relied extensively on both CIA analysis and
+    JSOC’s years of raiding in Afghanistan.</s>
+    <s rank='.9'>What was bureaucratically unthinkable before McChrystal is now
+    routine: JSOC and CIA, matched with other government elements, now hunt
+    al-Qaida worldwide in expanding, secretive wars.</s>
+   </p>
+
+   <p>
+    <s>Nor is that likely to change.</s>
+    <s>McChrystal’s allies and proteges are all over the security
+    bureaucracy.</s>
+    <s>McRaven now runs all U.S. Special Operations Forces.</s>
+    <s>Petraeus now runs the CIA.</s>
+    <s>McChrystal’s fellow Army Ranger, Lt. Gen. Joseph Votel, now runs
+    JSOC.</s>
+    <s rank='.8'>Ten years after 9/11, al-Qaida’s <keyword
+    name='network'>network</keyword> looks more brittle than ever, while JSOC’s
+    is robust.</s>
+   </p>
+
+   <p>
+    <s rank='.8'>The <keyword name='network'>network</keyword> McChrystal
+    built, McRaven enhanced and Votel inherits comes in stark contrast to the
+    rest of the U.S.  security bureaucracy, which Priest and Arkin call “Top
+    Secret America” and which remains disconnected, bloated and expensive.</s>
+    <s>Priest and Arkin bluntly conclude that McChrystal turned JSOC around “by
+    outright rejecting at least four of Top Secret America’s defining
+    characteristics: its enormous size, its counterproductive duplication, its
+    internal secrecy, and its old-fashioned, hierarchical structure.”</s>
+    <s>What the post-9/11 reforms failed to accomplish across the sprawling
+    national security apparatus, McChrystal did in miniature.</s>
+   </p>
+
+   <p>
+    <s rank='.8'>“We had to figure out a way to retain our traditional
+    capabilities of professionalism, technology, and, when needed, overwhelming
+    force,” McChrystal recalled in Foreign Policy, “while achieving levels of
+    knowledge, speed, precision, and unity of effort that only a <keyword
+    name='network'>network</keyword> could provide.”</s>
+    <s>It didn’t work in Afghanistan with conventional forces.</s>
+    <s rank='.9'>But now it’s up to the secretive, lethal <keyword
+    name='network'>network</keyword> that McChrystal established to finally
+    destroy the terrorist <keyword name='network'>network</keyword> that
+    inspired it.</s>
+   </p>
+  </section>
+ </body>
+</document>

@@ -66,7 +66,6 @@ a {
 .content-pane header {
   display:        block;
   padding:        1em;
-  margin-right:   0.5em;
   border-bottom:  0.5em solid #ccc;
 }
 .content-pane header h1,
@@ -116,9 +115,11 @@ a {
  */
 
 .content-pane article section {
-  display:  block;
-  padding:  0.5em 0.5em 0.5em 0;
-  margin:   0;
+  display:        block;
+  padding:        0.25em 0.5em 0.25em 0;
+  margin:         0;
+  border-top:     1px solid #eee;
+  border-bottom:  1px solid #eee;
 }
 
 .content-pane article section p {

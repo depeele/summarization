@@ -71,6 +71,11 @@ Req.assets = {
                              'ui.notes', 'ui.checkbox' ] }
 };
 
+var docId = (window.location.search
+              ? window.location.search
+                  .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.xml)?$/, '$1')
+              : '0001');
+
 Req('preloadImages', function() {
         // Preload global images/sprites
         preloadImages('css/images/loading.gif', 'css/images/icons-16.png');
@@ -78,7 +83,7 @@ Req('preloadImages', function() {
     'summary', function() {
         // Initialize the application
         jQuery('#article').summary({
-            metadata:   'samples/0001.xml'
+            metadata:   'samples/'+ docId +'.xml'
         });
     }
 );
