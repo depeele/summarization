@@ -21,5 +21,10 @@ SRCS	= jquery.js			\
 summary-06-full.js: $(SRCS)
 	cat $(SRCS) > $@
 
+#----------------------------------------------------------------------------
+clean:
+	rm -f preloadImages.min.js summary-06-full.js summary-06-full.min.js
+
+#----------------------------------------------------------------------------
 %.min.js : %.js
 	$(YUI_COMP) $< -o $@

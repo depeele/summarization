@@ -5,6 +5,11 @@ all: summary-06.min.css theme/jquery-ui.min.css
 
 summary-06.css: summary-06.less reset.css sprites-16.css
 
+#----------------------------------------------------------------------------
+clean:
+	rm -f summary-06.css summary-06.min.css theme/jquery-ui.min.css
+
+#----------------------------------------------------------------------------
 %.css : %.less
 	$(LESSC) $< -o $@
 
