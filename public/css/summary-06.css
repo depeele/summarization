@@ -1,29 +1,625 @@
+/** @file
+ *
+ *  This file may be used to generate summary-06.min.css using
+ *  lessc (http://lesscss.org/).
+ */
+/**
+ * HTML5 ✰ Boilerplate
+ *
+ * style.css contains a reset, font normalization and some base styles.
+ *
+ * Credit is left where credit is due.
+ * Much inspiration was taken from these projects:
+ * - yui.yahooapis.com/2.8.1/build/base/base.css
+ * - camendesign.com/design/
+ * - praegnanz.de/weblog/htmlcssjs-kickstart
+ */
+/**
+ * html5doctor.com Reset Stylesheet (Eric Meyer's Reset Reloaded + HTML5 baseline)
+ * v1.6.1 2010-09-17 | Authors: Eric Meyer & Richard Clark
+ * html5doctor.com/html-5-reset-stylesheet/
+ */
+html,
+body,
+div,
+span,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+abbr,
+address,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+samp,
+small,
+strong,
+sub,
+sup,
+var,
+b,
+i,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+blockquote, q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+ins {
+  background-color: #ff9;
+  color: #000;
+  text-decoration: none;
+}
+mark {
+  background-color: #ff9;
+  color: #000;
+  font-style: italic;
+  font-weight: bold;
+}
+del {
+  text-decoration: line-through;
+}
+abbr[title], dfn[title] {
+  border-bottom: 1px dotted;
+  cursor: help;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 1em 0;
+  padding: 0;
+}
+input, select {
+  vertical-align: middle;
+}
+/**
+ * Font normalization inspired by YUI Library's fonts.css: developer.yahoo.com/yui/
+ */
 body {
-  font:             16px/1.231 arial,helvetica,clean,sans-serif;
-  background-color: #eee;
-
-  display:          table;
-  margin-left:      auto;
-  margin-right:     auto;
+  font: 13px/1.231 sans-serif;
+  *font-size: small;
 }
+/* Hack retained to preserve specificity */
+select,
+input,
+textarea,
+button {
+  font: 99% sans-serif;
+}
+/* Normalize monospace sizing:
+   en.wikipedia.org/wiki/MediaWiki_talk:Common.css/Archive_11#Teletype_style_fix_for_Chrome */
+pre,
+code,
+kbd,
+samp {
+  font-family: monospace, sans-serif;
+}
+/**
+ * Minimal base styles.
+ */
+/* Always force a scrollbar in non-IE */
+html {
+  overflow-y: scroll;
+}
+/* Accessible focus treatment: people.opera.com/patrickl/experiments/keyboard/test */
+a:hover, a:active {
+  outline: none;
+}
+ul, ol {
+  margin-left: 2em;
+}
+ol {
+  list-style-type: decimal;
+}
+/* Remove margins for navigation lists */
+nav ul, nav li {
+  margin: 0;
+  list-style: none;
+  list-style-image: none;
+}
+small {
+  font-size: 85%;
+}
+strong, th {
+  font-weight: bold;
+}
+td {
+  vertical-align: top;
+}
+/* Set sub, sup without affecting line-height: gist.github.com/413930 */
+sub, sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+}
+sup {
+  top: -0.5em;
+}
+sub {
+  bottom: -0.25em;
+}
+pre {
+  /* www.pathf.com/blogs/2008/05/formatting-quoted-code-in-blog-posts-css21-white-space-pre-wrap/ */
 
+  white-space: pre;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  padding: 15px;
+}
+textarea {
+  overflow: auto;
+}
+/* www.sitepoint.com/blogs/2010/08/20/ie-remove-textarea-scrollbars/ */
+.ie6 legend, .ie7 legend {
+  margin-left: -7px;
+}
+/* Align checkboxes, radios, text inputs with their label by: Thierry Koblentz tjkdesign.com/ez-css/css/base.css  */
+input[type="radio"] {
+  vertical-align: text-bottom;
+}
+input[type="checkbox"] {
+  vertical-align: bottom;
+}
+.ie7 input[type="checkbox"] {
+  vertical-align: baseline;
+}
+.ie6 input {
+  vertical-align: text-bottom;
+}
+/* Hand cursor on clickable input elements */
+label,
+input[type="button"],
+input[type="submit"],
+input[type="image"],
+button {
+  cursor: pointer;
+}
+/* Webkit browsers add a 2px margin outside the chrome of form elements */
+button,
+input,
+select,
+textarea {
+  margin: 0;
+}
+/* Colors for form validity */
+input:invalid, textarea:invalid {
+  border-radius: 1px;
+  -moz-box-shadow: 0px 0px 5px red;
+  -webkit-box-shadow: 0px 0px 5px red;
+  box-shadow: 0px 0px 5px red;
+}
+.no-boxshadow input:invalid, .no-boxshadow textarea:invalid {
+  background-color: #f0dddd;
+}
+/* These selection declarations have to be separate
+   No text-shadow: twitter.com/miketaylr/status/12228805301
+   Also: hot pink! */
+::-moz-selection {
+  background: #999;
+  color: #fff;
+  text-shadow: none;
+}
+::selection {
+  background: #999;
+  color: #fff;
+  text-shadow: none;
+}
+/* j.mp/webkit-tap-highlight-color */
+a:link {
+  -webkit-tap-highlight-color: #999;
+}
+/* Make buttons play nice in IE:
+   www.viget.com/inspire/styling-the-button-element-in-internet-explorer/ */
+button {
+  width: auto;
+  overflow: visible;
+}
+/* Bicubic resizing for non-native sized IMG:
+   code.flickr.com/blog/2008/11/12/on-ui-quality-the-little-things-client-side-image-resizing/ */
+.ie7 img {
+  -ms-interpolation-mode: bicubic;
+}
+/**
+ * You might tweak these..
+ */
+body,
+select,
+input,
+textarea {
+  /* #444 looks better than black: twitter.com/H_FJ/statuses/11800719859 */
+
+  color: #444;
+  /* Set your base font here, to apply evenly */
+
+  /* font-family: Georgia, serif;  */
+
+}
+/* Headers (h1, h2, etc) have no default font-size or margin; define those yourself */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: bold;
+}
+a, a:active, a:visited {
+  color: #607890;
+}
+a:hover {
+  color: #036;
+}
+/**
+ * Primary styles
+ *
+ * Author: 
+ */
+/**
+ * Non-semantic helper classes: please define your styles before this section.
+ */
+/* For image replacement */
+.ir {
+  display: block;
+  text-indent: -999em;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  text-align: left;
+  direction: ltr;
+}
+/* Hide for both screenreaders and browsers:
+   css-discuss.incutio.com/wiki/Screenreader_Visibility */
+.hidden {
+  display: none;
+  visibility: hidden;
+}
+/* Hide only visually, but have it available for screenreaders: by Jon Neal.
+  www.webaim.org/techniques/css/invisiblecontent/  &  j.mp/visuallyhidden */
+.visuallyhidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+/* Extends the .visuallyhidden class to allow the element to be focusable when navigated to via the keyboard: drupal.org/node/897638 */
+.visuallyhidden.focusable:active, .visuallyhidden.focusable:focus {
+  clip: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  position: static;
+  width: auto;
+}
+/* Hide visually and from screenreaders, but maintain layout */
+.invisible {
+  visibility: hidden;
+}
+/* The Magnificent Clearfix: Updated to prevent margin-collapsing on child elements.
+   j.mp/bestclearfix */
+.clearfix:before, .clearfix:after {
+  content: "\0020";
+  display: block;
+  height: 0;
+  overflow: hidden;
+}
+.clearfix:after {
+  clear: both;
+}
+/* Fix clearfix: blueprintcss.lighthouseapp.com/projects/15318/tickets/5-extra-margin-padding-bottom-of-page */
+.clearfix {
+  zoom: 1;
+}
+/**
+ * Media queries for responsive design.
+ *
+ * These follow after primary styles so they will successfully override.
+ */
+@media all and (orientation:portrait) {
+  /* Style adjustments for portrait mode goes here */
+}
+@media all and (orientation:landscape) {
+  /* Style adjustments for landscape mode goes here */
+}
+/* Grade-A Mobile Browsers (Opera Mobile, Mobile Safari, Android Chrome)
+   consider this: www.cloudfour.com/css-media-query-for-mobile-is-fools-gold/ */
+@media screen and (max-device-width: 480px) {
+  /* Uncomment if you don't want iOS and WinMobile to mobile-optimize the text for you: j.mp/textsizeadjust */
+  /* html { -webkit-text-size-adjust:none; -ms-text-size-adjust:none; } */
+}
+/**
+ * Print styles.
+ *
+ * Inlined to avoid required HTTP connection: www.phpied.com/delay-loading-your-print-css/
+ */
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    text-shadow: none !important;
+    filter: none !important;
+    -ms-filter: none !important;
+  }
+  /* Black prints faster: sanbeiji.com/archives/953 */
+  a, a:visited {
+    color: #444 !important;
+    text-decoration: underline;
+  }
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+  abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+  .ir a:after, a[href^="javascript:"]:after, a[href^="#"]:after {
+    content: "";
+  }
+  /* Don't show links for images, or javascript/internal links */
+  pre, blockquote {
+    border: 1px solid #999;
+    page-break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+  /* css-discuss.incutio.com/wiki/Printing_Tables */
+  tr, img {
+    page-break-inside: avoid;
+  }
+  @page  {
+    margin: 0.5cm;
+  }
+  p, h2, h3 {
+    orphans: 3;
+    widows: 3;
+  }
+  h2, h3 {
+    page-break-after: avoid;
+  }
+}
+.su-icon {
+  width: 16px;
+  height: 16px;
+  background-image: url('images/icons-16.png');
+}
+/* positioning */
+.su-icon-star {
+  background-position: 0      0;
+}
+.su-icon-collapse {
+  background-position: -16px 0;
+}
+.su-icon-expand {
+  background-position: -32px 0;
+}
+.su-icon-cancel {
+  background-position: -48px 0;
+}
+.su-icon-tag {
+  background-position: -64px 0;
+}
+.su-icon-wrench {
+  background-position: -80px 0;
+}
+.su-icon-all {
+  background-position: -96px 0;
+}
+.su-icon-reset {
+  background-position: -112px 0;
+}
+.su-icon-star-blue {
+  background-position: 0 -16px;
+}
+.su-icon-collapse-blue {
+  background-position: -16px -16px;
+}
+.su-icon-expand-blue {
+  background-position: -32px -16px;
+}
+.su-icon-cancel-blue {
+  background-position: -48px -16px;
+}
+.su-icon-tag-blue {
+  background-position: -64px -16px;
+}
+.su-icon-wrench-blue {
+  background-position: -80px -16px;
+}
+.su-icon-all-blue {
+  background-position: -96px -16px;
+}
+.su-icon-reset-blue {
+  background-position: -112px -16px;
+}
+.su-icon-star-white {
+  background-position: 0 -32px;
+}
+.su-icon-collapse-white {
+  background-position: -16px -32px;
+}
+.su-icon-expand-white {
+  background-position: -32px -32px;
+}
+.su-icon-cancel-white {
+  background-position: -48px -32px;
+}
+.su-icon-tag-white {
+  background-position: -64px -32px;
+}
+.su-icon-wrench-white {
+  background-position: -80px -32px;
+}
+.su-icon-all-white {
+  background-position: -96px -32px;
+}
+.su-icon-reset-white {
+  background-position: -112px -32px;
+}
+/* state-based positioning */
+.starred .su-icon-star {
+  background-position: 0 -16px;
+}
+.su-state-active.su-icon-star {
+  background-position: 0 -16px;
+}
+.su-state-active.su-icon-collapse {
+  background-position: -16px -16px;
+}
+.su-state-active.su-icon-expand {
+  background-position: -32px -16px;
+}
+.su-state-active.su-icon-cancel {
+  background-position: -48px -16px;
+}
+.su-state-active.su-icon-tag {
+  background-position: -64px -16px;
+}
+.su-state-active.su-icon-wrench {
+  background-position: -80px -16px;
+}
+.su-state-active.su-icon-all {
+  background-position: -96px -16px;
+}
+.su-state-active.su-icon-reset {
+  background-position: -112px -16px;
+}
+.su-state-reverse.su-icon-star {
+  background-position: 0 -32px;
+}
+.su-state-reverse.su-icon-collapse {
+  background-position: -16px -32px;
+}
+.su-state-reverse.su-icon-expand {
+  background-position: -32px -32px;
+}
+.su-state-reverse.su-icon-cancel {
+  background-position: -48px -32px;
+}
+.su-state-reverse.su-icon-tag {
+  background-position: -64px -32px;
+}
+.su-state-reverse.su-icon-wrench {
+  background-position: -80px -32px;
+}
+.su-state-reverse.su-icon-all {
+  background-position: -96px -32px;
+}
+.su-state-reverse.su-icon-reset {
+  background-position: -112px -32px;
+}
+/**************************************************************************
+ * Global settings
+ *
+ */
+/**************************************************************************
+ * General styles
+ *
+ */
+body {
+  font: 16px/1.231 arial,helvetica,clean,sans-serif;
+  background-color: #eeeeee;
+  display: table;
+  margin-left: auto;
+  margin-right: auto;
+}
 a {
-  text-decoration:  none;
+  text-decoration: none;
 }
-
 .keyword-hover {
-  color:  #f6931f;
+  color: #f6931f;
 }
-
 .loading {
-  background-position:  0     0;
-  background-image:     url('images/loading.gif');
-  background-repeat:    no-repeat;
-  background-position:  50%;
-
-  min-height:           25px;
+  background-position: 0     0;
+  background-image: url('images/loading.gif');
+  background-repeat: no-repeat;
+  background-position: 50%;
+  min-height: 25px;
 }
-
 /**************************************************************************
  * Primary Structure
  *
@@ -31,226 +627,261 @@ a {
  * for window decoration and vertical scrollbar
  * (i.e. a client/document width of 1000 pixels)
  */
-.margin-left,
-.content-pane,
-.margin-right {
-  display:  table-cell;
+.margin-left, .content-pane, .margin-right {
+  display: table-cell;
 }
-
 .margin-left {
-  min-width:  55px;
+  min-width: 55px;
 }
 .content-pane {
-  width:      700px;
-  min-width:  700px;
-  max-width:  700px;
+  width: 700px;
+  min-width: 700px;
+  max-width: 700px;
 }
 .margin-right {
-  min-width:  240px;
+  min-width: 240px;
 }
-
 /**************************************************************************
- * Article
+ * Content Pane
  *
  */
-.content-pane article {
-  margin:           0 0.2em;
-  padding:          1em;
-  border:           1px solid #ccc;
-  background-color: #fff;
-}
+.content-pane {
+  /*******************
+   * Header
+   */
 
-/*******************
- * Header
- */
+  /*******************
+   * Article
+   */
+
+}
 .content-pane header {
-  display:        block;
-  padding:        1em;
-  border-bottom:  0.5em solid #ccc;
+  display: block;
+  padding: 1em;
+  border-bottom: 0.5em solid #d5d5d5;
 }
-.content-pane header h1,
-.content-pane header .keywords {
-  display:      block;
+.content-pane header h1, .content-pane header .keywords {
+  display: block;
 }
-.content-pane header author,
-.content-pane header time {
-  display:      inline-block;
+.content-pane header author, .content-pane header time {
+  display: inline-block;
 }
-
 .content-pane header h1 {
-  font-size:    1.2em;
-  font-weight:  bold;
+  font-size: 1.2em;
+  font-weight: bold;
 }
-.content-pane header author,
-.content-pane header time,
-.content-pane header .keywords {
-  font-size:    0.8em;
+.content-pane header author, .content-pane header time, .content-pane header .keywords {
+  font-size: 0.8em;
   padding-left: 2em;
-  color:        #999;
+  color: #999999;
 }
 .content-pane header time {
-  font-size:    0.7em;
+  font-size: 0.7em;
 }
 .content-pane header author:before {
-  content:      'by ';
+  content: 'by ';
 }
 .content-pane header time {
-  font-style:   italic;
+  font-style: italic;
 }
 .content-pane header .keywords {
-  font-size:    0.8em;
+  font-size: 0.8em;
 }
 .content-pane header .keywords .keyword {
-  display:    inline-block;
-  cursor:     pointer;
-  border:     1px solid #fff;
+  display: inline-block;
+  cursor: pointer;
+  border: 1px solid #ffffff;
 }
 .content-pane header .keywords .keyword:before {
-  content:      ' / ';
+  content: ' / ';
 }
+.content-pane article {
+  margin: 0 0.2em;
+  padding: 1em;
+  border: 1px solid #d5d5d5;
+  background-color: #ffffff;
+  /*******************
+     * Section
+     *
+     */
 
-/*******************
- * Section
- *
- */
+  /*******************
+     * Article:Normal
+     *
+     */
 
+  /*******************
+     * Article:Starred
+     *
+     */
+
+  /*******************
+     * Article:Tagged
+     *
+     */
+
+  /*******************
+     * Article:All
+     *
+     */
+
+}
 .content-pane article section {
-  display:        block;
-  padding:        0.25em 0.5em 0.25em 0;
-  margin:         0;
-  border-top:     1px solid #eee;
-  border-bottom:  1px solid #eee;
+  display: block;
+  padding: 0.25em 0.5em 0.25em 0;
+  margin: 0;
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #eeeeee;
 }
-
 .content-pane article section p {
-  display:      block;
-  padding:      0.1em;
+  display: block;
+  padding: 0.1em;
+  margin: 0;
+  margin-left: 54px;
+  /* For sentence controls */
 
-  margin:       0;
-  margin-left:  54px; /* For sentence controls */
-  margin-top:   0.1em;
-  margin-bottom:0.1em;
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+  border-bottom: 1px solid #eeeeee;
+  border-right: 1px solid #eeeeee;
+  cursor: pointer;
+  /* Progressive age */
 
-  box-shadow:   1px 1px #eee;
+  /* When expanded, present the expand icon as collapse by mirroring
+         * .su-icon-collapse
+         */
 
-  cursor:       pointer;
 }
 .content-pane article section p .sentence {
-  position:   relative;
-  padding:    0.1em 0.25em 0.1em 0;
-  margin:     0;
+  position: relative;
+  padding: 0.1em 0.25em 0.1em 0;
+  margin: 0;
   text-align: justify;
-  font-size:  1px;
-  color:      #ddd;
+  font-size: 1px;
+  color: #dddddd;
 }
-.content-pane article section p.folded {
-  visibility: visible;
-  font-size:  1px;
-}
-.content-pane article section p.folded .sentence {
-  display:    none;
-}
-
 .content-pane article section p .sentence .text,
 .content-pane article section p .sentence .keyword,
 .content-pane article section p .sentence .selected,
 .content-pane article section p .sentence .tagged {
-  position:   relative;
-  border:     none;
+  position: relative;
+  border: none;
 }
 .content-pane article section p .sentence .tagged {
-  font-weight:  normal;
-  background:   #d7ebf9 url(theme/images/ui-bg_glass_80_d7ebf9_1x400.png) 50% 50% repeat-x;
-  color:        #2779aa;
+  font-weight: normal;
+  background: #d7ebf9;
+  color: #2779aa;
 }
-
+.content-pane article section p.folded {
+  visibility: visible;
+  font-size: 1px;
+}
+.content-pane article section p.folded .sentence {
+  display: none;
+}
 .content-pane article section p .expanded,
 .content-pane article section p .expansion,
 .content-pane article section p .keyworded,
 .content-pane article section p .highlight {
-  display:    block;
-  font-size:  1em;
-  color:      #222;
-  cursor:     text;
+  display: block;
+  font-size: 1em;
+  color: #222222;
+  cursor: text;
 }
-.content-pane article section p .old-0 .content,
-.content-pane article section p .expanded .content {
+.content-pane article section p .old-0 .content, .content-pane article section p .expanded .content {
   background-color: #f0f0f0;
 }
-
-/* Progressive age */
-.content-pane article section p .old-1 .content { background-color: #ebebeb; }
-.content-pane article section p .old-2 .content { background-color: #e6e6e6; }
-.content-pane article section p .old-3 .content { background-color: #e1e1e1; }
-.content-pane article section p .old-4 .content { background-color: #dcdcdc; }
-.content-pane article section p .old-5 .content { background-color: #d7d7d7; }
-.content-pane article section p .old-6 .content { background-color: #d2d2d2; }
-.content-pane article section p .old-7 .content { background-color: #cdcdcd; }
-.content-pane article section p .old-8 .content { background-color: #c8c8c8; }
-
-.content-pane article section p .controls {
-  display:    none;
+.content-pane article section p .old-1 .content {
+  background-color: #ebebeb;
 }
+.content-pane article section p .old-2 .content {
+  background-color: #e6e6e6;
+}
+.content-pane article section p .old-3 .content {
+  background-color: #e1e1e1;
+}
+.content-pane article section p .old-4 .content {
+  background-color: #dcdcdc;
+}
+.content-pane article section p .old-5 .content {
+  background-color: #d7d7d7;
+}
+.content-pane article section p .old-6 .content {
+  background-color: #d2d2d2;
+}
+.content-pane article section p .old-7 .content {
+  background-color: #cdcdcd;
+}
+.content-pane article section p .old-8 .content {
+  background-color: #c8c8c8;
+}
+.content-pane article section p .controls {
+  display: none;
+}
+.content-pane article section p .keyword {
+  border: 1px solid #ffffff;
+}
+.content-pane article section p .controls, .content-pane article section p .selection-controls {
+  position: absolute;
+  display: block;
+  z-index: 10;
+}
+.content-pane article section p .controls {
+  top: 2px;
+  left: -52px;
+  width: 52px;
+  height: 100%;
+}
+.content-pane article section p .selection-controls {
+  background-color: #999999;
+  color: #ffffff;
+  border: none;
+  padding: 2px 2px 0 2px;
+}
+.content-pane article section p .sentence .tagged .selection-controls {
+  background-color: inherit;
+  border: 1px solid #d3d3d3;
+  /* From .ui-state-default */
 
+  border-bottom: none;
+}
+.content-pane article section p .controls .su-icon, .content-pane article section p .selection-controls .su-icon {
+  display: inline-block;
+  cursor: pointer;
+  border: none;
+}
+.content-pane article section p .controls .su-icon {
+  visibility: hidden;
+}
+.content-pane article section p .hide-expand .controls .expand {
+  visibility: hidden;
+}
+.content-pane article section p .ui-hover .controls .su-icon {
+  opacity: 0.6;
+}
+.content-pane article section p .starred .controls .star {
+  opacity: 1.0;
+}
+.content-pane article section p .expanded .controls .su-icon-expand {
+  background-position: -16px 0;
+}
 .content-pane article section .highlight .rank,
 .content-pane article section .keyworded .rank,
 .content-pane article section .expanded .rank,
 .content-pane article section .expansion .rank {
-  display:    block;
-  position:   absolute;
-  top:        2px;
-  left:       36px;
-
-  font-size:  0.75em;
-  display:    block;
-
-  color:      #f6931f;
-
+  display: block;
+  position: absolute;
+  top: 2px;
+  left: 36px;
+  font-size: 0.75em;
+  display: block;
+  color: #f6931f;
   /* Make it unselectable */
-  -moz-user-select:   none;
-  -webkit-user-select:none;
+
+  -moz-user-select: none;
+  -webkit-user-select: none;
   -khtml-user-select: none;
-  user-select:        none;
-}
-
-.content-pane article section p .keyword {
-  border:     1px solid #fff;
-}
-
-.content-pane article section p .controls,
-.content-pane article section p .selection-controls {
-  position:   absolute;
-
-  display:    block;
-  z-index:    10;
-}
-.content-pane article section p .controls {
-  top:        2px;
-  left:       -52px;
-
-  width:      52px;
-  height:     100%;
-}
-.content-pane article section p .selection-controls {
-  background-color: #999;
-  color:            #fff;
-  border:           none;
-  padding:          2px 2px 0 2px;
-}
-.content-pane article section p .sentence .tagged .selection-controls {
-  background-color: inherit;
-  border:           1px solid #aed0ea;  /* From .ui-state-default */
-  border-bottom:    none;
-}
-
-.content-pane article section p .controls .su-icon,
-.content-pane article section p .selection-controls .su-icon {
-  display:    inline-block;
-  cursor:     pointer;
-  border:     none;
-}
-.content-pane article section p .controls .su-icon {
-  visibility: hidden;
+  user-select: none;
 }
 .content-pane article section p .ui-hover .controls .su-icon,
 .content-pane article section .highlight.starred .controls .star,
@@ -258,292 +889,205 @@ a {
 .content-pane article section .expansion.starred .controls .star {
   visibility: visible;
 }
-.content-pane article section p .hide-expand .controls .expand {
-  visibility: hidden;
-}
-
-.content-pane article section p .ui-hover .controls .su-icon {
-  opacity:    0.6;
-}
-.content-pane article section p .starred .controls .star {
-  opacity:    1.0;
-}
-
-/* When expanded, present the expand icon as collapse by mirroring
- * .su-icon-collapse
- */
-.content-pane article section p .expanded .controls .su-icon-expand {
-  background-position:  -16px 0;
-}
-
-/*******************
- * Article:Normal
- *
- */
-
-/*******************
- * Article:Starred
- *
- */
-
-/*******************
- * Article:Tagged
- *
- */
-
-/*******************
- * Article:All
- *
- */
-
 /**************************************************************************
  * Control Pane (within .margin-right)
  *
  */
 .control-pane {
-  position:         fixed;
-  top:              11em;
-  width:            55px;
+  position: fixed;
+  top: 11em;
+  width: 55px;
+  font-size: 0.7em;
+  margin: 0;
+  z-index: 10;
+  /*******************
+   * Controls
+   *
+   */
 
-  font-size:        0.7em;
-
-  margin:           0;
-
-  z-index:          10;
 }
-
 .control-pane .toggle-controls {
-  position:         absolute;
-  top:              4px;
-  right:            4px;
-  cursor:           pointer;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  cursor: pointer;
 }
-
-/*******************
- * Controls
- *
- */
 .control-pane .controls {
-  overflow:   hidden;
+  overflow: hidden;
   text-align: center;
 }
-.control-pane .controls label.primary,
-.control-pane .controls label.values {
-  display:      block;
+.control-pane .controls label.primary, .control-pane .controls label.values {
+  display: block;
 }
 .control-pane .controls label.primary {
-  color:        #ccc;
-}
-.margin-left:hover .control-pane .controls label.primary {
-  color:        #999;
-  cursor:       text;
+  color: #d5d5d5;
 }
 .control-pane .controls .values {
-  color:        #f6931f;
-  font-size:    0.9em;
-  cursor:       text;
+  color: #f6931f;
+  font-size: 0.9em;
+  cursor: text;
 }
-.control-pane .controls .threshold,
-.control-pane .controls .filter,
-.control-pane .controls .coverage {
-  position:       relative;
-  padding:        0;
+.control-pane .controls .threshold, .control-pane .controls .filter, .control-pane .controls .coverage {
+  position: relative;
+  padding: 0;
   vertical-align: top;
-  text-align:     center;
-
-  display:        block;
-  margin:         1em 0 0 0;
+  text-align: center;
+  display: block;
+  margin: 1em 0 0 0;
 }
-
 .control-pane .controls .filter .checkbox {
-  cursor:         pointer;
+  cursor: pointer;
 }
 .control-pane .controls .filter .checkbox span {
-  display:        block;
-  margin:         0 auto;
+  display: block;
+  margin: 0 auto;
 }
 .control-pane .controls .filter .ui-state-default {
-  background:   transparent;
+  background: transparent;
   border-color: transparent;
-  opacity:      0.6;
+  opacity: 0.6;
 }
 .control-pane .controls .filter .ui-state-hover {
-  opacity:      1.0;
+  opacity: 1.0;
 }
 .control-pane .controls .threshold .buttons {
-  margin:       0;
+  margin: 0;
 }
-.control-pane .controls .threshold .buttons .expansion,
-.control-pane .controls .threshold .buttons .global {
-  margin:       0 0.4em;
+.control-pane .controls .threshold .buttons .expansion, .control-pane .controls .threshold .buttons .global {
+  margin: 0 0.4em;
 }
 .control-pane .controls .threshold .buttons .expansion {
-  margin:       0;
+  margin: 0;
 }
 .control-pane .controls .threshold .buttons button {
-  margin:       0;
+  margin: 0;
 }
 .control-pane .controls .threshold .buttons .ui-button-text {
-  padding:        0.4em;
-  line-height:    1;
+  padding: 0.4em;
+  line-height: 1;
 }
-.control-pane .controls .coverage .indicator {
-  display:        inline-block;
-  width:          3em;
-  height:         4em;
+.margin-left:hover .control-pane .controls label.primary {
+  color: #999999;
+  cursor: text;
 }
-.control-pane .controls .coverage .indicator .ui-slider-range {
-  border-top:     1px dashed #bbb;
-}
-.control-pane .controls .coverage .indicator .ui-slider-handle {
-  display:        none;
-}
-
 /**************************************************************************
  * Notes Pane (within .margin-right)
  *
  */
 .notes-pane {
-  position:         absolute;
-  top:              10em;
-
-  z-index:          11;
+  position: absolute;
+  top: 10em;
+  z-index: 11;
 }
-
 /*******************
  * Notes
  *
  */
 .notes {
-  display:          block;
-  position:         absolute;
-  left:             10px;
-
-  font-size:        0.7em;
-  width:            210px;
-  
-  border:           1px solid #bac8e6;
-  background-color: #fff;
-
-  z-index:          10;
-
-  cursor:           pointer;
+  display: block;
+  position: absolute;
+  left: 10px;
+  font-size: 0.7em;
+  width: 210px;
+  border: 1px solid #d5d5d5;
+  background-color: #ffffff;
+  z-index: 10;
+  cursor: pointer;
 }
-
 .notes .arrow-outer,
 .notes .arrow-inner,
-.notes-input-pane,
-.notes-body .note .buttons,
-.notes-body .note .edit {
-  display:        none;
+.notes .notes-input-pane,
+.notes .notes-body .note .buttons,
+.notes .notes-body .note .edit {
+  display: none;
 }
-
-.notes .notes-body {
+.notes .notes-body .note {
+  position: relative;
+  padding: 0.5em;
+  border-top: 1px dashed #d5d5d5;
 }
-
-.notes-body .note {
-  position:       relative;
-  padding:        0.5em;
-
-  border-top:     1px dashed #ccc;
+.notes .notes-body .note:first-child {
+  border-top: none;
 }
-.notes-body .note:first-child {
-  border-top:     none;
+.notes .notes-body .note .avatar {
+  position: absolute;
+  left: 0.5em;
+  top: 0.5em;
+  width: 24px;
+  height: 24px;
 }
-.notes-body .note .avatar {
-  position:     absolute;
-  left:         0.5em;
-  top;          0.5em;
-
-  width:        24px;
-  height:       24px;
+.notes .notes-body .note .author, .notes .notes-body .note .created {
+  margin-left: 32px;
 }
-.notes-body .note .author,
-.notes-body .note .created {
-  margin-left:  32px;
+.notes .notes-body .note .author {
+  font-weight: bold;
 }
-.notes-body .note .author {
-  font-weight:  bold;
+.notes .notes-body .note .created {
+  font-size: 0.8em;
 }
-.notes-body .note .created {
-  margin-top:   0.5em;
-  font-size:    0.8em;
+.notes .notes-body .note .comment, .notes .notes-body .note .edit {
+  margin-top: 0.5em;
 }
-.notes-body .note .comment {
+.notes .notes-body .note .buttons, .notes .notes-input-pane .buttons {
+  text-align: right;
+  padding-top: 0.5em;
+  font-size: 0.8em;
 }
-.notes-body .note .buttons,
-.notes-input-pane .buttons {
-  text-align:   right;
-  padding-top:  0.5em;
-
-  font-size:    0.8em;
+.notes .notes-body .note .buttons .ui-button-text, .notes .notes-input-pane .buttons .ui-button-text {
+  padding: 0.2em 0.5em;
 }
-
-.notes-body .note .buttons .ui-button-text,
-.notes-input-pane .buttons .ui-button-text {
-  padding:      0.2em 0.5em;
+.notes textarea {
+  width: 194px;
 }
-
-.notes-input-pane .hint {
-  color:        #aaa;
+.notes .notes-input-pane .hint {
+  color: #aaaaaa;
 }
-
 /*******************
  * Notes (active)
  *
  */
 .notes-active {
-  left:             -10px;
-
-  border:           1px solid #ffe764;
+  left: -10px;
+  border: 1px solid #ffee83;
   background-color: #fffce9;
-
-  box-shadow:       2px 2px 8px #ccc;
-  z-index:          11;
+  box-shadow: 2px 2px 8px #d5d5d5;
+  z-index: 11;
 }
-
 .notes-active .notes-body .note {
-  border-top:       1px dashed #ffe764;
+  border-top: 1px dashed #ffee83;
 }
 .notes-active .notes-body .note:first-child {
-  border-top:     none;
+  border-top: none;
 }
-
-.notes-active .notes-body .note .buttons,
-.notes-active .notes-input-pane {
-  display:        block;
+.notes-active .notes-body .note .buttons, .notes-active .notes-input-pane {
+  display: block;
 }
-
 .notes-active .notes-input-pane {
-  border-top:     1px dashed #ffe764;
-  padding:        0.5em;
-  text-align:     right;
+  border-top: 1px dashed #ffee83;
+  padding: 0.5em;
+  text-align: right;
 }
 .notes-active .arrow-outer {
-  display:        block;
-  position:       absolute;
-  left:           -15px;
-  top:            -1px;
-
-  height:         0;
-  width:          0;
-
-  border-top:     none;
-  border-bottom:  14px solid transparent;
-  border-left:    none;
-  border-right:   14px solid #ffe764;
+  display: block;
+  position: absolute;
+  left: -15px;
+  top: -1px;
+  height: 0;
+  width: 0;
+  border-top: none;
+  border-bottom: 14px solid transparent;
+  border-left: none;
+  border-right: 14px solid #ffee83;
 }
 .notes-active .arrow-inner {
-  display:        block;
-  position:       absolute;
-  left:           -13px;
-  top:            0;
-
-  height:         0;
-  width:          0;
-
-  border-top:     none;
-  border-bottom:  14px solid transparent;
-  border-left:    none;
-  border-right:   14px solid #fffce9;
+  display: block;
+  position: absolute;
+  left: -13px;
+  top: 0;
+  height: 0;
+  width: 0;
+  border-top: none;
+  border-bottom: 14px solid transparent;
+  border-left: none;
+  border-right: 14px solid #fffce9;
 }

@@ -1,0 +1,600 @@
+/** @file
+ *
+ *  This file may be used to generate summary-06.min.css using
+ *  lessc (http://lesscss.org/).
+ */
+@import "reset";
+@import "sprites-16";
+
+/**************************************************************************
+ * Global settings
+ *
+ */
+@baseFont:                      16px;
+@notesWidth:                    210px;
+
+@colorBackground:               #eee;
+@colorBorder:                   darken(@colorBackground, 10%);
+
+@colorText:                     #222;
+@colorTextLight:                #999;
+
+@colorArticleBackground:        #fff;
+
+@colorKeyword:                  #f6931f;
+
+@colorActiveNotesBackground:    #fffce9;
+@colorActivenotesBorder:        darken(@colorActiveNotesBackground, 20%);
+
+@colorSentenceHidden:           #ddd;
+@colorTagBackground:            #d7ebf9;
+@colorTag:                      #2779aa;
+@colorInputHint:                #aaa;
+
+/**************************************************************************
+ * General styles
+ *
+ */
+body {
+  font:             ~"@{baseFont}px/1.231 arial,helvetica,clean,sans-serif";
+  background-color: @colorBackground;
+
+  display:          table;
+  margin-left:      auto;
+  margin-right:     auto;
+}
+
+a {
+  text-decoration:  none;
+}
+
+.keyword-hover {
+  color:  @colorKeyword;
+}
+
+.loading {
+  background-position:  0     0;
+  background-image:     url('images/loading.gif');
+  background-repeat:    no-repeat;
+  background-position:  50%;
+
+  min-height:           25px;
+}
+
+/**************************************************************************
+ * Primary Structure
+ *
+ * Optimized for a minimum 1024x768 with 24 pixels
+ * for window decoration and vertical scrollbar
+ * (i.e. a client/document width of 1000 pixels)
+ */
+.margin-left,
+.content-pane,
+.margin-right {
+  display:  table-cell;
+}
+
+.margin-left {
+  min-width:  55px;
+}
+.content-pane {
+  width:      700px;
+  min-width:  700px;
+  max-width:  700px;
+}
+.margin-right {
+  min-width:  240px;
+}
+
+/**************************************************************************
+ * Content Pane
+ *
+ */
+.content-pane {
+
+  /*******************
+   * Header
+   */
+  header {
+    display:        block;
+    padding:        1em;
+    border-bottom:  0.5em solid @colorBorder;
+
+    h1, .keywords {
+      display:      block;
+    }
+    author, time {
+      display:      inline-block;
+    }
+
+    h1 {
+      font-size:    1.2em;
+      font-weight:  bold;
+    }
+    author, time, .keywords {
+      font-size:    0.8em;
+      padding-left: 2em;
+      color:        @colorTextLight;
+    }
+    time {
+      font-size:    0.7em;
+    }
+    author:before {
+      content:      'by ';
+    }
+    time {
+      font-style:   italic;
+    }
+    .keywords {
+      font-size:    0.8em;
+
+      .keyword {
+        display:    inline-block;
+        cursor:     pointer;
+        border:     1px solid @colorArticleBackground;
+      }
+      .keyword:before {
+        content:      ' / ';
+      }
+    }
+  }
+
+  /*******************
+   * Article
+   */
+  article {
+    margin:           0 0.2em;
+    padding:          1em;
+    border:           1px solid @colorBorder;
+    background-color: @colorArticleBackground;
+
+    /*******************
+     * Section
+     *
+     */
+    section {
+      display:        block;
+      padding:        0.25em 0.5em 0.25em 0;
+      margin:         0;
+      border-top:     1px solid @colorBackground;
+      border-bottom:  1px solid @colorBackground;
+
+      p {
+        display:      block;
+        padding:      0.1em;
+  
+        margin:       0;
+        margin-left:  54px; /* For sentence controls */
+        margin-top:   0.1em;
+        margin-bottom:0.1em;
+  
+        //box-shadow:   1px 1px @colorBackground;
+        border-bottom:1px solid @colorBackground;
+        border-right: 1px solid @colorBackground;
+  
+        cursor:       pointer;
+
+        .sentence {
+          position:   relative;
+          padding:    0.1em 0.25em 0.1em 0;
+          margin:     0;
+          text-align: justify;
+          font-size:  1px;
+          color:      @colorSentenceHidden;
+
+          .text,
+          .keyword,
+          .selected,
+          .tagged {
+            position:   relative;
+            border:     none;
+          }
+          .tagged {
+            font-weight:  normal;
+            background:   @colorTagBackground;
+            color:        @colorTag;
+          }
+        }
+
+        &.folded {
+          visibility: visible;
+          font-size:  1px;
+        }
+        &.folded .sentence {
+          display:    none;
+        }
+    
+        .expanded,
+        .expansion,
+        .keyworded,
+        .highlight {
+          display:    block;
+          font-size:  1em;
+          color:      @colorText;
+          cursor:     text;
+        }
+        .old-0 .content,
+        .expanded .content {
+          background-color: #f0f0f0;
+        }
+    
+        /* Progressive age */
+        .old-1 .content { background-color: #ebebeb; }
+        .old-2 .content { background-color: #e6e6e6; }
+        .old-3 .content { background-color: #e1e1e1; }
+        .old-4 .content { background-color: #dcdcdc; }
+        .old-5 .content { background-color: #d7d7d7; }
+        .old-6 .content { background-color: #d2d2d2; }
+        .old-7 .content { background-color: #cdcdcd; }
+        .old-8 .content { background-color: #c8c8c8; }
+    
+        .controls {
+          display:    none;
+        }
+
+        .keyword {
+          border:     1px solid @colorArticleBackground;
+        }
+    
+        .controls,
+        .selection-controls {
+          position:   absolute;
+    
+          display:    block;
+          z-index:    10;
+        }
+        .controls {
+          top:        2px;
+          left:       -52px;
+    
+          width:      52px;
+          height:     100%;
+        }
+        .selection-controls {
+          background-color: @colorTextLight;
+          color:            @colorArticleBackground;
+          border:           none;
+          padding:          2px 2px 0 2px;
+        }
+        .sentence .tagged .selection-controls {
+          background-color: inherit;
+          border:           1px solid #d3d3d3;  /* From .ui-state-default */
+          border-bottom:    none;
+        }
+    
+        .controls .su-icon,
+        .selection-controls .su-icon {
+          display:    inline-block;
+          cursor:     pointer;
+          border:     none;
+        }
+        .controls .su-icon {
+          visibility: hidden;
+        }
+        .hide-expand .controls .expand {
+          visibility: hidden;
+        }
+    
+        .ui-hover .controls .su-icon {
+          opacity:    0.6;
+        }
+        .starred .controls .star {
+          opacity:    1.0;
+        }
+    
+        /* When expanded, present the expand icon as collapse by mirroring
+         * .su-icon-collapse
+         */
+        .expanded .controls .su-icon-expand {
+          background-position:  -16px 0;
+        }
+      }
+  
+      .highlight .rank,
+      .keyworded .rank,
+      .expanded .rank,
+      .expansion .rank {
+        display:    block;
+        position:   absolute;
+        top:        2px;
+        left:       36px;
+  
+        font-size:  0.75em;
+        display:    block;
+  
+        color:      @colorKeyword;
+  
+        /* Make it unselectable */
+        -moz-user-select:   none;
+        -webkit-user-select:none;
+        -khtml-user-select: none;
+        user-select:        none;
+      }
+  
+      p .ui-hover .controls .su-icon,
+      .highlight.starred .controls .star,
+      .expanded.starred .controls .star,
+      .expansion.starred .controls .star {
+        visibility: visible;
+      }
+    }
+
+    /*******************
+     * Article:Normal
+     *
+     */
+
+    /*******************
+     * Article:Starred
+     *
+     */
+
+    /*******************
+     * Article:Tagged
+     *
+     */
+
+    /*******************
+     * Article:All
+     *
+     */
+  }
+}
+
+/**************************************************************************
+ * Control Pane (within .margin-right)
+ *
+ */
+.control-pane {
+  position:         fixed;
+  top:              11em;
+  width:            55px;
+
+  font-size:        0.7em;
+
+  margin:           0;
+
+  z-index:          10;
+
+  .toggle-controls {
+    position:         absolute;
+    top:              4px;
+    right:            4px;
+    cursor:           pointer;
+  }
+
+  /*******************
+   * Controls
+   *
+   */
+  .controls {
+    overflow:   hidden;
+    text-align: center;
+
+    label.primary,
+    label.values {
+      display:      block;
+    }
+    label.primary {
+      color:        @colorBorder;
+    }
+    .values {
+      color:        @colorKeyword;
+      font-size:    0.9em;
+      cursor:       text;
+    }
+    .threshold,
+    .filter,
+    .coverage {
+      position:       relative;
+      padding:        0;
+      vertical-align: top;
+      text-align:     center;
+  
+      display:        block;
+      margin:         1em 0 0 0;
+    }
+  
+    .filter {
+      .checkbox {
+        cursor:         pointer;
+
+        span {
+          display:        block;
+          margin:         0 auto;
+        }
+      }
+      .ui-state-default {
+        background:   transparent;
+        border-color: transparent;
+        opacity:      0.6;
+      }
+      .ui-state-hover {
+        opacity:      1.0;
+      }
+    }
+
+    .threshold {
+      .buttons {
+        margin:       0;
+
+        .expansion,
+        .global {
+          margin:       0 0.4em;
+        }
+        .expansion {
+          margin:       0;
+        }
+        button {
+          margin:       0;
+        }
+        .ui-button-text {
+          padding:        0.4em;
+          line-height:    1;
+        }
+      }
+    }
+  }
+}
+.margin-left:hover .control-pane .controls label.primary {
+  color:        @colorTextLight;
+  cursor:       text;
+}
+
+/**************************************************************************
+ * Notes Pane (within .margin-right)
+ *
+ */
+.notes-pane {
+  position:         absolute;
+  top:              10em;
+
+  z-index:          11;
+}
+
+/*******************
+ * Notes
+ *
+ */
+.notes {
+  display:          block;
+  position:         absolute;
+  left:             10px;
+
+  font-size:        0.7em;
+  width:            @notesWidth;
+  
+  border:           1px solid @colorBorder;
+  background-color: @colorArticleBackground;
+
+  z-index:          10;
+
+  cursor:           pointer;
+
+  .arrow-outer,
+  .arrow-inner,
+  .notes-input-pane,
+  .notes-body .note .buttons,
+  .notes-body .note .edit {
+    display:        none;
+  }
+
+  .notes-body {
+    .note {
+      position:       relative;
+      padding:        0.5em;
+    
+      border-top:     1px dashed @colorBorder;
+
+      &:first-child {
+        border-top:     none;
+      }
+
+      .avatar {
+        position:     absolute;
+        left:         0.5em;
+        top:          0.5em;
+    
+        width:        24px;
+        height:       24px;
+      }
+      .author,
+      .created {
+        margin-left:  32px;
+      }
+      .author {
+        font-weight:  bold;
+      }
+      .created {
+        font-size:    0.8em;
+      }
+      .comment, .edit {
+        margin-top:   0.5em;
+      }
+    }
+  }
+
+  .notes-body .note .buttons,
+  .notes-input-pane .buttons {
+    text-align:   right;
+    padding-top:  0.5em;
+    
+    font-size:    0.8em;
+  
+    .ui-button-text {
+      padding:      0.2em 0.5em;
+    }
+  }
+
+  textarea {
+    width:  @notesWidth - @baseFont;  // 1em
+  }
+
+  .notes-input-pane {
+
+    .hint {
+      color:        @colorInputHint;
+    }
+  }
+}
+
+/*******************
+ * Notes (active)
+ *
+ */
+.notes-active {
+  left:             -10px;
+
+  border:           1px solid @colorActivenotesBorder;
+  background-color: @colorActiveNotesBackground;
+
+  box-shadow:       2px 2px 8px @colorBorder;
+  z-index:          11;
+
+  .notes-body .note {
+    border-top:       1px dashed @colorActivenotesBorder;
+
+    &:first-child {
+      border-top:     none;
+    }
+  }
+  
+  .notes-body .note .buttons,
+  .notes-input-pane {
+    display:        block;
+  }
+  
+  .notes-input-pane {
+    border-top:     1px dashed @colorActivenotesBorder;
+    padding:        0.5em;
+    text-align:     right;
+  }
+  .arrow-outer {
+    display:        block;
+    position:       absolute;
+    left:           -15px;
+    top:            -1px;
+  
+    height:         0;
+    width:          0;
+  
+    border-top:     none;
+    border-bottom:  14px solid transparent;
+    border-left:    none;
+    border-right:   14px solid @colorActivenotesBorder;
+  }
+  .arrow-inner {
+    display:        block;
+    position:       absolute;
+    left:           -13px;
+    top:            0;
+  
+    height:         0;
+    width:          0;
+  
+    border-top:     none;
+    border-bottom:  14px solid transparent;
+    border-left:    none;
+    border-right:   14px solid @colorActiveNotesBackground;
+  }
+}

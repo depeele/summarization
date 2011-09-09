@@ -1,0 +1,12 @@
+YUI_COMP	= yui-compressor
+LESSC		= lessc
+
+all: summary-06.min.css theme/jquery-ui.min.css
+
+summary-06.css: summary-06.less reset.css sprites-16.css
+
+%.css : %.less
+	$(LESSC) $< -o $@
+
+%.min.css : %.css
+	$(YUI_COMP) $< -o $@

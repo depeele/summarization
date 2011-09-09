@@ -3,10 +3,15 @@
  * (i.e. added to the TAIL of the Req processing queue instead of being pushed
  *       to the HEAD).
  */
+var docId = (window.location.search
+              ? window.location.search
+                  .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.xml)?$/, '$1')
+              : '0001');
+
 Req(true, 'summary', function() {
     // Initialize the application
-    jQuery('#article').summary({
-        metadata:   'samples/0001.xml'
+    $('#article').summary({
+        metadata:   'samples/'+ docId +'.xml'
     });
 });
 </script>
