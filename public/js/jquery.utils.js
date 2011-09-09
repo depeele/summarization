@@ -186,6 +186,7 @@
                     diff < 86400 && Math.floor( diff / 3600) +" hours ago")  ||
                dayDiff == 1      && "Yesterday"                              ||
                dayDiff <  7      && dayDiff                  +" days ago"    ||
+               dayDiff <  14     && "1 week ago"                             ||
                dayDiff <  31     && Math.ceil( dayDiff/ 7 )  +" weeks ago";
     };
 

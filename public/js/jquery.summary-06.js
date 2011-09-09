@@ -521,7 +521,7 @@ $.Summary.prototype = {
 
                     if ($s.data('isHighlighted'))
                     {
-                        $s.younger()
+                        $s.younger( opts )
                           .removeData('isHighlighted');
                     }
 
@@ -546,12 +546,12 @@ $.Summary.prototype = {
                     if (isExpand === true)
                     {
                         // older
-                        $s.older();
+                        $s.older( opts );
                     }
                     else if (isExpand === false)
                     {
                         // younger
-                        $s.younger();
+                        $s.younger( opts );
                     }
                 }
 
@@ -721,6 +721,10 @@ $.Summary.prototype = {
                 return;
             }
 
+            /* If the sentence containing this tagged item is visible, ensure
+             * that the associated note is visible (which will also adjust its
+             * position).  Otherwise, hide the associated note.
+             */
             $notes.notes( (visible ? 'show' : 'hide') );
         });
     },
@@ -1136,24 +1140,6 @@ $.Summary.prototype = {
 
 
         /*************************************************************
-         * Handle toggling the primary controls
-         *
-         */
-        $gp.delegate('.control-pane .toggle-controls', 'click',
-                     function() {
-            var $ctl    = $(this).siblings('.controls');
-
-            if ($ctl.is(":visible"))
-            {
-                $ctl.hide(opts.animSpeed/ 4);
-            }
-            else
-            {
-                $ctl.show(opts.animSpeed / 4);
-            }
-        });
-
-        /*************************************************************
          * Handle clicks on the page-level control buttons.
          *
          */
@@ -1204,6 +1190,11 @@ $.Summary.prototype = {
             }
         });
 
+        /*************************************************************
+         * Handle changes to the filter controls -- triggered by the
+         * ui.checkbox widget.
+         *
+         */
         $gp.delegate('.controls .filter', 'change',
                      function(e, type) {
             var $filters    = $(this);
@@ -1213,12 +1204,13 @@ $.Summary.prototype = {
             switch (name)
             {
             case 'filter':
-                var vals    = self.$filters
+                // Assemble the filter as the value of all filter checkboxes
+                var filter  = self.$filters
                                 .map(function() {
                                     return $(this).checkbox('val');
                                 });
 
-                self._changeFilter( $.makeArray(vals).join(',') );
+                self._changeFilter( $.makeArray(filter).join(',') );
                 break;
             }
         });
@@ -1292,20 +1284,26 @@ $.Summary.prototype = {
 
             //console.log('.sentence hover: '+ e.type);
 
+            // Unhover all sentences
+            self.$s.removeClass('ui-hover');
+
             switch (e.type)
             {
             case 'hover-in':
+                // Hover over THIS sentence
                 $s.addClass('ui-hover');
                 break;
 
+            /*
             case 'hover-out':
                 $s.removeClass('ui-hover');
                 break;
+            // */
             }
         });
 
         /*************************************************************
-         * Mouse over for sentence controls
+         * Mouse over sentence controls increases opacity.
          *
          */
         $parent.delegate('.sentence .controls .su-icon',
@@ -1355,7 +1353,7 @@ $.Summary.prototype = {
         });
 
         /*************************************************************
-         * Click handler for non-highlighted sentences
+         * Click handler for non-highlighted/hidden sentences
          *
          */
         $parent.delegate('p', 'click', function(e) {
@@ -1457,7 +1455,7 @@ $.Summary.prototype = {
             if (toggleOn)
             {
                 // Make any sentence currently visible "older"
-                self.$s.filter('.highlight,.expansion').older();
+                self.$s.filter('.highlight,.expansion').older( opts );
 
                 // Highlight the keyword control
                 $kw.addClass('ui-state-highlight');
@@ -1495,7 +1493,7 @@ $.Summary.prototype = {
                 });
 
                 // Remove any 'old' class
-                self.$s.filter('[class*=" old"]').younger();
+                self.$s.filter('[class*=" old"]').younger( opts );
 
                 // Remove the highlight from the keyword control
                 $kw.removeClass('ui-state-highlight');
@@ -1575,16 +1573,11 @@ $.Summary.prototype = {
          */
         $parent.delegateHoverIntent('article .sentence .tagged',
                                     function(e) {
-            var $el     = $(this);
-            var $s      = $el.parents('.sentence:first');
-            var pos     = $el.position();
-            var offset  = $el.offset();
-            var width   = $el.width();
-
             /* Using the 'name' attribute of the target element, locate
              * all similarly named elements along with the ui.notes instance
              * associated with them.
              */
+            var $el     = $(this);
             var name    = $el.attr('name');
             var $tagged = self.element.find('[name='+ name +']:first');
             var $notes  = $tagged.data('notes-associate');
@@ -1620,6 +1613,7 @@ $.Summary.prototype = {
                 self._ignoreHoverOut = false;
 
                 // Remove any selection controls.
+                var $s  = $el.parents('.sentence:first');
                 $s.find('.selection-controls').remove();
                 break;
             }
@@ -1630,6 +1624,17 @@ $.Summary.prototype = {
          * remain activated.
          */
         $parent.delegate('article .sentence .tagged', 'click', function(e) {
+            /* Using the 'name' attribute of the target element, locate
+             * all similarly named elements along with the ui.notes instance
+             * associated with them.
+             */
+            var $el     = $(this);
+            var name    = $el.attr('name');
+            var $tagged = self.element.find('[name='+ name +']:first');
+            var $notes  = $tagged.data('notes-associate');
+
+            $notes.notes('focus');
+
             self._ignoreHoverOut = true;
             return false;
         });

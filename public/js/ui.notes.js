@@ -178,6 +178,15 @@ $.widget('ui.notes', {
                 .fadeOut(opts.animSpeed, cb);
     },
 
+    /** @brief  Focus on the input area.
+     */
+    focus: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$reply.trigger('focus');
+    },
+
     /** @brief  Return a serialized version of our underlying $.Notes instance.
      *
      *  @return A serialized version of our underlying $.Notes instance.
