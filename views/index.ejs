@@ -9,6 +9,8 @@ var docId = (window.location.search
               : '0001');
 
 Req(true, 'summary', function() {
+    var $ = jQuery.noConflict();
+
     // Initialize the application
     $('#article').summary({
         metadata:   'samples/'+ docId +'.xml'
