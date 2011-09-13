@@ -1449,8 +1449,15 @@ $.Summary.prototype = {
 
                         // Convert the XML <s> to an HTML <div>
                         $(this).find('s').each(function() {
-                            var $s   = $(this);
-                            var rank = parseFloat($s.attr('rank'));
+                            var $s          = $(this);
+                            var rank        = parseFloat($s.attr('rank'));
+
+                            /* If there is one or more <w> element that does
+                             * NOT have a 'keyword' attribute, don't create
+                             * elements for raw text, just for <w> elements.
+                             */
+                            var ignoreText  = ($s.find('w:not([keyword])')
+                                                                .length > 0);
                             if (isNaN(rank))    { rank = 0; }
 
                             /* Treat the rank as an integer percentile
@@ -1463,6 +1470,12 @@ $.Summary.prototype = {
                                             .appendTo($p);
                             var $sC  = $sEl.find('.content');
 
+                            /* Mark the sentence with information about whether
+                             * it contains ONLY word elements or if text spans
+                             * contain multiple words.
+                             */
+                            $sEl.attr('wordElements', ignoreText);
+
                             $sEl.find('.rank')
                                     .css('opacity', opts.rankOpacity);
 
@@ -1471,8 +1484,15 @@ $.Summary.prototype = {
                                 var $node   = $(this);
                                 switch (this.nodeName)
                                 {
-                                case 'w':
                                 case '#text':
+                                    if (ignoreText === true)
+                                    {
+                                        // Ignore
+                                        return;
+                                    }
+                                    // Fall through
+
+                                case 'w':
                                     if ($node.attr('keyword'))
                                     {
                                         $('#tmpl-sentence-keyword')
@@ -2436,8 +2456,15 @@ $.Summary.prototype = {
 
                         // Convert the XML <s> to an HTML <div>
                         $(this).find('s').each(function() {
-                            var $s   = $(this);
-                            var rank = parseFloat($s.attr('rank'));
+                            var $s          = $(this);
+                            var rank        = parseFloat($s.attr('rank'));
+
+                            /* If there is one or more <w> element that does
+                             * NOT have a 'keyword' attribute, don't create
+                             * elements for raw text, just for <w> elements.
+                             */
+                            var ignoreText  = ($s.find('w:not([keyword])')
+                                                                .length > 0);
                             if (isNaN(rank))    { rank = 0; }
 
                             /* Treat the rank as an integer percentile
@@ -2450,6 +2477,12 @@ $.Summary.prototype = {
                                             .appendTo($p);
                             var $sC  = $sEl.find('.content');
 
+                            /* Mark the sentence with information about whether
+                             * it contains ONLY word elements or if text spans
+                             * contain multiple words.
+                             */
+                            $sEl.attr('wordElements', ignoreText);
+
                             $sEl.find('.rank')
                                     .css('opacity', opts.rankOpacity);
 
@@ -2458,8 +2491,15 @@ $.Summary.prototype = {
                                 var $node   = $(this);
                                 switch (this.nodeName)
                                 {
-                                case 'w':
                                 case '#text':
+                                    if (ignoreText === true)
+                                    {
+                                        // Ignore
+                                        return;
+                                    }
+                                    // Fall through
+
+                                case 'w':
                                     if ($node.attr('keyword'))
                                     {
                                         $('#tmpl-sentence-keyword')
