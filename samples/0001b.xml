@@ -1,0 +1,1154 @@
+<document
+ src="http://www.wired.com/wiredscience/2011/07/the-selfishness-of-trust/">
+ <title>The Collapse of Political Trust</title>
+ <author>Jonah Lehrer</author>
+ <!--
+  <time pubdate datetime="2011-07-27T17:40-05:00">
+   July 27, 2011 5:40pm
+  </time>
+ -->
+ <published><date>July 27, 2011</date><time>5:40 pm</time></published>
+ <keywords>
+  <keyword name='politics' rank='.8'>Politics</keyword>
+  <keyword name='trust' rank='.9'>Trust</keyword>
+ </keywords>
+
+ <body>
+  <section>
+   <p>
+    <s rank='.1'>
+     <w>American</w><w> </w>
+     <w keyword='politics'>politics</w><w> </w>
+     <w>makes</w><w> </w>
+     <w>me</w><w> </w>
+     <w>sad</w><w>.</w>
+    </s>
+    <s rank='.7'>
+     <w>One</w><w> </w>
+     <w>can’t</w><w> </w>
+     <w>help</w><w> </w>
+     <w>but</w><w> </w>
+     <w>imagine</w><w> </w>
+     <w>the</w><w> </w>
+     <w>history</w><w> </w>
+     <w>books</w><w> </w>
+     <w>of</w><w> </w>
+     <w>the</w><w> </w>
+     <w>future</w><w>,</w>
+     <w>highlighting </w>
+     <w>this</w><w> </w>
+     <w>moment</w><w> </w>
+     <w>as</w><w> </w>
+     <w>an</w><w> </w>
+     <w>example</w><w> </w>
+     <w>of</w><w> </w>
+     <w>why</w><w> </w>
+     <w>the</w><w> </w>
+     <w>decline</w><w> </w>
+     <w>began</w><w>,</w><w> </w>
+     <w>how</w><w> </w>
+     <w>a</w><w> </w>
+     <w>country</w><w> </w>
+     <w>this</w><w> </w>
+     <w>rich</w><w> </w>
+     <w>and</w><w> </w>
+     <w>free</w><w> </w>
+     <w>developed</w><w> </w>
+     <w>such</w><w> </w>
+     <w>a</w><w> </w>
+     <w>dysfunctional</w><w> </w>
+     <w keyword='politics'>political</w><w> </w>
+     <w>system</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.1'>
+     <w>But</w><w> </w>
+     <w>this</w><w> </w>
+     <w>post</w><w> </w>
+     <w>is</w><w> </w>
+     <w>not</w><w> </w>
+     <w>a</w><w> </w>
+     <w>lament</w><w> </w>
+     <w>for</w><w> </w>
+     <w>a</w><w> </w>
+     <w>bygone</w><w> </w>
+     <w keyword='politics'>politics</w><w>,</w><w> </w>
+     <w>because</w><w> </w>
+     <w>lord</w><w> </w>
+     <w>knows</w><w> </w>
+     <w>there</w><w> </w>
+     <w>are</w><w> </w>
+     <w>enough</w><w> </w>
+     <w>of</w><w> </w>
+     <w>those</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>Instead</w><w>,</w><w> </w>
+     <w>I</w><w> </w>
+     <w>think</w><w> </w>
+     <w>the</w><w> </w>
+     <w>current</w><w> </w>
+     <w>breakdown</w><w> </w>
+     <w>in</w><w> </w>
+     <w>Washington</w><w> </w>
+     <w>highlights</w><w> </w>
+     <w>the</w><w> </w>
+     <w>fragility</w><w> </w>
+     <w>of</w><w> </w>
+     <w>a</w><w> </w>
+     <w>human</w><w> </w>
+     <w>capability</w><w> </w>
+     <w>we’ve</w><w> </w>
+     <w>long</w><w> </w>
+     <w>taken</w><w> </w>
+     <w>for</w><w> </w>
+     <w>granted</w><w>:</w><w> </w>
+     <w keyword='trust'>trust</w><w>.</w>
+    </s>
+    <s rank='.9'>
+     <w>While</w><w> </w>
+     <w>economists</w><w> </w>
+     <w>have</w><w> </w>
+     <w>begun</w><w> </w>
+     <w>focusing</w><w> </w>
+     <w>on</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>as</w><w> </w>
+     <w>a</w><w> </w>
+     <w>crucial</w><w> </w>
+     <w>factor</w><w> </w>
+     <w>in</w><w> </w>
+     <w>economic</w><w> </w>
+     <w>development</w><w> </w>
+     <w>–</w><w> </w>
+     <w>a</w><w> </w>
+     <w>country</w><w> </w>
+     <w>without</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>can’t</w><w> </w>
+     <w>build</w><w> </w>
+     <w>the</w><w> </w>
+     <w>institutions</w><w> </w>
+     <w>that</w><w> </w>
+     <w>make</w><w> </w>
+     <w>growth</w><w> </w>
+     <w>possible</w><w> </w>
+     <w>– </w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>is</w><w> </w>
+     <w>also</w><w> </w>
+     <w>an</w><w> </w>
+     <w>essential</w><w> </w>
+     <w>component</w><w> </w>
+     <w>of</w><w> </w>
+     <w>effective</w><w> </w>
+     <w keyword='politics'>politics</w><w>.</w>
+    </s>
+    <s rank='.3'>
+     <w>Democracies</w><w>,</w><w> </w>
+     <w>after</w><w> </w>
+     <w>all</w><w>,</w><w> </w>
+     <w>depend</w><w> </w>
+     <w>on</w><w> </w>
+     <w>compromise</w><w>.</w>
+    </s>
+    <s rank='.3'>
+     <w>And</w><w> </w>
+     <w>compromise</w><w> </w>
+     <w>requires</w><w> </w>
+     <w keyword='trust'>trust</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.1'>
+     <w>At</w><w> </w>
+     <w>the</w><w> </w>
+     <w>moment</w><w>,</w><w> </w>
+     <w>the</w><w> </w>
+     <w>neuroscience</w><w> </w>
+     <w>of</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>remains</w><w> </w>
+     <w>extremely</w><w> </w>
+     <w>provisional</w><w>.</w>
+    </s>
+    <s rank='.4'>
+     <w>We</w><w> </w>
+     <w>still</w><w> </w>
+     <w>don’t</w><w> </w>
+     <w>know</w><w> </w>
+     <w>why</w><w> </w>
+     <w>some</w><w> </w>
+     <w>societies</w><w> </w>
+     <w>are</w><w> </w>
+     <w>awash</w><w> </w>
+     <w>in</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>while</w><w> </w>
+     <w>others</w><w> </w>
+     <w>are</w><w> </w>
+     <w>forced</w><w> </w>
+     <w>to</w><w> </w>
+     <w>do</w><w> </w>
+     <w>without</w><w>,</w><w> </w>
+     <w>subsisting</w><w> </w>
+     <w>on</w><w> </w>
+     <w>nothing</w><w> </w>
+     <w>but</w><w> </w>
+     <w>the</w><w> </w>
+     <w>instinctive</w><w> </w>
+     <w>faith</w><w> </w>
+     <w>in</w><w> </w>
+     <w>close</w><w> </w>
+     <w>friends</w><w> </w>
+     <w>and</w><w> </w>
+     <w>family</w><w>.</w>
+    </s>
+    <s rank='.4'>
+     <w>We</w><w> </w>
+     <w>don’t</w><w> </w>
+     <w>know</w><w> </w>
+     <w>why</w><w> </w>
+     <w>some</w><w> </w>
+     <w>people</w><w> </w>
+     <w>are</w><w> </w>
+     <w>so</w><w> </w>
+     <w>much</w><w> </w>
+     <w>more</w><w> </w>
+     <w keyword='trust'>trusting</w><w> </w>
+     <w>than</w><w> </w>
+     <w>others</w><w> </w>
+     <w>or</w><w> </w>
+     <w>what</w><w> </w>
+     <w>happens</w><w> </w>
+     <w>when</w><w> </w>
+     <w>the</w><w> </w>
+     <w>bonds</w><w> </w>
+     <w>of</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>are</w><w> </w>
+     <w>broken</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>Nevertheles</w><w>,</w><w> </w>
+     <w>there</w><w> </w>
+     <w>have</w><w> </w>
+     <w>been</w><w> </w>
+     <w>some</w><w> </w>
+     <w>interesting</w><w> </w>
+     <w>glimmers</w><w> </w>
+     <w>into</w><w> </w>
+     <w>the</w><w> </w>
+     <w>formation</w><w> </w>
+     <w>of</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>in</w><w> </w>
+     <w>the</w><w> </w>
+     <w>brain</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.1'>
+     <w>Consider</w><w> </w>
+     <w>this</w><w> </w>
+     <w>elegant</w><w> </w>
+     <w>investigation</w><w> </w>
+     <w>of</w><w> </w>
+     <w keyword='trust'>trust</w><w>,</w><w> </w>
+     <w>led</w><w> </w>
+     <w>by</w><w> </w>
+     <w>Brooks</w><w> </w>
+     <w>King</w><w>-</w><w>Casas</w><w>,</w><w> </w>
+     <w>Colin</w><w> </w>
+     <w>Camerer</w><w>,</w><w> </w>
+     <w>Read</w><w> </w>
+     <w>Montague</w><w>,</w><w> </w>
+     <w>et</w><w>.</w><w> </w>
+     <w>al</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>The</w><w> </w>
+     <w>research</w><w> </w>
+     <w>was</w><w> </w>
+     <w>born</w><w> </w>
+     <w>out</w><w> </w>
+     <w>of</w><w> </w>
+     <w>a</w><w> </w>
+     <w>serious</w><w> </w>
+     <w>limitation</w><w> </w>
+     <w>of</w><w> </w>
+     <w>conventional</w><w> </w>
+     <w>fMRI</w><w>,</w><w> </w>
+     <w>which</w><w> </w>
+     <w>looks</w><w> </w>
+     <w>at</w><w> </w>
+     <w>the</w><w> </w>
+     <w>individual</w><w> </w>
+     <w>brain</w><w> </w>
+     <w>in</w><w> </w>
+     <w>splendid</w><w> </w>
+     <w>isolation</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>(A</w><w> </w>
+     <w>subject</w><w> </w>
+     <w>is</w><w> </w>
+     <w>put</w><w> </w>
+     <w>in</w><w> </w>
+     <w>a</w><w> </w>
+     <w>claustrophobic</w><w> </w>
+     <w>scanner</w><w> </w>
+     <w>and</w><w> </w>
+     <w>told</w><w> </w>
+     <w>to</w><w> </w>
+     <w>perform</w><w> </w>
+     <w>a</w><w> </w>
+     <w>task</w><w>.</w><w>)</w>
+    </s>
+    <s rank='.3'>
+     <w>Humans</w><w>,</w><w> </w>
+     <w>of</w><w> </w>
+     <w>course</w><w>,</w><w> </w>
+     <w>are</w><w> </w>
+     <w>a</w><w> </w>
+     <w>social</w><w> </w>
+     <w>species</w><w> </w>
+     <w>–</w><w> </w>
+     <w>our</w><w> </w>
+     <w>behavior</w><w> </w>
+     <w>is</w><w> </w>
+     <w>often</w><w> </w>
+     <w>influenced</w><w> </w>
+     <w>by</w><w> </w>
+     <w>the</w><w> </w>
+     <w>behavior</w><w> </w>
+     <w>of</w><w> </w>
+     <w>others</w><w> </w>
+     <w>–</w><w> </w>
+     <w>so</w><w> </w>
+     <w>the</w><w> </w>
+     <w>scientists</w><w> </w>
+     <w>pioneered</w><w> </w>
+     <w>a</w><w> </w>
+     <w>technique</w><w> </w>
+     <w>known</w><w> </w>
+     <w>as</w><w> </w>
+     <w>hyper</w><w>-</w><w>scanning</w><w>,</w><w> </w>
+     <w>which</w><w> </w>
+     <w>allows</w><w> </w>
+     <w>subjects</w><w> </w>
+     <w>in</w><w> </w>
+     <w>different</w><w> </w>
+     <w>fMRI</w><w> </w>
+     <w>machines</w><w> </w>
+     <w>to</w><w> </w>
+     <w>interact</w><w> </w>
+     <w>in</w><w> </w>
+     <w>real</w><w> </w>
+     <w>time</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.2'>
+     <w>The</w><w> </w>
+     <w>experiment</w><w> </w>
+     <w>revolved</w><w> </w>
+     <w>around</w><w> </w>
+     <w>a</w><w> </w>
+     <w>simple</w><w> </w>
+     <w>economic</w><w> </w>
+     <w>game</w><w> </w>
+     <w>in</w><w> </w>
+     <w>which</w><w> </w>
+     <w>getting</w><w> </w>
+     <w>the</w><w> </w>
+     <w>maximum</w><w> </w>
+     <w>reward</w><w> </w>
+     <w>required</w><w> </w>
+     <w>the</w><w> </w>
+     <w>strangers</w><w> </w>
+     <w>to</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>one</w><w> </w>
+     <w>another</w><w>.</w>
+    </s>
+    <s rank='.3'>
+     <w>However</w><w>,</w><w> </w>
+     <w>if</w><w> </w>
+     <w>one</w><w> </w>
+     <w>of</w><w> </w>
+     <w>the</w><w> </w>
+     <w>players</w><w> </w>
+     <w>grew</w><w> </w>
+     <w>especially</w><w> </w>
+     <w>selfish</w><w>,</w><w> </w>
+     <w>he</w><w> </w>
+     <w>or</w><w> </w>
+     <w>she</w><w> </w>
+     <w>could</w><w> </w>
+     <w>always</w><w> </w>
+     <w>steal</w><w> </w>
+     <w>from</w><w> </w>
+     <w>the</w><w> </w>
+     <w>pot</w><w> </w>
+     <w>and</w><w> </w>
+     <w>erase</w><w> </w>
+     <w>the</w><w> </w>
+     <w>tenuous</w><w> </w>
+     <w>sense</w><w> </w>
+     <w>of</w><w> </w>
+     <w keyword='trust'>trust</w><w>.</w>
+    </s>
+    <s rank='.4'>
+     <w>By</w><w> </w>
+     <w>monitoring</w><w> </w>
+     <w>the</w><w> </w>
+     <w>players’</w><w> </w>
+     <w>brains</w><w>,</w><w> </w>
+     <w>the</w><w> </w>
+     <w>scientists</w><w> </w>
+     <w>were</w><w> </w>
+     <w>able</w><w> </w>
+     <w>to</w><w> </w>
+     <w>predict</w><w> </w>
+     <w>whether</w><w> </w>
+     <w>or</w><w> </w>
+     <w>not</w><w> </w>
+     <w>someone</w><w> </w>
+     <w>would</w><w> </w>
+     <w>steal</w><w> </w>
+     <w>money</w><w> </w>
+     <w>several</w><w> </w>
+     <w>seconds</w><w> </w>
+     <w>before</w><w> </w>
+     <w>the</w><w> </w>
+     <w>theft</w><w> </w>
+     <w>actually</w><w> </w>
+     <w>occurred</w><w>.</w>
+    </s>
+    <s rank='.7'>
+     <w>The</w><w> </w>
+     <w>secret</w><w> </w>
+     <w>was</w><w> </w>
+     <w>a</w><w> </w>
+     <w>cortical</w><w> </w>
+     <w>area</w><w> </w>
+     <w>known</w><w> </w>
+     <w>as</w><w> </w>
+     <w>the</w><w> </w>
+     <w>caudate</w><w> </w>
+     <w>nucleus</w><w>,</w><w> </w>
+     <w>which</w><w> </w>
+     <w>closely</w><w> </w>
+     <w>tracked</w><w> </w>
+     <w>the</w><w> </w>
+     <w>payouts</w><w> </w>
+     <w>from</w><w> </w>
+     <w>the</w><w> </w>
+     <w>other</w><w> </w>
+     <w>player</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>(</w><w>The</w><w> </w>
+     <w>caudate</w><w> </w>
+     <w>is</w><w> </w>
+     <w>usually</w><w> </w>
+     <w>discussed</w><w> </w>
+     <w>in</w><w> </w>
+     <w>the</w><w> </w>
+     <w>context</w><w> </w>
+     <w>of</w><w> </w>
+     <w>addiction</w><w>,</w><w> </w>
+     <w>since</w><w> </w>
+     <w>it</w><w> </w>
+     <w>plays</w><w> </w>
+     <w>a</w><w> </w>
+     <w>central</w><w> </w>
+     <w>role</w><w> </w>
+     <w>in</w><w> </w>
+     <w>modulating</w><w> </w>
+     <w>our</w><w> </w>
+     <w>expectation</w><w> </w>
+     <w>of</w><w> </w>
+     <w>pleasure</w><w>.</w><w>)</w>
+    </s>
+    <s rank='.1'>
+     <w>Montague</w><w> </w>
+     <w>noticed</w><w> </w>
+     <w>that</w><w> </w>
+     <w>whenever</w><w> </w>
+     <w>the</w><w> </w>
+     <w>caudate</w><w> </w>
+     <w>exhibited</w><w> </w>
+     <w>reduced</w><w> </w>
+     <w>activity</w><w>,</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>tended</w><w> </w>
+     <w>to</w><w> </w>
+     <w>break</w><w> </w>
+     <w>down</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.1'>
+     <w>But</w><w> </w>
+     <w>what</w><w> </w>
+     <w>exactly</w><w> </w>
+     <w>is</w><w> </w>
+     <w>the</w><w> </w>
+     <w>caudate</w><w> </w>
+     <w>computing</w><w>?</w>
+    </s>
+    <s rank='.1'>
+     <w>How</w><w> </w>
+     <w>do</w><w> </w>
+     <w>we</w><w> </w>
+     <w>decide</w><w> </w>
+     <w>whom</w><w> </w>
+     <w>to</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>with</w><w> </w>
+     <w>our</w><w> </w>
+     <w>money</w><w>?</w>
+    </s>
+    <s rank='.6'>
+     <w>At</w><w> </w>
+     <w>first</w><w>,</w><w> </w>
+     <w>the</w><w> </w>
+     <w>caudate</w><w> </w>
+     <w>didn’t</w><w> </w>
+     <w>get</w><w> </w>
+     <w>excited</w><w> </w>
+     <w>until</w><w> </w>
+     <w>the</w><w> </w>
+     <w>subjects</w><w> </w>
+     <w>actually</w><w> </w>
+     <w keyword='trust'>trusted</w><w> </w>
+     <w>one</w><w> </w>
+     <w>another</w><w> </w>
+     <w>and</w><w> </w>
+     <w>garnered</w><w> </w>
+     <w>their</w><w> </w>
+     <w>separate</w><w> </w>
+     <w>rewards</w><w>.</w>
+    </s>
+    <s rank='.6'>
+     <w>But</w><w> </w>
+     <w>over</w><w> </w>
+     <w>time</w><w> </w>
+     <w>this</w><w> </w>
+     <w>brain</w><w> </w>
+     <w>area</w><w> </w>
+     <w>started</w><w> </w>
+     <w>to</w><w> </w>
+     <w>expect</w><w> </w>
+     <w>those</w><w> </w>
+     <w>rewards</w><w>,</w><w> </w>
+     <w>so</w><w> </w>
+     <w>that</w><w> </w>
+     <w>it</w><w> </w>
+     <w>fired</w><w> </w>
+     <w>long</w><w> </w>
+     <w>before</w><w> </w>
+     <w>the</w><w> </w>
+     <w>money</w><w> </w>
+     <w>actually</w><w> </w>
+     <w>arrived</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>It’s</w><w> </w>
+     <w>only</w><w> </w>
+     <w>at</w><w> </w>
+     <w>this</w><w> </w>
+     <w>point</w><w> </w>
+     <w>–</w><w> </w>
+     <w>once</w><w> </w>
+     <w>we</w><w> </w>
+     <w>take</w><w> </w>
+     <w>those</w><w> </w>
+     <w>future</w><w> </w>
+     <w>benefits</w><w> </w>
+     <w>for</w><w> </w>
+     <w>granted</w><w> </w>
+     <w>–</w><w> </w>
+     <w>that</w><w> </w>
+     <w>the</w><w> </w>
+     <w>bonds</w><w> </w>
+     <w>of</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>between</w><w> </w>
+     <w>the</w><w> </w>
+     <w>players</w><w> </w>
+     <w>began</w><w> </w>
+     <w>to</w><w> </w>
+     <w>form</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.8'>
+     <w>The</w><w> </w>
+     <w>moral</w><w> </w>
+     <w>is</w><w> </w>
+     <w>that</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>is</w><w> </w>
+     <w>ultimately</w><w> </w>
+     <w>about</w><w> </w>
+     <w>the</w><w> </w>
+     <w>expectation</w><w> </w>
+     <w>of</w><w> </w>
+     <w>rewards</w><w>.</w>
+    </s>
+    <s rank='.4'>
+     <w>We</w><w> </w>
+     <w>see</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>as</w><w> </w>
+     <w>such</w><w> </w>
+     <w>a</w><w> </w>
+     <w>noble</w><w> </w>
+     <w>trait</w><w>,</w><w> </w>
+     <w>but</w><w> </w>
+     <w>it’s</w><w> </w>
+     <w>ultimately</w><w> </w>
+     <w>rooted</w><w> </w>
+     <w>in</w><w> </w>
+     <w>a</w><w> </w>
+     <w>greedy</w><w> </w>
+     <w>calculation</w><w>,</w><w> </w>
+     <w>emanating</w><w> </w>
+     <w>from</w><w> </w>
+     <w>our</w><w> </w>
+     <w>primal</w><w> </w>
+     <w>dopaminergic</w><w> </w>
+     <w>circuitry</w><w>:</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.8'>
+     <w>Taken</w><w> </w>
+     <w>together</w><w>,</w><w> </w>
+     <w>these</w><w> </w>
+     <w>results</w><w> </w>
+     <w>suggest</w><w> </w>
+     <w>that</w><w> </w>
+     <w>the</w><w> </w>
+     <w>head</w><w> </w>
+     <w>of</w><w> </w>
+     <w>the</w><w> </w>
+     <w>caudate</w><w> </w>
+     <w>nucleus</w><w> </w>
+     <w>receives</w><w> </w>
+     <w>or</w><w> </w>
+     <w>computes</w><w> </w>
+     <w>information</w><w> </w>
+     <w>about</w><w> </w>
+     <w>(</w><w>i</w><w>)</w><w> </w>
+     <w>the</w><w> </w>
+     <w>fairness</w><w> </w>
+     <w>of</w><w> </w>
+     <w>a</w><w> </w>
+     <w>social</w><w> </w>
+     <w>partner's</w><w> </w>
+     <w>decision</w><w> </w>
+     <w>and</w><w> </w>
+     <w>(</w><w>ii</w><w>)</w><w> </w>
+     <w>the</w><w> </w>
+     <w>intention</w><w> </w>
+     <w>to</w><w> </w>
+     <w>repay</w><w> </w>
+     <w>that</w><w> </w>
+     <w>decision</w><w> </w>
+     <w>with</w><w> </w>
+     <w keyword='trust'>trust</w><w>.</w>
+    </s>
+    <s rank='.5'>
+     <w>In</w><w> </w>
+     <w>early</w><w> </w>
+     <w>rounds</w><w> </w>
+     <w>of</w><w> </w>
+     <w>the</w><w> </w>
+     <w>game</w><w>,</w><w> </w>
+     <w>the</w><w> </w>
+     <w>”</w><w>intention</w><w> </w>
+     <w>to</w><w> </w>
+     <w keyword='trust'>trust</w><w>”</w><w> </w>
+     <w>is</w><w> </w>
+     <w>evident</w><w> </w>
+     <w>only</w><w> </w>
+     <w>after</w><w> </w>
+     <w>an</w><w> </w>
+     <w>investment</w><w> </w>
+     <w>is</w><w> </w>
+     <w>revealed</w><w>.</w>
+    </s>
+    <s rank='.5'>
+     <w>With</w><w> </w>
+     <w>experience</w><w>,</w><w> </w>
+     <w>this</w><w> </w>
+     <w>signal</w><w> </w>
+     <w>shifts</w><w> </w>
+     <w>to</w><w> </w>
+     <w>a</w><w> </w>
+     <w>time</w><w> </w>
+     <w>preceding</w><w> </w>
+     <w>the</w><w> </w>
+     <w>revelation</w><w> </w>
+     <w>of</w><w> </w>
+     <w>the</w><w> </w>
+     <w>investment</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.6'>
+     <w>In</w><w> </w>
+     <w>other</w><w> </w>
+     <w>words</w><w>,</w><w> </w>
+     <w>we</w><w> </w>
+     <w>don’t</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>people</w><w> </w>
+     <w>because</w><w> </w>
+     <w>they</w><w> </w>
+     <w>seem</w><w> </w>
+     <w>nice</w><w> </w>
+     <w>or</w><w> </w>
+     <w>virtuous</w><w> </w>
+     <w>or</w><w> </w>
+     <w keyword='trust'>trustworthy</w><w>,</w><w> </w>
+     <w>whatever</w><w> </w>
+     <w>those</w><w> </w>
+     <w>adjectives</w><w> </w>
+     <w>mean</w><w>.</w>
+    </s>
+    <s rank='.6'>
+     <w>We</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>them</w><w> </w>
+     <w>because</w><w> </w>
+     <w>they</w><w> </w>
+     <w>get</w><w> </w>
+     <w>us</w><w> </w>
+     <w>the</w><w> </w>
+     <w>good</w><w> </w>
+     <w>stuff</w><w>,</w><w> </w>
+     <w>delivering</w><w> </w>
+     <w>what</w><w> </w>
+     <w>Montague</w><w> </w>
+     <w>refers</w><w> </w>
+     <w>to</w><w> </w>
+     <w>as</w><w> </w>
+     <w>the</w><w> </w>
+     <w>“</w><w>social</w><w> </w>
+     <w>juice</w><w>”</w><w> </w>
+     <w>of</w><w> </w>
+     <w>reciprocity</w><w>.</w>
+    </s>
+    <s rank='.8'>
+     <w>When</w><w> </w>
+     <w>we</w><w> </w>
+     <w>say</w><w> </w>
+     <w>we</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>someone</w><w>,</w><w> </w>
+     <w>what</w><w> </w>
+     <w>we’re</w><w> </w>
+     <w>really</w><w> </w>
+     <w>saying</w><w> </w>
+     <w>is</w><w> </w>
+     <w>that</w><w> </w>
+     <w>they're</w><w> </w>
+     <w>a</w><w> </w>
+     <w>reliable</w><w> </w>
+     <w>source</w><w> </w>
+     <w>of</w><w> </w>
+     <w>what</w><w> </w>
+     <w>we</w><w> </w>
+     <w>want</w><w>.</w>
+    </s>
+    <s rank='.4'>
+     <w>I</w><w> </w>
+     <w>scratch</w><w> </w>
+     <w>your</w><w> </w>
+     <w>back</w><w>,</w><w> </w>
+     <w>you</w><w> </w>
+     <w>scratch</w><w> </w>
+     <w>mine</w><w>.</w>
+     </s>
+   </p>
+
+   <p>
+    <s rank='.1'>
+     <w>And</w><w> </w>
+     <w>this</w><w> </w>
+     <w>returns</w><w> </w>
+     <w>us</w><w> </w>
+     <w>to</w><w> </w>
+     <w>the</w><w> </w>
+     <w>present</w><w> </w>
+     <w>dysfunction</w><w> </w>
+     <w>in</w><w> </w>
+     <w>Washington</w><w>.</w>
+    </s>
+    <s rank='.9'>
+     <w>If</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>is</w><w> </w>
+     <w>about</w><w> </w>
+     <w>the</w><w> </w>
+     <w>distribution</w><w> </w>
+     <w>of</w><w> </w>
+     <w>rewards</w><w> </w>
+     <w>–</w><w> </w>
+     <w>about</w><w> </w>
+     <w>learning</w><w> </w>
+     <w>to</w><w> </w>
+     <w>expect</w><w> </w>
+     <w>bonuses</w><w> </w>
+     <w>from</w><w> </w>
+     <w>others</w><w> </w>
+     <w>–</w><w> </w>
+     <w>then</w><w> </w>
+     <w>it’s</w><w> </w>
+     <w>going</w><w> </w>
+     <w>to</w><w> </w>
+     <w>be</w><w> </w>
+     <w>a</w><w> </w>
+     <w>lot</w><w> </w>
+     <w>harder</w><w> </w>
+     <w>to</w><w> </w>
+     <w>share</w><w> </w>
+     <w>those</w><w> </w>
+     <w>rewards</w><w> </w>
+     <w>in</w><w> </w>
+     <w>an</w><w> </w>
+     <w>age</w><w> </w>
+     <w>of</w><w> </w>
+     <w>scarcity</w><w> </w>
+     <w>and</w><w> </w>
+     <w>deficits</w><w>.</w>
+    </s>
+    <s rank='.7'>
+     <w>For</w><w> </w>
+     <w>the</w><w> </w>
+     <w>first</w><w> </w>
+     <w>time</w><w> </w>
+     <w>in</w><w> </w>
+     <w>decades</w><w>,</w><w> </w>
+     <w>congresspeople</w><w> </w>
+     <w>aren’t</w><w> </w>
+     <w>trading</w><w> </w>
+     <w>pork</w><w> </w>
+     <w>barrel</w><w> </w>
+     <w>projects</w><w> </w>
+     <w>and</w><w> </w>
+     <w>tax</w><w> </w>
+     <w>breaks</w><w> </w>
+     <w>–</w><w> </w>
+     <w>they're</w><w> </w>
+     <w>negotiating</w><w> </w>
+     <w>steep</w><w> </w>
+     <w>budget</w><w> </w>
+     <w>cuts</w><w>.</w>
+    </s>
+    <s rank='.8'>
+     <w>Those</w><w> </w>
+     <w>cuts</w><w> </w>
+     <w>might</w><w> </w>
+     <w>be</w><w> </w>
+     <w>necessary</w><w>,</w><w> </w>
+     <w>but</w><w> </w>
+     <w>they’re</w><w> </w>
+     <w>aren’t</w><w> </w>
+     <w>going</w><w> </w>
+     <w>to</w><w> </w>
+     <w>excite</w><w> </w>
+     <w>the</w><w> </w>
+     <w>caudate</w><w> </w>
+     <w>or</w><w> </w>
+     <w>generate</w><w> </w>
+     <w>that</w><w> </w>
+     <w>requisite</w><w> </w>
+     <w>burst</w><w> </w>
+     <w>of</w><w> </w>
+     <w>“</w><w>social</w><w> </w>
+     <w>juice</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>The</w><w> </w>
+     <w>traditional</w><w> </w>
+     <w>means</w><w> </w>
+     <w>of</w><w> </w>
+     <w>developing</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>among</w><w> </w>
+     <w>Congresspeople</w><w> </w>
+     <w>have</w><w> </w>
+     <w>disappeared</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.1'>
+     <w>There</w><w> </w>
+     <w>are</w><w>,</w><w> </w>
+     <w>of</w><w> </w>
+     <w>course</w><w>,</w><w> </w>
+     <w>myriad</w><w> </w>
+     <w>reasons</w><w> </w>
+     <w>for</w><w> </w>
+     <w>the</w><w> </w>
+     <w>increasing</w><w> </w>
+     <w>polarization</w><w> </w>
+     <w>of</w><w> </w>
+     <w>Congress</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>But</w><w> </w>
+     <w>I</w><w> </w>
+     <w>can’t</w><w> </w>
+     <w>help</w><w> </w>
+     <w>but</w><w> </w>
+     <w>wonder</w><w> </w>
+     <w>if</w><w> </w>
+     <w>one</w><w> </w>
+     <w>of</w><w> </w>
+     <w>the</w><w> </w>
+     <w>reasons</w><w> </w>
+     <w>has</w><w> </w>
+     <w>to</w><w> </w>
+     <w>with</w><w> </w>
+     <w>this</w><w> </w>
+     <w>newfound</w><w> </w>
+     <w>lack</w><w> </w>
+     <w>of</w><w> </w>
+     <w>favor</w><w> </w>
+     <w>trading</w><w>,</w><w> </w>
+     <w>as</w><w> </w>
+     <w>it’s</w><w> </w>
+     <w>increasingly</w><w> </w>
+     <w>difficult</w><w> </w>
+     <w>for</w><w> </w>
+     <w keyword='politics'>politicians</w><w> </w>
+     <w>to</w><w> </w>
+     <w>barter</w><w> </w>
+     <w>projects</w><w> </w>
+     <w>in</w><w> </w>
+     <w>exchange</w><w> </w>
+     <w>for</w><w> </w>
+     <w>votes</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>It’s</w><w> </w>
+     <w>easy</w><w> </w>
+     <w>to</w><w> </w>
+     <w>hate</w><w> </w>
+     <w>on</w><w> </w>
+     <w>Congressional</w><w> </w>
+     <w>pork</w><w> </w>
+     <w>and</w><w> </w>
+     <w>mock</w><w> </w>
+     <w>all</w><w> </w>
+     <w>those</w><w> </w>
+     <w>silly</w><w> </w>
+     <w>projects</w><w> </w>
+     <w>that</w><w> </w>
+     <w>get</w><w> </w>
+     <w>snuck</w><w> </w>
+     <w>into</w><w> </w>
+     <w>bills</w><w>.</w>
+    </s>
+    <s rank='.7'>
+     <w>But</w><w> </w>
+     <w>when</w><w> </w>
+     <w>we</w><w> </w>
+     <w>do</w><w> </w>
+     <w>without</w><w> </w>
+     <w>pork</w><w>,</w><w> </w>
+     <w>we</w><w> </w>
+     <w>also</w><w> </w>
+     <w>deny</w><w> </w>
+     <w>our</w><w> </w>
+     <w keyword='politics'>politicians</w><w> </w>
+     <w>a</w><w> </w>
+     <w>means</w><w> </w>
+     <w>of</w><w> </w>
+     <w>building</w><w> </w>
+     <w keyword='trust'>trusting</w><w> </w>
+     <w>relationships</w><w> </w>
+     <w>across</w><w> </w>
+     <w>the</w><w> </w>
+     <w>aisle</w><w>.</w>
+    </s>
+    <s rank='.5'>
+     <w>In</w><w> </w>
+     <w>this</w><w> </w>
+     <w>sense</w><w>,</w><w> </w>
+     <w>those</w><w> </w>
+     <w>bridges</w><w> </w>
+     <w>to</w><w> </w>
+     <w>nowhere</w><w> </w>
+     <w>are</w><w> </w>
+     <w>a</w><w> </w>
+     <w>sort</w><w> </w>
+     <w>of</w><w> </w>
+     <w>benevolent</w><w> </w>
+     <w>inefficiency</w><w>,</w><w> </w>
+     <w>a</w><w> </w>
+     <w>form</w><w> </w>
+     <w>of</w><w> </w>
+     <w>waste</w><w> </w>
+     <w>that</w><w>,</w><w> </w>
+     <w>just</w><w> </w>
+     <w>maybe</w><w>,</w><w> </w>
+     <w>keeps</w><w> </w>
+     <w>us</w><w> </w>
+     <w>from</w><w> </w>
+     <w>becoming</w><w> </w>
+     <w>a</w><w> </w>
+     <w>banana</w><w> </w>
+     <w>republic</w><w>.</w>
+    </s>
+    <s rank='.1'>
+     <w>Such</w><w> </w>
+     <w>are</w><w> </w>
+     <w>the</w><w> </w>
+     <w>hazards</w><w> </w>
+     <w>of</w><w> </w>
+     <w keyword='politics'>politics</w><w> </w>
+     <w>in</w><w> </w>
+     <w>age</w><w> </w>
+     <w>of</w><w> </w>
+     <w>cutting</w><w>.</w>
+    </s>
+    <s rank='.7'>
+     <w>If</w><w> </w>
+     <w keyword='trust'>trust</w><w> </w>
+     <w>begins</w><w> </w>
+     <w>when</w><w> </w>
+     <w>we</w><w> </w>
+     <w>share</w><w> </w>
+     <w>the</w><w> </w>
+     <w>treasure</w><w>,</w><w> </w>
+     <w>what</w><w> </w>
+     <w>happens</w><w> </w>
+     <w>when</w><w> </w>
+     <w>there's</w><w> </w>
+     <w>no</w><w> </w>
+     <w>treasure</w><w> </w>
+     <w>left</w><w> </w>
+     <w>to</w><w> </w>
+     <w>share</w><w>?</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.01'>
+     <w>PS</w><w>.</w><w> </w>
+     <w>I</w><w> </w>
+     <w>also</w><w> </w>
+     <w>love</w><w> </w>
+     <w>Bill</w><w> </w>
+     <w>Clinton’s</w><w> </w>
+     <w>theory</w><w> </w>
+     <w>that</w><w> </w>
+     <w>the</w><w> </w>
+     <w>extreme</w><w> </w>
+     <w>partisanship</w><w> </w>
+     <w>of</w><w> </w>
+     <w>Congress</w><w> </w>
+     <w>is</w><w> </w>
+     <w>largely</w><w> </w>
+     <w>due</w><w> </w>
+     <w>to</w><w>…</w>
+     <w>sleep</w><w> </w>
+     <w>deprivation</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.01'>
+     <w>PPS</w><w>.</w><w> </w>
+     <w>For</w><w> </w>
+     <w>more</w><w> </w>
+     <w>on</w><w> </w>
+     <w>the</w><w> </w>
+     <w>hidden</w><w> </w>
+     <w>benefits</w><w> </w>
+     <w>of</w><w> </w>
+     <w>Congressional</w><w> </w>
+     <w>pork</w><w>,</w><w> </w>
+     <w>check</w><w> </w>
+     <w>out</w><w> </w>
+     <w>this</w><w> </w>
+     <w>paper</w><w> </w>
+     <w>by</w><w> </w>
+     <w>the</w><w> </w>
+     <w keyword='politics'>political</w><w> </w>
+     <w>scientists</w><w> </w>
+     <w>John</w><w> </w>
+     <w>Ellwood</w><w> </w>
+     <w>and</w><w> </w>
+     <w>Eric</w><w> </w>
+     <w>Patashnik</w><w>.</w>
+    </s>
+   </p>
+
+   <p>
+    <s rank='.01'>
+     <w>Image</w><w>:</w><w> </w>
+     <w>President</w><w> </w>
+     <w>Barack</w><w> </w>
+     <w>Obama</w><w> </w>
+     <w>sits</w><w> </w>
+     <w>next</w><w> </w>
+     <w>to</w><w> </w>
+     <w>House</w><w> </w>
+     <w>Speaker</w><w> </w>
+     <w>John</w><w> </w>
+     <w>Boehner</w><w> </w>
+     <w>of</w><w> </w>
+     <w>Ohio</w><w>,</w><w> </w>
+     <w>left</w><w>,</w><w> </w>
+     <w>in</w><w> </w>
+     <w>the</w><w> </w>
+     <w>Cabinet</w><w> </w>
+     <w>Room</w><w> </w>
+     <w>of</w><w> </w>
+     <w>the</w><w> </w>
+     <w>White</w><w> </w>
+     <w>House</w><w>,</w><w> </w>
+     <w>Saturday</w><w>,</w><w> </w>
+     <w>July</w><w> </w>
+     <w>23</w><w>,</w><w> </w>
+     <w>2011</w><w>,</w><w> </w>
+     <w>in</w><w> </w>
+     <w>Washington</w><w>,</w><w> </w>
+     <w>as</w><w> </w>
+     <w>they</w><w> </w>
+     <w>meet</w><w> </w>
+     <w>to</w><w> </w>
+     <w>discuss</w><w> </w>
+     <w>the</w><w> </w>
+     <w>debt</w><w>.</w>
+    </s>
+    <s rank='0.1'>
+     <w>(</w>
+     <w>AP</w><w> </w>
+     <w>Photo</w><w>/</w>
+     <w>Carolyn</w><w> </w>
+     <w>Kaster</w><w>)</w>
+    </s>
+   </p>
+  </section>
+ </body>
+</document>
