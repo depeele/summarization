@@ -219,9 +219,12 @@ $.Notes.prototype = {
     destroy: function() {
         var self    = this;
         var props   = self.props;
-        $.each(props.notes, function() {
-            this.destroy();
-        });
+        if ($.isArray(props.notes))
+        {
+            $.each(props.notes, function() {
+                this.destroy();
+            });
+        }
 
         delete props.range;
         delete props.notes;

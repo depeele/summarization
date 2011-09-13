@@ -3,8 +3,17 @@
  *  Provide a UI component to represent a single sentence.
  *
  *  Requires:
- *      ui.core.js
- *      ui.widget.js
+ *      jquery.js
+ *      jquery-ui.js
+ *      jquery.hoverIntent.js
+ *      jquery.delegateHoverIntent.js
+ *
+ *      rangy.js
+ *      rangy/seializer.js
+ *      rangy/cssclassapplier.js
+ *
+ *      jquery.notes.js
+ *      ui.notes.js
  */
 /*jslint nomen:false, laxbreak:true, white:false, onevar:false */
 /*global jQuery:false */
@@ -57,6 +66,7 @@ $.widget("ui.sentence", {
         css:            {
             highlighted:    'highlight',
             expanded:       'expanded',
+            expansion:      'expansion',
             starred:        'starred',
             noExpansion:    'hide-expand'
         }
@@ -66,9 +76,11 @@ $.widget("ui.sentence", {
      *
      *  Valid options are:
      *      rank            The rank for this sentence;
-     *      expanded        Is this sentence expanded/visible?  [ true ];
+     *      highlighted     Is this sentence highlighte?        [ false ];
+     *      expanded        Is this sentence expanded/visible?  [ false ];
      *      starred         Is this sentence starred?           [ false ];
      *      noExpansion     Disallow expansion?                 [ false ];
+     *      notes           A serialized version of the associated $.Notes;
      *
      *  @triggers (with a 'sentence-' prefix):
      *      'enabled'     / 'disabled'      when element is enabled/disabled;
@@ -127,6 +139,14 @@ $.widget("ui.sentence", {
         // Interaction events
         self._widgetInit()
             ._eventsBind();
+
+        if (opts.notes)
+        {
+            var notes   = opts.notes;
+            opts.notes  = undefined;
+
+            self.addNotes( notes, (! self.isVisible()) );
+        }
     },
 
     /************************
@@ -146,35 +166,79 @@ $.widget("ui.sentence", {
 
     /** @brief  Highlight this sentence. */
     highlight: function() {
-        this._setOption('highlighted', true);
+        return this._setOption('highlighted', true);
     },
 
     /** @brief  UnHighlight this sentence. */
     unhighlight: function() {
-        this._setOption('highlighted', false);
+        return this._setOption('highlighted', false);
     },
 
     /** @brief  Shortcut -- Expand this sentence. */
     expand: function() {
-        this._setOption('expanded', true);
+        return this._setOption('expanded', true);
     },
 
     /** @brief  Shortcut -- Collapse this sentence. */
     collapse: function() {
-        this._setOption('expanded', false);
+        return this._setOption('expanded', false);
     },
 
     /** @brief  Shortcut -- Star/unstar this sentence.
      *  @param  value   true/false
      */
     star: function(value) {
-        this._setOption('starred', value);
+        return this._setOption('starred', value);
+    },
+
+    /** @brief  Return a serialized version of this sentence.
+     *
+     *  @return The serialized version of this sentence.
+     */
+    serialize: function() {
+        var self    = this;
+        var opts    = self.options;
+        var ser     = {
+            rank:       opts.rank,
+            starred:    opts.starred,
+            notes:      self.serializeNotes()
+        };
+
+        return ser;
+    },
+
+    /** @brief  Apply serialized state to this sentence.
+     *  @param  ser     The serialized state to apply to this sentence
+     *                  (generated via serialize());
+     *
+     *  @return this for a fluent interface.
+     */
+    unserialize: function(ser) {
+        var self    = this;
+        var opts    = self.options;
+
+        $.each(ser, function(key, val) {
+            if (key === 'notes')    { return; }
+
+            self._setOption(key, val);
+        });
+
+        if ( $.isArray(ser.notes))
+        {
+            $.each(self.notes, function() {
+                ser.notes.push( this.serialize() );
+            });
+        }
+
+        return self;
     },
 
     /** @brief  Given an array of serialized notes, (re)apply them to the
      *          current sentence.
      *  @param  notes   An array of serialized notes;
      *  @param  hide    If true, hide the notes widget once created.
+     *
+     *  @return this for a fluent interface
      */
     addNotes: function( notes, hide ) {
         var self    = this;
@@ -183,13 +247,19 @@ $.widget("ui.sentence", {
         $.each(notes, function() {
             if (! this) { return; }
 
-            var notesInst   = new $.Notes( this );
+            var notesInst   = ( this instanceof $.Notes
+                                    ? this
+                                    : new $.Notes( this ) );
             self._addNotes( notesInst.getRange(), notesInst, hide );
         });
+
+        return self;
     },
 
     /** @brief  Toggle the given option.
      *  @param  key     The option to toggle.
+     *
+     *  @return this for a fluent interface
      */
     toggleOption: function(key) {
         var self    = this;
@@ -203,9 +273,13 @@ $.widget("ui.sentence", {
         {
             self._setOption(key, true);
         }
+
+        return self;
     },
 
     /** @brief  Sync the position of any notes associated with this sentence.
+     *
+     *  @return this for a fluent interface.
      */
     syncNotesPositions: function() {
         var self    = this;
@@ -230,6 +304,8 @@ $.widget("ui.sentence", {
              */
             $notes.notes( (visible ? 'show' : 'hide') );
         });
+
+        return self;
     },
 
     /** @brief  Return a serialized version of the $.Notes attached to this
@@ -242,7 +318,9 @@ $.widget("ui.sentence", {
         var serialized  = [];
 
         // self.notes is an array of ui.notes instances.
-        $.each(self.notes, function() {
+        $.each(self.notes, function(idex, val) {
+            if ( ! $(this).data('notes')) { return; }
+
             //serialized.push(this.serialize());
             serialized.push( this.notes('serialize') );
         });
@@ -250,10 +328,15 @@ $.widget("ui.sentence", {
         return serialized;
     },
 
-    /** @brief  Destroy this widget. */
+    /** @brief  Destroy this widget.
+     *
+     *  @return this for a fluent interface.
+     */
     destroy: function() {
         this._eventsUnbind()
             ._widgetClean();
+
+        return this;
     },
 
     /************************
@@ -268,8 +351,20 @@ $.widget("ui.sentence", {
     _widgetInit: function() {
         var self    = this;
         var opts    = self.options;
+        var $s      = self.element;
 
-        self.notes  = [];
+        self.$notesPane = $('.notes-pane');
+        self.notes      = [];
+
+        // Ensure the applied CSS classes matche our initial state
+        $s[ opts.highlighted
+                ? 'addClass' : 'removeClass']( opts.css.highlighted );
+        $s[ opts.expanded
+                ? 'addClass' : 'removeClass']( opts.css.expanded );
+        $s[ opts.starred
+                ? 'addClass' : 'removeClass']( opts.css.starred );
+        $s[ opts.noExpansion
+                ? 'addClass' : 'removeClass']( opts.css.noExpansion );
 
         return self;
     },
@@ -293,6 +388,7 @@ $.widget("ui.sentence", {
     _setOption: function(key, value) {
         var self    = this;
         var opts    = self.options;
+        var trigger = false;
 
         switch (key)
         {
@@ -310,12 +406,14 @@ $.widget("ui.sentence", {
             break;
 
         case 'expanded':
+            // events triggered via _expand/_collapse
             if (value)  self._expand()
             else        self._collapse();
 
             break;
 
         case 'highlighted':
+            // events triggered via _highlight/_unhighlight
             if (value)  self._highlight()
             else        self._unhighlight();
 
@@ -324,6 +422,9 @@ $.widget("ui.sentence", {
         case 'starred':
             self.widget()
                 [ value ? 'addClass' : 'removeClass']( opts.css.starred );
+
+            // Trigger a 'change' event for starred/unstarred
+            trigger = (value ? 'starred' : 'unstarred');
             break;
 
         case 'noExpansion':
@@ -333,6 +434,12 @@ $.widget("ui.sentence", {
         }
 
         $.Widget.prototype._setOption.apply( self, arguments );
+
+        // Trigger any related events (AFTER the value is actually set)
+        if (trigger !== false)
+        {
+            self._trigger('change', null, trigger);
+        }
     },
 
     /** @brief  Highlight this sentence. */
@@ -390,13 +497,13 @@ $.widget("ui.sentence", {
         // Mark this sentence as "being highlighted"
         $s.data('isHighlighting', true);
 
-        if ($s.hasClass('highlighted'))
+        if ($s.hasClass( opts.css.highlighted ))
         {
             // Directly highlighted
             $s.removeClass( opts.css.highlighted, opts.animSpeed,
                             unhighlightDone);
         }
-        else if ($s.hasClass('expansion'))
+        else if ($s.hasClass( opts.css.expansion ))
         {
             // highlighted via sibling
             unhighlightDone();
@@ -420,7 +527,7 @@ $.widget("ui.sentence", {
         var $prev       = $s.prev();
         var $next       = $s.next();
         var expandDone  = function() {
-            $s.addClass('expansion')
+            $s.addClass( opts.css.expansion )
               .css('display', '')       // Remove the 'display' style
               .removeData('isExpanding');
 
@@ -439,13 +546,13 @@ $.widget("ui.sentence", {
         // if the previous sibling is NOT visible, expand it.
         if (! $prev.sentence('isVisible'))
         {
-            $prev.addClass('expansion', opts.animSpeed, expandDone);
+            $prev.addClass( opts.css.expansion, opts.animSpeed, expandDone);
         }
 
         // if the next sibling is NOT visible, expand it.
         if (! $next.sentence('isVisible'))
         {
-            $next.addClass('expansion', opts.animSpeed, expandDone);
+            $next.addClass( opts.css.expansion, opts.animSpeed, expandDone);
         }
     },
 
@@ -469,7 +576,7 @@ $.widget("ui.sentence", {
         var collapseDone        = function() {
             if ( --compNeeded > 0)  { return; }
 
-            $s.removeClass('expansion')
+            $s.removeClass( opts.css.expansion )
               .css('display', '')       // Remove the 'display' style
               .removeData('isCollapsing');
 
@@ -497,7 +604,7 @@ $.widget("ui.sentence", {
         var collapseExpansion   = function($sib) {
             ++compNeeded;
 
-            $sib.removeClass('expansion', opts.animSpeed, collapseDone);
+            $sib.removeClass( opts.css.expansion, opts.animSpeed, collapseDone);
 
             if ($sib.hasClass('expanded'))
             {
@@ -514,20 +621,20 @@ $.widget("ui.sentence", {
             // Directly expanded
             $s.removeClass( opts.css.expanded, opts.animSpeed, collapseDone);
         }
-        else if ($s.hasClass('expansion'))
+        else if ($s.hasClass( opts.css.expansion ))
         {
             // Expanded via sibling
-            $s.removeClass( 'expansion', opts.animSpeed, collapseDone);
+            $s.removeClass( opts.css.expansion, opts.animSpeed, collapseDone);
         }
 
         // if the previous sibling is an expansion, collapse it.
-        if ($prev.hasClass('expansion'))
+        if ($prev.hasClass( opts.css.expansion ))
         {
             collapseExpansion($prev);
         }
 
         // if the next sibling is visible, collapse it.
-        if ($next.hasClass('expansion'))
+        if ($next.hasClass( opts.css.expansion ))
         {
             collapseExpansion($next);
         }
@@ -603,6 +710,7 @@ $.widget("ui.sentence", {
          * same vertical offset as $tagged.
          */
         var $notes  = $('<div />').notes({
+                        container:  opts.notesPane,
                         notes:      notes,
                         position:   { of:$tagged },
                         hidden:     (hide ? true : false)
@@ -616,6 +724,43 @@ $.widget("ui.sentence", {
         $notes.data('notes-associate', $tagged);
         $tagged.data('notes-associate',  $notes);
 
+        /**************************************************
+         * Bind handlers for ui.notes and ui.note events
+         *
+         */
+        $notes.bind('notes-change', function(e, type) {
+            if (type === 'noteRemoved')
+            {
+                // Are there any more note entries in the ui.notes widget?
+                if ($notes.notes('notesCount') < 1)
+                {
+                    // NO -- destroy the ui.notes widget
+                    var $tagged = $notes.data('notes-associate');
+
+                    self._removeNotes( $tagged );
+
+                    return false;
+                }
+            }
+
+            /* Reflect this 'notes-change' event up as a 'sentence-change'
+             * event.
+             */
+            self._trigger('change', null, type);
+        });
+
+        // Reflect 'note-change/noteSaved' events
+        $notes.bind('note-change', function(e, type) {
+            if (type === 'noteSaved')
+            {
+                /* Reflect this 'note-change' event up as a 'sentence-change'
+                 * event.
+                 */
+                self._trigger('change', null, type);
+            }
+        });
+
+        // Trigger a 'sentence-change/notesAdded' event
         self._trigger('change', null, 'notesAdded');
     },
 
@@ -635,7 +780,8 @@ $.widget("ui.sentence", {
         var name    = 'summary-notes-'+ id;
         var $tags   = self.element.find('[name='+ name +']');
 
-        $notes.removeData('tagged-item')
+        $notes.unbind('notes-change note-change')
+              .removeData('tagged-item')
               .notes('destroy');
 
         $el.removeData('summary-notes');
@@ -956,6 +1102,54 @@ $.widget("ui.sentence", {
 
             self._ignoreHoverOut = true;
             return false;
+        });
+
+        /*************************************************************
+         * Reflect any ui.notes 'notes-change' events up as a
+         * 'sentence-change' event.
+         *
+        self.$notesPane.delegate('.notes', 'notes-change',
+                                 function(e, type) {
+            var $notes  = $(this);
+            var $tagged = $notes.data('notes-associate');
+            var $s      = $tagged.parents('.sentence:first');
+
+            if ($s != self.element) { return; }
+
+            if (type === 'noteRemoved')
+            {
+                // Are there any more note entries in the ui.notes widget?
+                if ($notes.notes('notesCount') < 1)
+                {
+                    // NO -- destroy the ui.notes widget
+                    var $tagged = $notes.data('notes-associate');
+
+                    self._removeNotes( $tagged );
+
+                    return false;
+                }
+            }
+
+            // Reflect this 'notes-change' event up as a 'sentence-change'
+            // event.
+            self._trigger('change', null, type);
+        });
+         */
+
+        /*************************************************************
+         * Reflect any ui.note 'note-change/noteSaved' event up as a
+         * 'sentence-change' event.
+         *
+         */
+        self.$notesPane.delegate('.notes', 'note-change',
+                                 function(e, type) {
+            if (type === 'noteSaved')
+            {
+                /* Reflect this 'note-change' event up as a 'sentence-change'
+                 * event.
+                 */
+                self._trigger('change', null, type);
+            }
         });
 
         return self;

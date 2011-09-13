@@ -3,8 +3,17 @@
  *  Provide a UI component to represent a single sentence.
  *
  *  Requires:
- *      ui.core.js
- *      ui.widget.js
+ *      jquery.js
+ *      jquery-ui.js
+ *      jquery.hoverIntent.js
+ *      jquery.delegateHoverIntent.js
+ *
+ *      rangy.js
+ *      rangy/seializer.js
+ *      rangy/cssclassapplier.js
+ *
+ *      jquery.notes.js
+ *      ui.notes.js
  */
 /*jslint nomen:false, laxbreak:true, white:false, onevar:false */
 /*global jQuery:false */
@@ -57,6 +66,7 @@ $.widget("ui.sentence", {
         css:            {
             highlighted:    'highlight',
             expanded:       'expanded',
+            expansion:      'expansion',
             starred:        'starred',
             noExpansion:    'hide-expand'
         }
@@ -66,9 +76,11 @@ $.widget("ui.sentence", {
      *
      *  Valid options are:
      *      rank            The rank for this sentence;
-     *      expanded        Is this sentence expanded/visible?  [ true ];
+     *      highlighted     Is this sentence highlighte?        [ false ];
+     *      expanded        Is this sentence expanded/visible?  [ false ];
      *      starred         Is this sentence starred?           [ false ];
      *      noExpansion     Disallow expansion?                 [ false ];
+     *      notes           A serialized version of the associated $.Notes;
      *
      *  @triggers (with a 'sentence-' prefix):
      *      'enabled'     / 'disabled'      when element is enabled/disabled;
@@ -127,6 +139,14 @@ $.widget("ui.sentence", {
         // Interaction events
         self._widgetInit()
             ._eventsBind();
+
+        if (opts.notes)
+        {
+            var notes   = opts.notes;
+            opts.notes  = undefined;
+
+            self.addNotes( notes, (! self.isVisible()) );
+        }
     },
 
     /************************
@@ -146,35 +166,79 @@ $.widget("ui.sentence", {
 
     /** @brief  Highlight this sentence. */
     highlight: function() {
-        this._setOption('highlighted', true);
+        return this._setOption('highlighted', true);
     },
 
     /** @brief  UnHighlight this sentence. */
     unhighlight: function() {
-        this._setOption('highlighted', false);
+        return this._setOption('highlighted', false);
     },
 
     /** @brief  Shortcut -- Expand this sentence. */
     expand: function() {
-        this._setOption('expanded', true);
+        return this._setOption('expanded', true);
     },
 
     /** @brief  Shortcut -- Collapse this sentence. */
     collapse: function() {
-        this._setOption('expanded', false);
+        return this._setOption('expanded', false);
     },
 
     /** @brief  Shortcut -- Star/unstar this sentence.
      *  @param  value   true/false
      */
     star: function(value) {
-        this._setOption('starred', value);
+        return this._setOption('starred', value);
+    },
+
+    /** @brief  Return a serialized version of this sentence.
+     *
+     *  @return The serialized version of this sentence.
+     */
+    serialize: function() {
+        var self    = this;
+        var opts    = self.options;
+        var ser     = {
+            rank:       opts.rank,
+            starred:    opts.starred,
+            notes:      self.serializeNotes()
+        };
+
+        return ser;
+    },
+
+    /** @brief  Apply serialized state to this sentence.
+     *  @param  ser     The serialized state to apply to this sentence
+     *                  (generated via serialize());
+     *
+     *  @return this for a fluent interface.
+     */
+    unserialize: function(ser) {
+        var self    = this;
+        var opts    = self.options;
+
+        $.each(ser, function(key, val) {
+            if (key === 'notes')    { return; }
+
+            self._setOption(key, val);
+        });
+
+        if ( $.isArray(ser.notes))
+        {
+            $.each(self.notes, function() {
+                ser.notes.push( this.serialize() );
+            });
+        }
+
+        return self;
     },
 
     /** @brief  Given an array of serialized notes, (re)apply them to the
      *          current sentence.
      *  @param  notes   An array of serialized notes;
      *  @param  hide    If true, hide the notes widget once created.
+     *
+     *  @return this for a fluent interface
      */
     addNotes: function( notes, hide ) {
         var self    = this;
@@ -183,13 +247,19 @@ $.widget("ui.sentence", {
         $.each(notes, function() {
             if (! this) { return; }
 
-            var notesInst   = new $.Notes( this );
+            var notesInst   = ( this instanceof $.Notes
+                                    ? this
+                                    : new $.Notes( this ) );
             self._addNotes( notesInst.getRange(), notesInst, hide );
         });
+
+        return self;
     },
 
     /** @brief  Toggle the given option.
      *  @param  key     The option to toggle.
+     *
+     *  @return this for a fluent interface
      */
     toggleOption: function(key) {
         var self    = this;
@@ -203,9 +273,13 @@ $.widget("ui.sentence", {
         {
             self._setOption(key, true);
         }
+
+        return self;
     },
 
     /** @brief  Sync the position of any notes associated with this sentence.
+     *
+     *  @return this for a fluent interface.
      */
     syncNotesPositions: function() {
         var self    = this;
@@ -230,6 +304,8 @@ $.widget("ui.sentence", {
              */
             $notes.notes( (visible ? 'show' : 'hide') );
         });
+
+        return self;
     },
 
     /** @brief  Return a serialized version of the $.Notes attached to this
@@ -242,7 +318,9 @@ $.widget("ui.sentence", {
         var serialized  = [];
 
         // self.notes is an array of ui.notes instances.
-        $.each(self.notes, function() {
+        $.each(self.notes, function(idex, val) {
+            if ( ! $(this).data('notes')) { return; }
+
             //serialized.push(this.serialize());
             serialized.push( this.notes('serialize') );
         });
@@ -250,10 +328,15 @@ $.widget("ui.sentence", {
         return serialized;
     },
 
-    /** @brief  Destroy this widget. */
+    /** @brief  Destroy this widget.
+     *
+     *  @return this for a fluent interface.
+     */
     destroy: function() {
         this._eventsUnbind()
             ._widgetClean();
+
+        return this;
     },
 
     /************************
@@ -268,8 +351,20 @@ $.widget("ui.sentence", {
     _widgetInit: function() {
         var self    = this;
         var opts    = self.options;
+        var $s      = self.element;
 
-        self.notes  = [];
+        self.$notesPane = $('.notes-pane');
+        self.notes      = [];
+
+        // Ensure the applied CSS classes matche our initial state
+        $s[ opts.highlighted
+                ? 'addClass' : 'removeClass']( opts.css.highlighted );
+        $s[ opts.expanded
+                ? 'addClass' : 'removeClass']( opts.css.expanded );
+        $s[ opts.starred
+                ? 'addClass' : 'removeClass']( opts.css.starred );
+        $s[ opts.noExpansion
+                ? 'addClass' : 'removeClass']( opts.css.noExpansion );
 
         return self;
     },
@@ -293,6 +388,7 @@ $.widget("ui.sentence", {
     _setOption: function(key, value) {
         var self    = this;
         var opts    = self.options;
+        var trigger = false;
 
         switch (key)
         {
@@ -310,12 +406,14 @@ $.widget("ui.sentence", {
             break;
 
         case 'expanded':
+            // events triggered via _expand/_collapse
             if (value)  self._expand()
             else        self._collapse();
 
             break;
 
         case 'highlighted':
+            // events triggered via _highlight/_unhighlight
             if (value)  self._highlight()
             else        self._unhighlight();
 
@@ -324,6 +422,9 @@ $.widget("ui.sentence", {
         case 'starred':
             self.widget()
                 [ value ? 'addClass' : 'removeClass']( opts.css.starred );
+
+            // Trigger a 'change' event for starred/unstarred
+            trigger = (value ? 'starred' : 'unstarred');
             break;
 
         case 'noExpansion':
@@ -333,6 +434,12 @@ $.widget("ui.sentence", {
         }
 
         $.Widget.prototype._setOption.apply( self, arguments );
+
+        // Trigger any related events (AFTER the value is actually set)
+        if (trigger !== false)
+        {
+            self._trigger('change', null, trigger);
+        }
     },
 
     /** @brief  Highlight this sentence. */
@@ -390,13 +497,13 @@ $.widget("ui.sentence", {
         // Mark this sentence as "being highlighted"
         $s.data('isHighlighting', true);
 
-        if ($s.hasClass('highlighted'))
+        if ($s.hasClass( opts.css.highlighted ))
         {
             // Directly highlighted
             $s.removeClass( opts.css.highlighted, opts.animSpeed,
                             unhighlightDone);
         }
-        else if ($s.hasClass('expansion'))
+        else if ($s.hasClass( opts.css.expansion ))
         {
             // highlighted via sibling
             unhighlightDone();
@@ -420,7 +527,7 @@ $.widget("ui.sentence", {
         var $prev       = $s.prev();
         var $next       = $s.next();
         var expandDone  = function() {
-            $s.addClass('expansion')
+            $s.addClass( opts.css.expansion )
               .css('display', '')       // Remove the 'display' style
               .removeData('isExpanding');
 
@@ -439,13 +546,13 @@ $.widget("ui.sentence", {
         // if the previous sibling is NOT visible, expand it.
         if (! $prev.sentence('isVisible'))
         {
-            $prev.addClass('expansion', opts.animSpeed, expandDone);
+            $prev.addClass( opts.css.expansion, opts.animSpeed, expandDone);
         }
 
         // if the next sibling is NOT visible, expand it.
         if (! $next.sentence('isVisible'))
         {
-            $next.addClass('expansion', opts.animSpeed, expandDone);
+            $next.addClass( opts.css.expansion, opts.animSpeed, expandDone);
         }
     },
 
@@ -469,7 +576,7 @@ $.widget("ui.sentence", {
         var collapseDone        = function() {
             if ( --compNeeded > 0)  { return; }
 
-            $s.removeClass('expansion')
+            $s.removeClass( opts.css.expansion )
               .css('display', '')       // Remove the 'display' style
               .removeData('isCollapsing');
 
@@ -497,7 +604,7 @@ $.widget("ui.sentence", {
         var collapseExpansion   = function($sib) {
             ++compNeeded;
 
-            $sib.removeClass('expansion', opts.animSpeed, collapseDone);
+            $sib.removeClass( opts.css.expansion, opts.animSpeed, collapseDone);
 
             if ($sib.hasClass('expanded'))
             {
@@ -514,20 +621,20 @@ $.widget("ui.sentence", {
             // Directly expanded
             $s.removeClass( opts.css.expanded, opts.animSpeed, collapseDone);
         }
-        else if ($s.hasClass('expansion'))
+        else if ($s.hasClass( opts.css.expansion ))
         {
             // Expanded via sibling
-            $s.removeClass( 'expansion', opts.animSpeed, collapseDone);
+            $s.removeClass( opts.css.expansion, opts.animSpeed, collapseDone);
         }
 
         // if the previous sibling is an expansion, collapse it.
-        if ($prev.hasClass('expansion'))
+        if ($prev.hasClass( opts.css.expansion ))
         {
             collapseExpansion($prev);
         }
 
         // if the next sibling is visible, collapse it.
-        if ($next.hasClass('expansion'))
+        if ($next.hasClass( opts.css.expansion ))
         {
             collapseExpansion($next);
         }
@@ -603,6 +710,7 @@ $.widget("ui.sentence", {
          * same vertical offset as $tagged.
          */
         var $notes  = $('<div />').notes({
+                        container:  opts.notesPane,
                         notes:      notes,
                         position:   { of:$tagged },
                         hidden:     (hide ? true : false)
@@ -616,6 +724,43 @@ $.widget("ui.sentence", {
         $notes.data('notes-associate', $tagged);
         $tagged.data('notes-associate',  $notes);
 
+        /**************************************************
+         * Bind handlers for ui.notes and ui.note events
+         *
+         */
+        $notes.bind('notes-change', function(e, type) {
+            if (type === 'noteRemoved')
+            {
+                // Are there any more note entries in the ui.notes widget?
+                if ($notes.notes('notesCount') < 1)
+                {
+                    // NO -- destroy the ui.notes widget
+                    var $tagged = $notes.data('notes-associate');
+
+                    self._removeNotes( $tagged );
+
+                    return false;
+                }
+            }
+
+            /* Reflect this 'notes-change' event up as a 'sentence-change'
+             * event.
+             */
+            self._trigger('change', null, type);
+        });
+
+        // Reflect 'note-change/noteSaved' events
+        $notes.bind('note-change', function(e, type) {
+            if (type === 'noteSaved')
+            {
+                /* Reflect this 'note-change' event up as a 'sentence-change'
+                 * event.
+                 */
+                self._trigger('change', null, type);
+            }
+        });
+
+        // Trigger a 'sentence-change/notesAdded' event
         self._trigger('change', null, 'notesAdded');
     },
 
@@ -635,7 +780,8 @@ $.widget("ui.sentence", {
         var name    = 'summary-notes-'+ id;
         var $tags   = self.element.find('[name='+ name +']');
 
-        $notes.removeData('tagged-item')
+        $notes.unbind('notes-change note-change')
+              .removeData('tagged-item')
               .notes('destroy');
 
         $el.removeData('summary-notes');
@@ -958,6 +1104,54 @@ $.widget("ui.sentence", {
             return false;
         });
 
+        /*************************************************************
+         * Reflect any ui.notes 'notes-change' events up as a
+         * 'sentence-change' event.
+         *
+        self.$notesPane.delegate('.notes', 'notes-change',
+                                 function(e, type) {
+            var $notes  = $(this);
+            var $tagged = $notes.data('notes-associate');
+            var $s      = $tagged.parents('.sentence:first');
+
+            if ($s != self.element) { return; }
+
+            if (type === 'noteRemoved')
+            {
+                // Are there any more note entries in the ui.notes widget?
+                if ($notes.notes('notesCount') < 1)
+                {
+                    // NO -- destroy the ui.notes widget
+                    var $tagged = $notes.data('notes-associate');
+
+                    self._removeNotes( $tagged );
+
+                    return false;
+                }
+            }
+
+            // Reflect this 'notes-change' event up as a 'sentence-change'
+            // event.
+            self._trigger('change', null, type);
+        });
+         */
+
+        /*************************************************************
+         * Reflect any ui.note 'note-change/noteSaved' event up as a
+         * 'sentence-change' event.
+         *
+         */
+        self.$notesPane.delegate('.notes', 'note-change',
+                                 function(e, type) {
+            if (type === 'noteSaved')
+            {
+                /* Reflect this 'note-change' event up as a 'sentence-change'
+                 * event.
+                 */
+                self._trigger('change', null, type);
+            }
+        });
+
         return self;
     },
 
@@ -994,8 +1188,9 @@ $.widget("ui.sentence", {
  *      jquery.js
  *      jquery-ui.js
  *      jquery.delegateHoverIntent.js
- *      rangy.js
- *      rangy/seializer.js
+ *
+ *      ui.checkbox.js
+ *      ui.sentence.js
  */
 (function($) {
 
@@ -1044,18 +1239,16 @@ $.Summary.prototype = {
      *  @return this for a fluent interface.
      */
     init: function(el, options) {
-        var self    = this;
-        var opts    = $.extend(true, {}, self.options, options);
+        var self        = this;
+        var opts        = $.extend(true, {}, self.options, options);
 
-        self.element  = el;
-        self.options  = opts;
-        self.metadata = null;
-        self.starred  = [];
-        self.notes    = [];
+        self.element    = el;
+        self.options    = opts;
+        self.metadata   = null;
+        self.state      = [];   // Sentence state based upon their DOM index
 
-        var $gp     = self.element.parent().parent();
+        var $gp         = self.element.parent().parent();
         self.$control         = $gp.find('.control-pane');
-        self.$notes           = $gp.find('.notes-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
         
@@ -1085,24 +1278,13 @@ $.Summary.prototype = {
         });
         self.$control.show();
 
-        rangy.init();
-        self.cssTag    = rangy.createCssClassApplier(
-                                    'ui-state-default tagged', {
-                                        normalize:      true,
-                                        elementTagName: 'em'
-                                    });
-        self.cssSelect = rangy.createCssClassApplier('selected', {
-                                        normalize:      true,
-                                        elementTagName: 'em'
-                                    });
-
         // Bind events
         self._bindEvents();
 
         // Kick off the retrieval of the metadata
-        var getMetadata  = $.get(opts.metadata);
-
         self.element.addClass('loading');
+
+        var getMetadata  = $.get(opts.metadata);
         getMetadata.success(function( data ) {
             self.metadata = data;
 
@@ -1130,6 +1312,11 @@ $.Summary.prototype = {
         // If we have NOT retrieved the XML meta-data, no rendering.
         if (self.metadata === null) { return; }
         
+        /* Disable put since we're performing an initial render based upon
+         * the incoming XML AND any serialized state
+         */
+        self._noPut = true;
+
         // Retrieve the filter state for the current meta-data URL
         var state   = self._getState(opts.metadata);
         var notes   = [];
@@ -1139,7 +1326,7 @@ $.Summary.prototype = {
             opts.threshold.max = state.threshold.max;
             opts.filter        = state.filter;
             
-            self.starred       = (state.starred ? state.starred : []);
+            self.state         = (state.state ? state.state : []);
 
             if (state.notes)    { notes = state.notes; }
         }
@@ -1149,15 +1336,23 @@ $.Summary.prototype = {
 
         // Find all sentences and bucket them based upon 'rank'
         self.$p     = self.element.find('p');
-        self.$s     = self.$p.find('.sentence').sentence();
+        self.$s     = self.$p.find('.sentence');
         self.$kws   = self.element.find('.keyword');
         self.ranks  = [];
-        self.$s.each(function() {
+
+        // Instantiate the ui.sentence widgets using any serialized state
+        self.$s.each(function(idex) {
             var $el     = $(this);
+            var config  = ( self.state.length > idex
+                                ? self.state[idex]
+                                : null );
+
+            // Instantiate the sentence using the serialized state (if any)
+            $el.sentence( config );
+
             var rank    = $el.sentence('option', 'rank');
 
             if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
-
             self.ranks[rank].push($el);
         });
 
@@ -1169,42 +1364,14 @@ $.Summary.prototype = {
 
         }
 
-        // If there were previously starred sentences, mark them now
-        if (self.starred.length > 0)
-        {
-            // Remove any current star markings and apply those indicated by
-            // self.starred
-            self.$s.removeClass('starred');
-            $.each(self.starred, function(idex, val) {
-                if (val === true)
-                {
-                    var $s  = $( self.$s.get(idex) );
-                    $s.addClass('starred');
-                }
-            });
-        }
-        
-        // If there were previous tags, mark them now
-        if (notes.length > 0)
-        {
-            var nNotes  = notes.length;
-
-            self._noPut = true;
-
-            $.each(notes, function(idex, val) {
-                if (! $.isArray(val))   { return; }
-
-                var $s  = $( self.$s.get(idex) );
-                $s.sentence('addNotes', this, true);
-            });
-            self._noPut = false;
-        }
-
         /* Ensure the filter is properly set (without a refresh).
          * The refresh will take place when we set the threshold.
          */
         self._changeFilter(opts.filter, true);
         self.threshold( threshold.min, threshold.max);
+
+        // Re-enable put
+        self._noPut = false;
     },
 
     /** @brief  Given XML content, convert it to stylable HTML.
@@ -1519,8 +1686,7 @@ $.Summary.prototype = {
             threshold:  opts.threshold,
             filter:     opts.filter,
             
-            starred:    self.starred,
-            notes:      self.notes
+            state:      self.state      // Sentence state
         };
         
         $.jStorage.set(url, state);
@@ -1559,42 +1725,6 @@ $.Summary.prototype = {
         return threshold;
     },
     
-    /** @brief  Given a jQuery DOM sentence element (.sentence),
-     *          turn ON the 'star' setting.
-     *  @param  $s      The jQuery DOM sentence element
-     *
-     */
-    _starOn: function($s) {
-        var self    = this;
-        var opts    = self.options;
-        
-        // Locate the paragraph/sentence number
-        var sNum    = self.$s.index($s);
-        
-        $s.addClass('starred');
-        self.starred[sNum] = true;
-
-        return this;
-    },
-    
-    /** @brief  Given a jQuery DOM sentence element (.sentence),
-     *          turn OFF the 'star' setting.
-     *  @param  $s      The jQuery DOM sentence element
-     *
-     */
-    _starOff: function($s) {
-        var self    = this;
-        var opts    = self.options;
-        
-        // Locate the paragraph/sentence number
-        var sNum    = self.$s.index($s);
-        
-        $s.removeClass('starred');
-        self.starred[sNum] = false;
-
-        return this;
-    },
-
     /** @brief  Change the filter value.
      *  @param  filter      The new value ('normal', 'tagged', 'starred').
      *  @param  noRefresh   If true, do NOT perform a refresh.
@@ -1650,39 +1780,6 @@ $.Summary.prototype = {
         return self;
     },
 
-    /** @brief  Given a jQuery DOM element that has been tagged via
-     *          _addNotes(), remove the tag for all items in the associated
-     *          range.
-     *  @param  $el     The jQuery DOM element that has been tagged.
-     */
-    _removeNotes: function( $el ) {
-        var self    = this;
-        var opts    = self.options;
-        var $notes  = $el.data('summary-notes');
-
-        if (! $notes)   { return; }
-
-        var id      = $notes.notes('id');
-        var name    = 'summary-notes-'+ id;
-        var $tags   = self.element.find('[name='+ name +']');
-
-        $notes.removeData('tagged-item')
-              .notes('destroy');
-
-        $el.removeData('summary-notes');
-
-        //delete self.notes[ id ];
-        self.notes[ id ] = undefined;
-
-        // Remove the '.tagged' container
-        $tags.each(function() {
-            var $tagged = $(this);
-            $tagged.replaceWith( $tagged.html() );
-        });
-
-        self._putState();
-    },
-    
     /** @brief  Set the caret/cursor position within the given element
      *  @param  $el     The jQuery/DOM element representing the input control;
      *  @param  pos     The desired caret/cursor position;
@@ -1992,50 +2089,16 @@ $.Summary.prototype = {
                 break;
 
             case 'starred':
-                self.starred[idex] = true;
-                break;
-
             case 'unstarred':
-                self.starred[idex] = undefined;
-                break;
-
             case 'notesAdded':
-                self.notes[idex] = $s.sentence('serializeNotes');
-                break;
-
             case 'notesRemoved':
-                self.notes[idex] = undefined;
-                break;
-            }
-
-            self._putState();
-        });
-
-        /*************************************************************
-         * Handle any 'changed' event on notes contained within
-         * our notes pane.
-         */
-        self.$notes.delegate('.notes', 'changed', function() {
-            var $notes  = $(this);
-            var notesCount  = $notes.notes('notesCount');
-
-            if (notesCount < 1)
-            {
-                /* There are no more notes.  Remove the Notes widget.
-                 * First, grab the associated "tagged" element, which is the
-                 * parameter needed for _removeNotes().
-                 */
-                var $el = $notes.data('notes-associate');
-
-                self._removeNotes($el);
-            }
-            else
-            {
-                // There are still notes.  (Re)serialize the notes.
-                var id      = $notes.notes('id');
-
-                self.notes[ id ] = $notes.notes('serialize');
+            case 'noteAdded':       // Reflected from ui.notes via ui.sentence
+            case 'noteRemoved':     // Reflected from ui.notes via ui.sentence
+            case 'noteSaved':       // Reflected from ui.notes via ui.sentence
+                // Save the serialize state of this sentence.
+                self.state[idex] = $s.sentence('serialize');
                 self._putState();
+                break;
             }
         });
     },
@@ -2050,7 +2113,6 @@ $.Summary.prototype = {
         $parent.undelegateHoverIntent('.rank');
         $parent.undelegate('header .keyword', 'click');
         $parent.undelegate('.sentence', 'sentence-change');
-        self.$notes.undelegate('.notes', 'changed');
     }
 };
 
@@ -2113,8 +2175,9 @@ $.fn.younger = function(options) {
  *      jquery.js
  *      jquery-ui.js
  *      jquery.delegateHoverIntent.js
- *      rangy.js
- *      rangy/seializer.js
+ *
+ *      ui.checkbox.js
+ *      ui.sentence.js
  */
 (function($) {
 
@@ -2163,18 +2226,16 @@ $.Summary.prototype = {
      *  @return this for a fluent interface.
      */
     init: function(el, options) {
-        var self    = this;
-        var opts    = $.extend(true, {}, self.options, options);
+        var self        = this;
+        var opts        = $.extend(true, {}, self.options, options);
 
-        self.element  = el;
-        self.options  = opts;
-        self.metadata = null;
-        self.starred  = [];
-        self.notes    = [];
+        self.element    = el;
+        self.options    = opts;
+        self.metadata   = null;
+        self.state      = [];   // Sentence state based upon their DOM index
 
-        var $gp     = self.element.parent().parent();
+        var $gp         = self.element.parent().parent();
         self.$control         = $gp.find('.control-pane');
-        self.$notes           = $gp.find('.notes-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
         
@@ -2204,24 +2265,13 @@ $.Summary.prototype = {
         });
         self.$control.show();
 
-        rangy.init();
-        self.cssTag    = rangy.createCssClassApplier(
-                                    'ui-state-default tagged', {
-                                        normalize:      true,
-                                        elementTagName: 'em'
-                                    });
-        self.cssSelect = rangy.createCssClassApplier('selected', {
-                                        normalize:      true,
-                                        elementTagName: 'em'
-                                    });
-
         // Bind events
         self._bindEvents();
 
         // Kick off the retrieval of the metadata
-        var getMetadata  = $.get(opts.metadata);
-
         self.element.addClass('loading');
+
+        var getMetadata  = $.get(opts.metadata);
         getMetadata.success(function( data ) {
             self.metadata = data;
 
@@ -2249,6 +2299,11 @@ $.Summary.prototype = {
         // If we have NOT retrieved the XML meta-data, no rendering.
         if (self.metadata === null) { return; }
         
+        /* Disable put since we're performing an initial render based upon
+         * the incoming XML AND any serialized state
+         */
+        self._noPut = true;
+
         // Retrieve the filter state for the current meta-data URL
         var state   = self._getState(opts.metadata);
         var notes   = [];
@@ -2258,7 +2313,7 @@ $.Summary.prototype = {
             opts.threshold.max = state.threshold.max;
             opts.filter        = state.filter;
             
-            self.starred       = (state.starred ? state.starred : []);
+            self.state         = (state.state ? state.state : []);
 
             if (state.notes)    { notes = state.notes; }
         }
@@ -2268,15 +2323,23 @@ $.Summary.prototype = {
 
         // Find all sentences and bucket them based upon 'rank'
         self.$p     = self.element.find('p');
-        self.$s     = self.$p.find('.sentence').sentence();
+        self.$s     = self.$p.find('.sentence');
         self.$kws   = self.element.find('.keyword');
         self.ranks  = [];
-        self.$s.each(function() {
+
+        // Instantiate the ui.sentence widgets using any serialized state
+        self.$s.each(function(idex) {
             var $el     = $(this);
+            var config  = ( self.state.length > idex
+                                ? self.state[idex]
+                                : null );
+
+            // Instantiate the sentence using the serialized state (if any)
+            $el.sentence( config );
+
             var rank    = $el.sentence('option', 'rank');
 
             if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
-
             self.ranks[rank].push($el);
         });
 
@@ -2288,42 +2351,14 @@ $.Summary.prototype = {
 
         }
 
-        // If there were previously starred sentences, mark them now
-        if (self.starred.length > 0)
-        {
-            // Remove any current star markings and apply those indicated by
-            // self.starred
-            self.$s.removeClass('starred');
-            $.each(self.starred, function(idex, val) {
-                if (val === true)
-                {
-                    var $s  = $( self.$s.get(idex) );
-                    $s.addClass('starred');
-                }
-            });
-        }
-        
-        // If there were previous tags, mark them now
-        if (notes.length > 0)
-        {
-            var nNotes  = notes.length;
-
-            self._noPut = true;
-
-            $.each(notes, function(idex, val) {
-                if (! $.isArray(val))   { return; }
-
-                var $s  = $( self.$s.get(idex) );
-                $s.sentence('addNotes', this, true);
-            });
-            self._noPut = false;
-        }
-
         /* Ensure the filter is properly set (without a refresh).
          * The refresh will take place when we set the threshold.
          */
         self._changeFilter(opts.filter, true);
         self.threshold( threshold.min, threshold.max);
+
+        // Re-enable put
+        self._noPut = false;
     },
 
     /** @brief  Given XML content, convert it to stylable HTML.
@@ -2638,8 +2673,7 @@ $.Summary.prototype = {
             threshold:  opts.threshold,
             filter:     opts.filter,
             
-            starred:    self.starred,
-            notes:      self.notes
+            state:      self.state      // Sentence state
         };
         
         $.jStorage.set(url, state);
@@ -2678,42 +2712,6 @@ $.Summary.prototype = {
         return threshold;
     },
     
-    /** @brief  Given a jQuery DOM sentence element (.sentence),
-     *          turn ON the 'star' setting.
-     *  @param  $s      The jQuery DOM sentence element
-     *
-     */
-    _starOn: function($s) {
-        var self    = this;
-        var opts    = self.options;
-        
-        // Locate the paragraph/sentence number
-        var sNum    = self.$s.index($s);
-        
-        $s.addClass('starred');
-        self.starred[sNum] = true;
-
-        return this;
-    },
-    
-    /** @brief  Given a jQuery DOM sentence element (.sentence),
-     *          turn OFF the 'star' setting.
-     *  @param  $s      The jQuery DOM sentence element
-     *
-     */
-    _starOff: function($s) {
-        var self    = this;
-        var opts    = self.options;
-        
-        // Locate the paragraph/sentence number
-        var sNum    = self.$s.index($s);
-        
-        $s.removeClass('starred');
-        self.starred[sNum] = false;
-
-        return this;
-    },
-
     /** @brief  Change the filter value.
      *  @param  filter      The new value ('normal', 'tagged', 'starred').
      *  @param  noRefresh   If true, do NOT perform a refresh.
@@ -2769,39 +2767,6 @@ $.Summary.prototype = {
         return self;
     },
 
-    /** @brief  Given a jQuery DOM element that has been tagged via
-     *          _addNotes(), remove the tag for all items in the associated
-     *          range.
-     *  @param  $el     The jQuery DOM element that has been tagged.
-     */
-    _removeNotes: function( $el ) {
-        var self    = this;
-        var opts    = self.options;
-        var $notes  = $el.data('summary-notes');
-
-        if (! $notes)   { return; }
-
-        var id      = $notes.notes('id');
-        var name    = 'summary-notes-'+ id;
-        var $tags   = self.element.find('[name='+ name +']');
-
-        $notes.removeData('tagged-item')
-              .notes('destroy');
-
-        $el.removeData('summary-notes');
-
-        //delete self.notes[ id ];
-        self.notes[ id ] = undefined;
-
-        // Remove the '.tagged' container
-        $tags.each(function() {
-            var $tagged = $(this);
-            $tagged.replaceWith( $tagged.html() );
-        });
-
-        self._putState();
-    },
-    
     /** @brief  Set the caret/cursor position within the given element
      *  @param  $el     The jQuery/DOM element representing the input control;
      *  @param  pos     The desired caret/cursor position;
@@ -3111,50 +3076,16 @@ $.Summary.prototype = {
                 break;
 
             case 'starred':
-                self.starred[idex] = true;
-                break;
-
             case 'unstarred':
-                self.starred[idex] = undefined;
-                break;
-
             case 'notesAdded':
-                self.notes[idex] = $s.sentence('serializeNotes');
-                break;
-
             case 'notesRemoved':
-                self.notes[idex] = undefined;
-                break;
-            }
-
-            self._putState();
-        });
-
-        /*************************************************************
-         * Handle any 'changed' event on notes contained within
-         * our notes pane.
-         */
-        self.$notes.delegate('.notes', 'changed', function() {
-            var $notes  = $(this);
-            var notesCount  = $notes.notes('notesCount');
-
-            if (notesCount < 1)
-            {
-                /* There are no more notes.  Remove the Notes widget.
-                 * First, grab the associated "tagged" element, which is the
-                 * parameter needed for _removeNotes().
-                 */
-                var $el = $notes.data('notes-associate');
-
-                self._removeNotes($el);
-            }
-            else
-            {
-                // There are still notes.  (Re)serialize the notes.
-                var id      = $notes.notes('id');
-
-                self.notes[ id ] = $notes.notes('serialize');
+            case 'noteAdded':       // Reflected from ui.notes via ui.sentence
+            case 'noteRemoved':     // Reflected from ui.notes via ui.sentence
+            case 'noteSaved':       // Reflected from ui.notes via ui.sentence
+                // Save the serialize state of this sentence.
+                self.state[idex] = $s.sentence('serialize');
                 self._putState();
+                break;
             }
         });
     },
@@ -3169,7 +3100,6 @@ $.Summary.prototype = {
         $parent.undelegateHoverIntent('.rank');
         $parent.undelegate('header .keyword', 'click');
         $parent.undelegate('.sentence', 'sentence-change');
-        self.$notes.undelegate('.notes', 'changed');
     }
 };
 

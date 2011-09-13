@@ -1688,7 +1688,9 @@ $.Summary.prototype = {
          * Handle any 'changed' event on notes contained within
          * our notes pane.
          */
-        self.$notes.delegate('.notes', 'changed', function() {
+        self.$notes.delegate('.notes',
+                             'notes-changed note-change note-destroyed',
+                             function() {
             var $notes  = $(this);
             var notesCount  = $notes.notes('notesCount');
 
@@ -1742,7 +1744,8 @@ $.Summary.prototype = {
 
         $parent.undelegate('article .sentence', 'mouseup');
 
-        self.$notes.undelegate('.notes', 'changed');
+        self.$notes.undelegate('.notes',
+                               'notes-changed note-change note-destroyed');
     }
 };
 

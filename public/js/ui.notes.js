@@ -22,6 +22,11 @@
 $.widget('ui.notes', {
     version:    '0.0.1',
 
+    /* Change the prefix used by ui.widget._trigger() for events so we can bind
+     * to events like 'notes-change' instead of 'noteschange'.
+     */
+    widgetEventPrefix:    'notes-',
+
     options:    {
         notes:      null,   /* The associated $.Notes instance.  May initially
                              * be a serialized version of a $.Notes
@@ -48,6 +53,43 @@ $.widget('ui.notes', {
         // Template selector
         template:   '#tmpl-notes'
     },
+
+    /** @brief  Initialize a new instance.
+     *
+     *  @triggers (with a 'notes-' prefix):
+     *      'change' -- 'noteAdded'
+     *      'change' -- 'noteRemoved'
+     *      'change' -- 'noteSaved'
+     *
+     *      'destroyed'
+     */
+    _init: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self._isInitializing = true;
+
+        self.$container = $( opts.container );
+
+        if ( $.isPlainObject(opts.notes) )
+        {
+            if ((opts.notes.id === undefined) || (opts.notes.id === null))
+            {
+                opts.notes.id = self.element.attr('id');
+            }
+
+            // Generate a new $.Notes instance...
+            opts.notes  = new $.Notes( opts.notes );
+        }
+
+        self._widgetCreate()
+            ._bindEvents();
+
+        self._isInitializing = false;
+
+        return self;
+    },
+
 
     /** @brief  Return the id of our $.Notes instance.
      *
@@ -89,7 +131,7 @@ $.widget('ui.notes', {
             var note    = $note.note('option', 'note');
             opts.notes.addNote(note);
 
-            self.element.trigger('changed');
+            self._trigger('change', null, 'noteAdded');
         }
 
         return self;
@@ -110,7 +152,7 @@ $.widget('ui.notes', {
 
         opts.notes.removeNote(note);
 
-        self.element.trigger('changed');
+        self._trigger('change', null, 'noteRemoved');
 
         return self;
     },
@@ -214,36 +256,6 @@ $.widget('ui.notes', {
      * Private methods
      *
      */
-
-    /** @brief  Initialize a new instance.
-     */
-    _init: function() {
-        var self    = this;
-        var opts    = self.options;
-
-        self._isInitializing = true;
-
-        self.$container = $( opts.container );
-
-        if ( $.isPlainObject(opts.notes) )
-        {
-            if ((opts.notes.id === undefined) || (opts.notes.id === null))
-            {
-                opts.notes.id = self.element.attr('id');
-            }
-
-            // Generate a new $.Notes instance...
-            opts.notes  = new $.Notes( opts.notes );
-        }
-
-        self._widgetCreate()
-            ._bindEvents();
-
-        self._isInitializing = false;
-
-        return self;
-    },
-
 
     /** @brief  Actually create our widget along with any sub-widgets
      */
@@ -382,7 +394,7 @@ $.widget('ui.notes', {
          * Handle the deletion of contained notes
          *
          */
-        self.$body.bind('destroyed', function(e, note) {
+        self.element.delegate('.note', 'note-destroyed', function(e, note) {
             var $note   = $(e.target);
 
             self.removeNote($note);
@@ -452,6 +464,11 @@ $.widget('ui.notes', {
 $.widget('ui.note', {
     version:    '0.0.1',
 
+    /* Change the prefix used by ui.widget._trigger() for events so we can bind
+     * to events like 'note-change' instead of 'notechange'.
+     */
+    widgetEventPrefix:    'note-',
+
     options:    {
         note:       null,   /* The associated $.Note instance.  May initially
                              * be a serialized version of a $.Note
@@ -481,7 +498,8 @@ $.widget('ui.note', {
             ._widgetDestroy();
 
         // Notify our container that this note has been destroyed.
-        self.element.trigger('destroyed', opts.note);
+        self._trigger('destroyed', null, opts.note);
+        //self.element.trigger('destroyed', opts.note);
     },
 
     /*******************************
@@ -571,7 +589,7 @@ $.widget('ui.note', {
 
                 self.$comment.text( opts.note.getText() );
 
-                self.element.trigger('changed');
+                self._trigger('change', null, 'noteSaved');
 
                 // Fall-through to 'cancel' to restore non-edit mode
 
