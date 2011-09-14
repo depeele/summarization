@@ -111,6 +111,9 @@ $.widget("ui.sentence", {
 
         if (cssSelect === null)
         {
+            // Ensure that rangy is initialized
+            rangy.init();
+
             // Generate the shared cssClassAppliers
             cssTag    = rangy.createCssClassApplier(
                             self.cssTag.cssClass, {
