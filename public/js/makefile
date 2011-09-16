@@ -13,16 +13,19 @@ SHARED 	= jquery.js			\
 	  jquery.hoverIntent.js		\
 	  jquery.delegateHoverIntent.js	\
 	  jquery.user.js		\
-	  jquery.notes.js		\
 	  jquery-ui.js			\
-	  ui.checkbox.js		\
-	  ui.notes.js
+	  ui.checkbox.js
 
 SRC_06	= $(SHRED)			\
+	  jquery.notes.js		\
+	  ui.notes.js			\
 	  jquery.summary-06.js
 
 SRC_07	= $(SHRED)			\
+	  jquery.note.js		\
+	  ui.note.js			\
 	  ui.sentence.js		\
+	  ui.contentOverlay.js		\
 	  jquery.summary-07.js
 
 summary-06-full.js: $(SRC_06)

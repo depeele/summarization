@@ -756,16 +756,31 @@ a {
   position: relative;
   padding: 0.1em 0.25em 0.1em 0;
   margin: 0;
-  text-align: justify;
   font-size: 1px;
-  color: #dddddd;
+  color: #bbbbbb;
 }
-.content-pane article section p .sentence .text,
-.content-pane article section p .sentence .keyword,
-.content-pane article section p .sentence .selected,
-.content-pane article section p .sentence .tagged {
+.content-pane article section p .sentence .text, .content-pane article section p .sentence .keyword {
   position: relative;
   border: none;
+}
+.content-pane article section p .sentence .overlay {
+  position: absolute;
+}
+.content-pane article section p .sentence .overlay .group .text {
+  position: absolute;
+  display: block;
+}
+.content-pane article section p .sentence .overlay .group .selected {
+  background-color: #999999;
+}
+.content-pane article section p .sentence .overlay .group .tagged {
+  background-color: #d7ebf9;
+}
+.content-pane article section p .sentence .overlay .overlay-controls {
+  display: none;
+}
+.content-pane article section p .sentence .overlay .ui-hover .overlay-controls {
+  display: block;
 }
 .content-pane article section p .sentence .tagged {
   font-weight: normal;
@@ -821,7 +836,7 @@ a {
 .content-pane article section p .keyword {
   border: 1px solid #ffffff;
 }
-.content-pane article section p .controls, .content-pane article section p .selection-controls {
+.content-pane article section p .controls, .content-pane article section p .overlay-controls {
   position: absolute;
   display: block;
   z-index: 10;
@@ -832,20 +847,20 @@ a {
   width: 52px;
   height: 100%;
 }
-.content-pane article section p .selection-controls {
+.content-pane article section p .overlay-controls {
   background-color: #999999;
   color: #ffffff;
   border: none;
   padding: 2px 2px 0 2px;
 }
-.content-pane article section p .sentence .tagged .selection-controls {
+.content-pane article section p .sentence .tagged .overlay-controls {
   background-color: inherit;
   border: 1px solid #d3d3d3;
   /* From .ui-state-default */
 
   border-bottom: none;
 }
-.content-pane article section p .controls .su-icon, .content-pane article section p .selection-controls .su-icon {
+.content-pane article section p .controls .su-icon, .content-pane article section p .overlay-controls .su-icon {
   display: inline-block;
   cursor: pointer;
   border: none;
@@ -980,10 +995,10 @@ a {
   z-index: 11;
 }
 /*******************
- * Notes
+ * Note
  *
  */
-.notes {
+.note {
   display: block;
   position: absolute;
   left: 10px;
@@ -994,80 +1009,80 @@ a {
   z-index: 10;
   cursor: pointer;
 }
-.notes .arrow-outer,
-.notes .arrow-inner,
-.notes .notes-input-pane,
-.notes .notes-body .note .buttons,
-.notes .notes-body .note .edit {
+.note .arrow-outer,
+.note .arrow-inner,
+.note .note-input-pane,
+.note .note-body .comment .buttons,
+.note .note-body .comment .edit {
   display: none;
 }
-.notes .notes-body .note {
+.note .note-body .comment {
   position: relative;
   padding: 0.5em;
   border-top: 1px dashed #d5d5d5;
 }
-.notes .notes-body .note:first-child {
+.note .note-body .comment:first-child {
   border-top: none;
 }
-.notes .notes-body .note .avatar {
+.note .note-body .comment .avatar {
   position: absolute;
   left: 0.5em;
   top: 0.5em;
   width: 24px;
   height: 24px;
 }
-.notes .notes-body .note .author, .notes .notes-body .note .created {
+.note .note-body .comment .author, .note .note-body .comment .created {
   margin-left: 32px;
 }
-.notes .notes-body .note .author {
+.note .note-body .comment .author {
   font-weight: bold;
 }
-.notes .notes-body .note .created {
+.note .note-body .comment .created {
   font-size: 0.8em;
 }
-.notes .notes-body .note .comment, .notes .notes-body .note .edit {
+.note .note-body .comment .text, .note .note-body .comment .edit {
   margin-top: 0.5em;
 }
-.notes .notes-body .note .buttons, .notes .notes-input-pane .buttons {
+.note .note-body .comment .buttons, .note .note-input-pane .buttons {
   text-align: right;
   padding-top: 0.5em;
   font-size: 0.8em;
 }
-.notes .notes-body .note .buttons .ui-button-text, .notes .notes-input-pane .buttons .ui-button-text {
+.note .note-body .comment .buttons .ui-button-text, .note .note-input-pane .buttons .ui-button-text {
   padding: 0.2em 0.5em;
 }
-.notes textarea {
+.note textarea {
   width: 194px;
 }
-.notes .notes-input-pane .hint {
+.note .note-input-pane .hint {
   color: #aaaaaa;
 }
 /*******************
- * Notes (active)
+ * Note (active)
  *
  */
-.notes-active {
+.note-active {
   left: -10px;
   border: 1px solid #ffee83;
   background-color: #fffce9;
   box-shadow: 2px 2px 8px #d5d5d5;
   z-index: 11;
 }
-.notes-active .notes-body .note {
+.note-active .note-body .comment {
   border-top: 1px dashed #ffee83;
 }
-.notes-active .notes-body .note:first-child {
+.note-active .note-body .comment:first-child {
   border-top: none;
 }
-.notes-active .notes-body .note .buttons, .notes-active .notes-input-pane {
+.note-active .note-body .comment .buttons, .note-active .note-input-pane {
   display: block;
 }
-.notes-active .notes-input-pane {
+.note-active .note-input-pane {
   border-top: 1px dashed #ffee83;
   padding: 0.5em;
   text-align: right;
 }
-.notes-active .arrow-outer {
+.note-active .arrow-outer {
   display: block;
   position: absolute;
   left: -15px;
@@ -1079,7 +1094,7 @@ a {
   border-left: none;
   border-right: 14px solid #ffee83;
 }
-.notes-active .arrow-inner {
+.note-active .arrow-inner {
   display: block;
   position: absolute;
   left: -13px;

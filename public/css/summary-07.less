@@ -11,7 +11,7 @@
  *
  */
 @baseFont:                      16px;
-@notesWidth:                    210px;
+@noteWidth:                     210px;
 
 @colorBackground:               #eee;
 @colorBorder:                   darken(@colorBackground, 10%);
@@ -23,10 +23,13 @@
 
 @colorKeyword:                  #f6931f;
 
-@colorActiveNotesBackground:    #fffce9;
-@colorActivenotesBorder:        darken(@colorActiveNotesBackground, 20%);
+@colorActiveNoteBackground:     #fffce9;
+@colorActiveNoteBorder:         darken(@colorActiveNoteBackground, 20%);
 
-@colorSentenceHidden:           #ddd;
+@colorSentenceHidden:           #bbb;
+
+@colorSelectedBackground:       @colorTextLight;
+
 @colorTagBackground:            #d7ebf9;
 @colorTag:                      #2779aa;
 @colorInputHint:                #aaa;
@@ -178,17 +181,41 @@ a {
           position:   relative;
           padding:    0.1em 0.25em 0.1em 0;
           margin:     0;
-          text-align: justify;
           font-size:  1px;
           color:      @colorSentenceHidden;
 
           .text,
-          .keyword,
-          .selected,
-          .tagged {
+          .keyword {
             position:   relative;
             border:     none;
           }
+
+          // Sentence overlays -- selected, tagged
+          .overlay {
+            position:   absolute;
+            .group {
+              .text {
+                position: absolute;
+                display:  block;
+              }
+              .selected {
+                background-color: @colorSelectedBackground;
+              }
+              .tagged {
+                background-color: @colorTagBackground;
+              }
+            }
+
+            // hover for selection controls
+            .overlay-controls {
+              display:  none;
+            }
+
+            .ui-hover .overlay-controls {
+              display:  block;
+            }
+          }
+
           .tagged {
             font-weight:  normal;
             background:   @colorTagBackground;
@@ -237,7 +264,7 @@ a {
         }
     
         .controls,
-        .selection-controls {
+        .overlay-controls {
           position:   absolute;
     
           display:    block;
@@ -250,24 +277,25 @@ a {
           width:      52px;
           height:     100%;
         }
-        .selection-controls {
-          background-color: @colorTextLight;
+        .overlay-controls {
+          background-color: @colorSelectedBackground;
           color:            @colorArticleBackground;
           border:           none;
           padding:          2px 2px 0 2px;
         }
-        .sentence .tagged .selection-controls {
+        .sentence .tagged .overlay-controls {
           background-color: inherit;
           border:           1px solid #d3d3d3;  /* From .ui-state-default */
           border-bottom:    none;
         }
     
         .controls .su-icon,
-        .selection-controls .su-icon {
+        .overlay-controls .su-icon {
           display:    inline-block;
           cursor:     pointer;
           border:     none;
         }
+
         .controls .su-icon {
           visibility: hidden;
         }
@@ -453,16 +481,16 @@ a {
 }
 
 /*******************
- * Notes
+ * Note
  *
  */
-.notes {
+.note {
   display:          block;
   position:         absolute;
   left:             10px;
 
   font-size:        0.7em;
-  width:            @notesWidth;
+  width:            @noteWidth;
   
   border:           1px solid @colorBorder;
   background-color: @colorArticleBackground;
@@ -473,14 +501,14 @@ a {
 
   .arrow-outer,
   .arrow-inner,
-  .notes-input-pane,
-  .notes-body .note .buttons,
-  .notes-body .note .edit {
+  .note-input-pane,
+  .note-body .comment .buttons,
+  .note-body .comment .edit {
     display:        none;
   }
 
-  .notes-body {
-    .note {
+  .note-body {
+    .comment {
       position:       relative;
       padding:        0.5em;
     
@@ -508,14 +536,14 @@ a {
       .created {
         font-size:    0.8em;
       }
-      .comment, .edit {
+      .text, .edit {
         margin-top:   0.5em;
       }
     }
   }
 
-  .notes-body .note .buttons,
-  .notes-input-pane .buttons {
+  .note-body .comment .buttons,
+  .note-input-pane .buttons {
     text-align:   right;
     padding-top:  0.5em;
     
@@ -527,10 +555,10 @@ a {
   }
 
   textarea {
-    width:  @notesWidth - @baseFont;  // 1em
+    width:  @noteWidth - @baseFont;  // 1em
   }
 
-  .notes-input-pane {
+  .note-input-pane {
 
     .hint {
       color:        @colorInputHint;
@@ -539,33 +567,33 @@ a {
 }
 
 /*******************
- * Notes (active)
+ * Note (active)
  *
  */
-.notes-active {
+.note-active {
   left:             -10px;
 
-  border:           1px solid @colorActivenotesBorder;
-  background-color: @colorActiveNotesBackground;
+  border:           1px solid @colorActiveNoteBorder;
+  background-color: @colorActiveNoteBackground;
 
   box-shadow:       2px 2px 8px @colorBorder;
   z-index:          11;
 
-  .notes-body .note {
-    border-top:       1px dashed @colorActivenotesBorder;
+  .note-body .comment {
+    border-top:       1px dashed @colorActiveNoteBorder;
 
     &:first-child {
       border-top:     none;
     }
   }
   
-  .notes-body .note .buttons,
-  .notes-input-pane {
+  .note-body .comment .buttons,
+  .note-input-pane {
     display:        block;
   }
   
-  .notes-input-pane {
-    border-top:     1px dashed @colorActivenotesBorder;
+  .note-input-pane {
+    border-top:     1px dashed @colorActiveNoteBorder;
     padding:        0.5em;
     text-align:     right;
   }
@@ -581,7 +609,7 @@ a {
     border-top:     none;
     border-bottom:  14px solid transparent;
     border-left:    none;
-    border-right:   14px solid @colorActivenotesBorder;
+    border-right:   14px solid @colorActiveNoteBorder;
   }
   .arrow-inner {
     display:        block;
@@ -595,6 +623,6 @@ a {
     border-top:     none;
     border-bottom:  14px solid transparent;
     border-left:    none;
-    border-right:   14px solid @colorActiveNotesBackground;
+    border-right:   14px solid @colorActiveNoteBackground;
   }
 }

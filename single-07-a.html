@@ -44,11 +44,7 @@ if (development === true)
         },
         'rangy':        { src: 'js/rangy.js' },
         'rangy.serializer':
-                        { src: 'js/rangy/serializer.js',
-                                                        req: ['rangy'] },
-        'rangy.cssClassApplier':
-                        { src: 'js/rangy/cssclassapplier.js',
-                                                        req: ['rangy'] },
+                        { src: 'js/rangy/serializer.js',req: ['rangy'] },
     
         'utils':        { src: 'js/jquery.utils.js',    req: ['jquery'] },
         'tmpl':         { src: 'js/jquery.tmpl.js',     req: ['jquery'] },
@@ -57,23 +53,27 @@ if (development === true)
         'hoverIntent':  { src: 'js/jquery.hoverIntent.js',
                                                         req: ['jquery'] },
         'delegateHoverIntent':
-                        { src: 'js/jquery.delegateHoverIntent.js',
-                                                        req: ['jquery'] },
+                        { src:    'js/jquery.delegateHoverIntent.js',
+                                                        req:    ['jquery'] },
         'user':         { src: 'js/jquery.user.js',     req: ['jquery'] },
-        'notes':        { src: 'js/jquery.notes.js',    req: ['jquery'] },
+        'note':         { src: 'js/jquery.note.js',     req: ['jquery'] },
         'jquery-ui':    { src: 'js/jquery-ui.js',       req: ['jquery'] },
     
         'ui.checkbox':  { src: 'js/ui.checkbox.js',     req: ['jquery-ui'] },
-        'ui.notes':     { src: 'js/ui.notes.js',        req: ['jquery-ui'] },
+        'ui.note':      { src: 'js/ui.note.js',         req: ['jquery-ui'] },
         'ui.sentence':  { src: 'js/ui.sentence.js',     req: ['jquery-ui'] },
+        'ui.contentOverlay':
+                        { src: 'js/ui.contentOverlay.js',
+                          req: ['jquery-ui', 'rangy',
+                                'rangy.serializer' ] },
     
         'summary':      { src: 'js/jquery.summary-07.js',
                           req: [ 'jquery',
-                                 'rangy.serializer', 'rangy.cssClassApplier',
                                  'utils', 'tmpl', 'json', 'jstorage',
                                  'hoverIntent', 'delegateHoverIntent', 'user',
-                                 'notes',
-                                 'ui.notes', 'ui.checkbox', 'ui.sentence' ] }
+                                 'note',
+                                 'ui.note', 'ui.checkbox', 'ui.sentence',
+                                 'ui.contentOverlay'] }
     };
 }
 else
@@ -187,24 +187,24 @@ Req('preloadImages', function() {
         name='${keyword}'>${text}</span>
  </script>
 
- <script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>
-  <div class='selection-controls ui-corner-top'><div
+ <script id='tmpl-overlay-controls' type='text/x-jquery-tmpl'>
+  <div class='overlay-controls ui-corner-top'><div
        class='tag su-icon su-state-reverse su-icon-tag'
        title='tag' /></div>
  </script>
 
- <script id='tmpl-selection-remove-controls' type='text/x-jquery-tmpl'>
-  <div class='selection-controls ui-corner-top'><div
+ <script id='tmpl-overlay-remove-controls' type='text/x-jquery-tmpl'>
+  <div class='overlay-controls ui-corner-top'><div
        class='remove su-icon su-icon-cancel-blue ui-state-default'
        title='remove tag' /></div>
  </script>
 
- <!-- The BODY of a note (without the outter <div class='note' /> ) -->
- <script id='tmpl-note' type='text/x-jquery-tmpl'>
+ <!-- The BODY of a comment (without the outter <div class='comment' /> ) -->
+ <script id='tmpl-comment' type='text/x-jquery-tmpl'>
    <img class='avatar' src='${note.getAuthor().getAvatarUrl()}' />
    <div class='author'>${note.getAuthor().getFullName()}</div>
    <div class='created'>${ $.prettyDate(note.getCreated()) }</div>
-   <div class='comment'>${note.getText()}</div>
+   <div class='text'>${note.getText()}</div>
    <div class='edit'>
     <textarea class='edit-comment'></textarea>
     <div class='buttons'>
@@ -218,16 +218,16 @@ Req('preloadImages', function() {
    </div>
  </script>
 
- <!-- The BODY of a notes container
-        (without the outter <div class='notes' /> ) -->
- <script id='tmpl-notes' type='text/x-jquery-tmpl'>
+ <!-- The BODY of a note container
+        (without the outter <div class='note' /> ) -->
+ <script id='tmpl-note' type='text/x-jquery-tmpl'>
    <div class='arrow-outer'></div>
    <div class='arrow-inner'></div>
-   <div class='notes-body'>
-    <!-- note entries will be placed here -->
+   <div class='note-body'>
+    <!-- comments will be placed here -->
    </div>
-   <div class='notes-input-pane'>
-    <textarea class='notes-reply' title="Reply to this comment..."></textarea>
+   <div class='note-input-pane'>
+    <textarea class='note-reply' title="Reply to this comment..."></textarea>
     <div class='buttons'>
      <button name='reply'>reply</button>
      <button name='cancel'>cancel</button>

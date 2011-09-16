@@ -138,7 +138,6 @@ $.Summary.prototype = {
 
         // Retrieve the filter state for the current meta-data URL
         var state   = self._getState(opts.metadata);
-        var notes   = [];
         if (state)
         {
             opts.threshold.min = state.threshold.min;
@@ -146,8 +145,6 @@ $.Summary.prototype = {
             opts.filter        = state.filter;
             
             self.state         = (state.state ? state.state : []);
-
-            if (state.notes)    { notes = state.notes; }
         }
 
         // Renter the XML
@@ -159,7 +156,9 @@ $.Summary.prototype = {
         self.$kws   = self.element.find('.keyword');
         self.ranks  = [];
 
-        // Instantiate the ui.sentence widgets using any serialized state
+        /* Instantiate the ui.sentence widgets using any parallel serialized
+         * state.
+         */
         self.$s.each(function(idex) {
             var $el     = $(this);
             var config  = ( self.state.length > idex
@@ -924,16 +923,21 @@ $.Summary.prototype = {
             case 'unhighlighted':
             case 'expanded':
             case 'collapsed':
-                self.$s.slice(idex).sentence('syncNotesPositions');
+                /* Notify all following sentences to synchronize their note
+                 * positions.
+                 */
+                self.$s.slice(idex + 1).each(function() {
+                    $(this).sentence('syncNotePositions');
+                });
                 break;
 
             case 'starred':
             case 'unstarred':
-            case 'notesAdded':
-            case 'notesRemoved':
-            case 'noteAdded':       // Reflected from ui.notes via ui.sentence
-            case 'noteRemoved':     // Reflected from ui.notes via ui.sentence
-            case 'noteSaved':       // Reflected from ui.notes via ui.sentence
+            case 'noteAdded':
+            case 'noteRemoved':
+            case 'commentAdded':    // Reflected from ui.note via ui.sentence
+            case 'commentRemoved':  // Reflected from ui.note via ui.sentence
+            case 'commentSaved':    // Reflected from ui.note via ui.sentence
                 // Save the serialize state of this sentence.
                 self.state[idex] = $s.sentence('serialize');
                 self._putState();

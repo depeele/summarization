@@ -1,5 +1,913 @@
 /** @file
  *
+ *  jQuery class/objects representing a single, user-generated note as well as
+ *  a group of one or more comments.
+ *
+ *  Requires:
+ *      jquery.js
+ *      jquery.user.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global jQuery:false */
+(function($) {
+
+/******************************************************************************
+ * Note
+ *
+ */
+
+/** @brief  A note comprised of one or more comments and tags.  */
+$.Note = function(props) {
+    var defaults    = {
+        id:         null,
+        comments:   [],
+        tags:       []
+    };
+
+    return this.init( $.extend(defaults, true, props || {}) );
+};
+$.Note.prototype = {
+    /** @brief  Initialize a new Note instance.
+     *  @param  props   The properties of this instance:
+     *                      id:         The unique id of this instance;
+     *                      comments:   An array of $.Comment objects,
+     *                                  serialized $.Comment objects, or empty
+     *                                  to initialize an empty set;
+     *                      tags:       An array of tag strings;
+     */
+    init: function(props) {
+        this.props = props;
+
+        var commentInstances    = [];
+        $.each(this.props.comments, function() {
+            var comment = this;
+            if ($.isPlainObject(comment))  { comment = new $.Comment(comment); }
+
+            commentInstances.push( comment );
+        });
+
+        if (commentInstances.length < 1)
+        {
+            // Create a single, empty comment
+            commentInstances.push( new $.Comment() );
+        }
+
+        this.props.comments = commentInstances;
+
+        return this;
+    },
+
+    /** @brief  Add a new comment to this note.
+     *  @param  comment A $.Comment instance or properties to create one.
+     *
+     *  @return The comment instance that was added.
+     */
+    addComment: function(comment) {
+        if ($.isPlainObject(comment))   { comment = new $.Comment(comment); }
+
+        this.props.comments.push(comment);
+
+        return comment;
+    },
+
+    /** @brief  Remove a comments from this note.
+     *  @param  comment A $.Comment instance to remove.
+     *
+     *  @return this for a fluent interface.
+     */
+    removeComment: function(comment) {
+        var self    = this;
+        if (comment instanceof $.Comment)
+        {
+            var targetIdex  = -1;
+            $.each(self.props.comments, function(idex) {
+                if (this === comment)
+                {
+                    targetIdex = idex;
+                    return false;
+                }
+            });
+
+            if (targetIdex >= 0)
+            {
+                self.props.comments.splice(targetIdex, 1);
+                comment.destroy();
+            }
+        }
+
+        return self;
+    },
+
+    getId: function()           { return this.props.id; },
+    getComments: function()     { return this.props.comments; },
+    getCommentCount: function() { return this.props.comments.length; },
+    getTags: function()         { return this.props.tags; },
+
+    getComment: function(idex) {
+        idex = idex || 0;
+        return this.props.comments[idex];
+    },
+    getTag: function(idex) {
+        idex = idex || 0;
+        return this.props.tags[idex];
+    },
+
+    /** @brief  Return a serialized version of this instance suitable
+     *          for creating a duplicate instance via our constructor.
+     *
+     *  @return The serialized version
+     */
+    serialize: function() {
+        var serialized  = {
+            id:         this.props.id,
+            comments:   [],
+            tags:       this.props.tags
+        };
+
+        $.each(this.props.comments, function() {
+            serialized.comments.push( this.serialize() );
+        });
+
+        return serialized;
+    },
+
+    /** @brief  Destroy this instance.
+     */
+    destroy: function() {
+        var self    = this;
+        var props   = self.props;
+        if ($.isArray(props.comments))
+        {
+            $.each(props.comments, function() {
+                this.destroy();
+            });
+        }
+
+        delete props.comments;
+        delete props.tags;
+    }
+};
+
+/******************************************************************************
+ * Comment
+ *
+ */
+
+/** @brief  A single, attributable comment.
+ *  @param  props   The properties of this comment:
+ *                      author:     The $.User instance or serialize $.User
+ *                                  representing the author of this comment;
+ *                      text:       The text of this comment;
+ *                      created:    The date/time the comment was created;
+ */
+$.Comment  = function(props) {
+    var defaults    = {
+        author: null,
+        text:   '',
+        created:new Date()
+    };
+
+    return this.init( $.extend(defaults, true, props || {}) );
+};
+$.Comment.prototype = {
+    /** @brief  Initialize a new Comment instance.
+     *  @param  props   The properties of this comment:
+     *                      author:     The Unique ID of the author
+     *                      text:       The text of this comment
+     *                      created:    The date/time the comment was created
+     */
+    init: function(props) {
+        this.props = props;
+
+        if ( (this.props.author === null) ||
+             ($.isPlainObject(this.props.author)) )
+        {
+            this.props.author = new $.User( this.props.author );
+        }
+
+        return this;
+    },
+
+    getAuthor: function() { return this.props.author; },
+    getText:   function() { return this.props.text; },
+    getCreated:function() { return this.props.created; },
+
+    setText:   function(text)
+    {
+        this.props.text = text;
+    },
+
+    /** @brief  Return a serialized version of this instance suitable
+     *          for creating a duplicate instance via our constructor.
+     *
+     *  @return The serialized version.
+     */
+    serialize: function() {
+        var serialized  = {
+            author: (this.props.author
+                        ? this.props.author.serialize()
+                        : null),
+            text:   this.props.text,
+            created:this.props.created
+        };
+
+        return serialized;
+    },
+
+    destroy: function() {
+        var self    = this;
+        var props   = self.props;
+
+        if (props.author && (props.author instanceof $.User))
+        {
+            props.author.destroy();
+        }
+
+        delete props.author;
+        delete props.text;
+        delete props.created;
+    }
+};
+
+ }(jQuery));
+/** @file
+ *
+ *  Provide a UI for $.Note and $.Comment.
+ *
+ *  The DOM element used to create a new ui.note instance MAY have an 'id'
+ *  attribute or the 'id' MAY be passed as an option.
+ *
+ *  Requires:
+ *      jquery.js
+ *      jquery.note.js
+ *      ui.core.js
+ *      ui.widget.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global jQuery:false */
+(function($) {
+
+/*****************************************************************************
+ *  A UI widget for $.Note
+ *
+ */
+$.widget('ui.note', {
+    version:    '0.0.1',
+
+    /* Change the prefix used by ui.widget._trigger() for events so we can bind
+     * to events like 'note-change' instead of 'notechange'.
+     */
+    widgetEventPrefix:    'note-',
+
+    options:    {
+        note:       null,   /* The associated $.Note instance.  May initially
+                             * be a serialized version of a $.Note
+                             */
+
+        // The selector for the container of note widgets
+        container:  '.notes-pane',
+
+        // Positioning information
+        position:   {
+            my:     'top',
+            at:     'top',
+            of:     null,   /* The selector for the element we should sync with
+                             * (e.g. the tagged/selected text within a
+                             *       sentence).
+                             */
+            using:  null    // A movement function (defaults to animate())
+        },
+
+        animSpeed:  200,    // The speed (in ms) of animations
+
+        hidden:     false,  // Initially hidden?
+
+        // Template selector
+        template:   '#tmpl-note'
+    },
+
+    /** @brief  Initialize a new instance.
+     *
+     *  @triggers (with a 'note-' prefix):
+     *      'change' -- 'commentAdded'
+     *      'change' -- 'commentRemoved'
+     *      'change' -- 'commentSaved'
+     *
+     *      'destroyed'
+     */
+    _init: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self._isInitializing = true;
+
+        self.$container = $( opts.container );
+
+        if ( $.isPlainObject(opts.note) )
+        {
+            if ((opts.note.id === undefined) || (opts.note.id === null))
+            {
+                opts.note.id = self.element.attr('id');
+            }
+
+            // Generate a new $.Note instance...
+            opts.note  = new $.Note( opts.note );
+        }
+
+        self._widgetCreate()
+            ._bindEvents();
+
+        self._isInitializing = false;
+
+        return self;
+    },
+
+
+    /** @brief  Return the id of our $.Note instance.
+     *
+     *  @return The id.
+     */
+    id: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        return opts.note.getId();
+    },
+
+    /** @brief  Return the number of $.Note instances.
+     *
+     *  @return The count.
+     */
+    commentCount: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        return opts.note.getCommentCount();
+    },
+
+    /** @brief  Given a new $.Comment instance, add the comment to our
+     *          container.
+     *  @param  comment     The new $.Comment instance.
+     *
+     *  @return this for a fluent interface.
+     */
+    addComment: function(comment) {
+        var self    = this;
+        var opts    = self.options;
+
+        // Create and append a new ui.comment widget
+        var $comment    = $('<div />').comment({comment:comment});
+        self.$body.append( $comment );
+
+        if (self._isInitializing !== true)
+        {
+            var comment = $comment.comment('option', 'comment');
+            opts.note.addComment(comment);
+
+            self._trigger('change', null, 'commentAdded');
+        }
+
+        return self;
+    },
+
+    /** @brief  Given a ui.comment widget, remove the comment from our
+     *          container.
+     *  @param  $comment    The jQuery DOM element that has a ui.comment widget
+     *                      attached.
+     *
+     *  @return this for a fluent interface.
+     */
+    removeComment: function($comment) {
+        var self    = this;
+        var opts    = self.options;
+
+        // Create and append a new ui.comment widget
+        var comment = $comment.comment('option', 'comment');
+
+        opts.note.removeComment(comment);
+
+        self._trigger('change', null, 'commentRemoved');
+
+        // If there are no more comments, self-destruct!
+        if (self.commentCount() < 1)
+        {
+            self.destroy();
+        }
+
+        return self;
+    },
+
+    /** @brief  Mark this instance as 'active'
+     */
+    activate: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        if (self.element.hasClass('note-active'))      { return; }
+
+        var $reply  = self.$buttons.filter('[name=reply]');
+        if ((! self.$reply.hasClass('hint')) &&
+            (self.$reply.val().length > 0))
+        {
+            self.$buttons.show();
+            $reply.button('enable');
+        }
+        else
+        {
+            self.$buttons.hide();
+            $reply.button('disable');
+            self.$reply.addClass('hint')
+                       .val( self.$reply.attr('title') );
+        }
+
+        /* NOTE: Popping to the top immediately relies on a z-index set for
+         *       .note in both normal and activated states, with the activated
+         *       state at a higher z-index.
+         */
+        var zIndex  = parseInt(self.element.css('z-index'), 10);
+        self.element
+                .css('z-index', zIndex + 1) // pop to the top immediately...
+                .addClass('note-active', opts.animSpeed, function() {
+                        // ...then remove the hard z-index and let
+                        //    the CSS take over.
+                        self.element.css('z-index', '');
+        });
+    },
+
+    /** @brief  Mark this instance as 'inactive'
+     */
+    deactivate: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        if (! self.element.hasClass('note-active'))    { return; }
+
+        // Cancel any note that is currently being edited
+        self.element.find('.note .buttons [name=cancel]').click();
+
+        self.element.removeClass('note-active', opts.animSpeed);
+    },
+
+    /** @brief  Show this note container.
+     */
+    show: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.element
+                .fadeIn(opts.animSpeed)
+                .position( opts.position );
+    },
+
+    /** @brief  Hide this note container.
+     */
+    hide: function(cb) {
+        var self    = this;
+        var opts    = self.options;
+
+        self.element
+                .fadeOut(opts.animSpeed, cb);
+    },
+
+    /** @brief  Focus on the input area.
+     */
+    focus: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$reply.trigger('focus');
+    },
+
+    /** @brief  Does this note currently have focus?
+     *
+     *  @return true | false
+     */
+    hasFocus: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        return self.$reply.is(':focus');
+    },
+
+    /** @brief  Return a serialized version of our underlying $.Note instance.
+     *
+     *  @return A serialized version of our underlying $.Note instance.
+     */
+    serialize: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        return opts.note.serialize();
+    },
+
+    /** @brief  Destroy this widget. */
+    destroy: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self._unbindEvents()
+            .hide(function() {
+                self._widgetDestroy();
+                opts.note.destroy();
+
+                self._trigger('destroyed');
+            });
+    },
+
+    /*******************************
+     * Private methods
+     *
+     */
+
+    /** @brief  Actually create our widget along with any sub-widgets
+     */
+    _widgetCreate: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        if (opts.position.using === null)
+        {
+            opts.position.using = function( to ) {
+
+                // See if there is an existing note we will be colliding with
+                var myExtent    = self.element.offset();
+                var newTop      = myExtent.top + to.top;
+                var newBot      = newTop + self.element.height();
+                var myId        = self.element.attr('id');
+
+                self.$container.find('.note').each(function() {
+                    var $note   = $(this);
+                    if (myId === $note.attr('id'))  { return; }
+
+                    var pos     = $note.offset();
+                    var extent  = {
+                        top:    pos.top,
+                        bot:    pos.top  + $note.height()
+                    };
+
+                    if ( ((newTop >= extent.top) && (newTop <= extent.bot)) ||
+                         ((newBot >= extent.top) && (newBot <= extent.bot)) )
+                    {
+                        // Collision!  Adjust Down
+                        to.top += $note.height() + 4;
+                    }
+                });
+
+                $(this).animate( {top: to.top}, opts.animSpeed );
+            };
+        }
+
+        self.element
+                .addClass('note ui-corner-all')
+                .attr('id', 'note-'+ self.id())
+                .append( $( opts.template ).tmpl() )
+                .appendTo( self.$container );
+
+        if (opts.hidden === true)
+        {
+            self.element.hide();
+        }
+
+        self.$body    = self.element.find('.note-body');
+        self.$reply   = self.element.find('.note-reply');
+        self.$buttons = self.element.find('.note-input-pane .buttons button');
+
+        self.$buttons.button();
+
+        // Generate a ui.Note widget for each current $.Note instance
+        $.each(opts.note.getComments(), function() {
+            self.addComment( this, true );
+        });
+
+        if (opts.hidden !== true)
+        {
+            self.element.position( opts.position );
+        }
+
+        return self;
+    },
+
+    /** @brief  Destroy this widget along with any sub-widgets
+     */
+    _widgetDestroy: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        // Destroy all contained note instances
+        self.$body.find('.note').note('destroy');
+
+        self.$buttons.button('destroy');
+
+        self.element.empty();
+
+        return self;
+    },
+
+    _bindEvents: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self._docClick = function(e) {
+            var $target = $(e.target);
+
+            if ($target !== self.element)
+            {
+                self.deactivate();
+            }
+        };
+
+        /*****************************************************
+         * General click handler for document.  If we see
+         * this event, deactivate this note widget.
+         *
+         */
+        $(document).bind('click.ui-note', self._docClick);
+
+        /*****************************************************
+         * Handle button clicks (reply/cancel) within the
+         * input pane.
+         *
+         */
+        self.element.delegate('.note-input-pane button',
+                              'click.ui-note', function(e) {
+            var $button = $(this);
+
+            switch ($button.attr('name'))
+            {
+            case 'reply':
+                var comment = new $.Comment({ text: self.$reply.val() });
+                self.addComment(comment);
+                self.$reply.val('');
+                break;
+
+            case 'cancel':
+                self.$reply.val('');
+                self.$reply.blur();
+                //self.deactivate();
+                break;
+            }
+        });
+
+        /*****************************************************
+         * Handle 'keyup' in the reply area.
+         *
+         * Enable/Disale the reply button based upon whether
+         * the new content is empty.
+         *
+         */
+        self.$reply.bind('keyup.ui-note', function(e) {
+            var $reply  = self.$buttons.filter('[name=reply]');
+            if ((! self.$reply.hasClass('hint')) &&
+                (self.$reply.val().length > 0))
+            {
+                $reply.button('enable');
+            }
+            else
+            {
+                $reply.button('disable');
+            }
+        });
+
+        /*****************************************************
+         * Handle click-to-activate
+         *
+         */
+        self.element.bind('click.ui-note', function(e) {
+            self.activate();
+            return false;
+        });
+
+        /*****************************************************
+         * Handle the deletion of a comment
+         *
+         */
+        self.element.delegate('.comment', 'comment-destroyed',
+                              function(e, comment) {
+            var $comment    = $(e.target);
+
+            self.removeComment($comment);
+        });
+
+        /*****************************************************
+         * Handle focus/blur for the reply element
+         *
+         */
+        self.$reply.bind('focus.ui-note', function(e) {
+             self.$buttons.show();
+
+             var $reply  = self.$buttons.filter('[name=reply]');
+             if (self.$reply.hasClass('hint'))
+             {
+                self.$reply.val('')
+                           .removeClass('hint');
+             }
+
+             if (self.$reply.val().length > 0)
+             {
+                 $reply.button('enable');
+             }
+             else
+             {
+                 $reply.button('disable');
+             }
+        });
+
+        self.$reply.bind('blur.ui-note', function(e) {
+             var $reply  = self.$buttons.filter('[name=reply]');
+             if (self.$reply.val().length > 0)
+             {
+                 $reply.button('enable');
+             }
+             else
+             {
+                self.$reply.addClass('hint')
+                           .val( self.$reply.attr('title') );
+
+                self.$buttons.hide();
+                 $reply.button('disable');
+             }
+        });
+
+        return self;
+    },
+
+    _unbindEvents: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.element.undelegate('.note-input-pane button', 'click.ui-note');
+        self.$reply.unbind('.ui-note');
+        self.element.unbind('.ui-note');
+        self.element.undelegate('.comment', 'comment-destroyed');
+
+        $(document).bind('click.ui-note', self._docClick);
+
+        return self;
+    }
+});
+
+/*****************************************************************************
+ *  A UI widget for $.Note
+ *
+ */
+$.widget('ui.comment', {
+    version:    '0.0.1',
+
+    /* Change the prefix used by ui.widget._trigger() for events so we can bind
+     * to events like 'comment-change' instead of 'commentchange'.
+     */
+    widgetEventPrefix:    'comment-',
+
+    options:    {
+        comment:    null,   /* The associated $.Comment instance.  May
+                             * initially be a serialized version of a $.Comment
+                             */
+
+        // Template Selector
+        template:   '#tmpl-comment'
+    },
+
+    /** @brief  Return a serialized version of our underlying $.Comment
+     *          instance.
+     *
+     *  @return A serialized version of our underlying $.Comment instance.
+     */
+    serialize: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        return opts.comment.serialize();
+    },
+
+    /** @brief  Destroy this widget. */
+    destroy: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self._unbindEvents()
+            ._widgetDestroy();
+
+        // Notify our container that this comment has been destroyed.
+        self._trigger('destroyed', null, opts.comment);
+        //self.element.trigger('destroyed', opts.comment);
+    },
+
+    /*******************************
+     * Private methods
+     *
+     */
+
+    /** @brief  Initialize a new instance.
+     */
+    _init: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        if ( $.isPlainObject(opts.comment) )
+        {
+            // Generate a new $.Comment instance
+            opts.comment = new $.Comment( opts.comment );
+        }
+
+        self._widgetCreate()
+            ._bindEvents();
+
+        return self;
+    },
+
+
+    /** @brief  Actually create our widget along with any sub-widgets
+     */
+    _widgetCreate: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.element
+                .addClass('comment')
+                .append( $( opts.template ).tmpl( {note: opts.comment} ) );
+
+        self.$comment     = self.element.find('.text');
+        self.$editArea    = self.element.find('.edit');
+        self.$edit        = self.$editArea.find('textarea');
+        self.$buttons     = self.element.find('.buttons button');
+        self.$mainButtons = self.element.find('.buttons:last');
+
+        self.$buttons.button();
+
+        return self;
+    },
+
+    /** @brief  Destroy this widget along with any sub-widgets
+     */
+    _widgetDestroy: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$buttons.button('destroy');
+        self.element.empty();
+
+        return self;
+    },
+
+    _bindEvents: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$buttons.bind('click.ui-comment', function(e) {
+            var $button = $(this);
+
+            switch ($button.attr('name'))
+            {
+            case 'edit':
+                self.$edit.val( self.$comment.text() );
+                self.$comment.hide();
+                self.$mainButtons.css('display', 'none');
+                self.$editArea.show();
+                self.$edit.focus();
+                break;
+
+            case 'delete':
+                //self.destroy();
+                self.element.slideUp(function() {
+                    self.element.remove();
+                });
+                break;
+
+            case 'save':
+                // Save any changes in self.$edit
+                opts.comment.setText( self.$edit.val() );
+
+                self.$comment.text( opts.comment.getText() );
+
+                self._trigger('change', null, 'commentSaved');
+
+                // Fall-through to 'cancel' to restore non-edit mode
+
+            case 'cancel':
+                // Cancel 'edit'
+                self.$editArea.hide();
+                self.$comment.show();
+                self.$mainButtons.css('display', '');
+                break;
+            }
+        });
+
+        return self;
+    },
+
+    _unbindEvents: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$buttons.unbind('.ui-comment');
+
+        return self;
+    }
+});
+
+ }(jQuery));
+/** @file
+ *
  *  Provide a UI component to represent a single sentence.
  *
  *  Requires:
@@ -9,20 +917,14 @@
  *      jquery.delegateHoverIntent.js
  *
  *      rangy.js
- *      rangy/seializer.js
- *      rangy/cssclassapplier.js
  *
- *      jquery.notes.js
- *      ui.notes.js
+ *      jquery.note.js
+ *      ui.note.js
+ *      ui.contentOverlay.js
  */
 /*jslint nomen:false, laxbreak:true, white:false, onevar:false */
 /*global jQuery:false */
 (function($) {
-
-/** @brief  Shared rangy cssClassAppliers */
-var cssSelect   = null;
-var cssTag      = null;
-
 
 $.widget("ui.sentence", {
     version: "0.0.1",
@@ -31,24 +933,6 @@ $.widget("ui.sentence", {
      * to events like 'sentence-change' instead of 'sentencechange'.
      */
     widgetEventPrefix:    'sentence-',
-
-    /** @brief  Properties used to generate the shared rangy css selection
-     *          applier (cssSelect).
-     */
-    cssSelect:  {
-        cssClass:   'selected', // The CSS class to apply to selected elements
-        tagName:    'em'        /* The DOM element to use when wrapping
-                                 * selected areas.
-                                 */
-    },
-
-    /** @brief  Properties used to generate the shared rangy css selection
-     *          applier (cssTag).
-     */
-    cssTag:     {
-        cssClass:   'ui-state-default tagged',
-        tagName:    'em'
-    },
 
     options: {
         notesPane:      '.notes-pane',  /* The selector OR jQuery DOM element
@@ -68,7 +952,11 @@ $.widget("ui.sentence", {
             expanded:       'expanded',
             expansion:      'expansion',
             starred:        'starred',
-            noExpansion:    'hide-expand'
+            noExpansion:    'hide-expand',
+
+            // inner-classes
+            selected:       'selected',
+            tagged:         'ui-state-default tagged'
         }
     },
 
@@ -80,7 +968,7 @@ $.widget("ui.sentence", {
      *      expanded        Is this sentence expanded/visible?  [ false ];
      *      starred         Is this sentence starred?           [ false ];
      *      noExpansion     Disallow expansion?                 [ false ];
-     *      notes           A serialized version of the associated $.Notes;
+     *      notes           Serialized notes (generated via _serializeNotes());
      *
      *  @triggers (with a 'sentence-' prefix):
      *      'enabled'     / 'disabled'      when element is enabled/disabled;
@@ -98,31 +986,16 @@ $.widget("ui.sentence", {
      *      'change' - 'unstarred'          when element is unstarred -- a
      *                                      'change' event with a single type
      *                                      parameter of 'starred';
-     *      'change' - 'notesAdded'         when a new note is added -- a
+     *      'change' - 'commentAdded'       when a new comment is added -- a
      *                                      'change' event with a single type
-     *                                      parameter of 'notesAdded';
-     *      'change' - 'notesRemoved'       when a new note is added -- a
+     *                                      parameter of 'commentAdded';
+     *      'change' - 'commentRemoved'     when a new note is added -- a
      *                                      'change' event with a single type
-     *                                      parameter of 'notesRemoved';
+     *                                      parameter of 'commentRemoved';
      */
     _init: function() {
         var self    = this;
         var opts    = this.options;
-
-        if (cssSelect === null)
-        {
-            // Generate the shared cssClassAppliers
-            cssTag    = rangy.createCssClassApplier(
-                            self.cssTag.cssClass, {
-                                normalize:      true,
-                                elementTagName: self.cssTag.tagName
-                        });
-            cssSelect = rangy.createCssClassApplier(
-                            self.cssSelect.cssClass, {
-                                normalize:      true,
-                                elementTagName: self.cssSelect.tagName
-                        });
-        }
 
         opts.enabled = self.element.attr('disabled') ? false : true;
 
@@ -139,14 +1012,6 @@ $.widget("ui.sentence", {
         // Interaction events
         self._widgetInit()
             ._eventsBind();
-
-        if (opts.notes)
-        {
-            var notes   = opts.notes;
-            opts.notes  = undefined;
-
-            self.addNotes( notes, (! self.isVisible()) );
-        }
     },
 
     /************************
@@ -191,7 +1056,8 @@ $.widget("ui.sentence", {
         return this._setOption('starred', value);
     },
 
-    /** @brief  Return a serialized version of this sentence.
+    /** @brief  Return a serialized version of this instance suitable
+     *          for creating a duplicate instance via our constructor.
      *
      *  @return The serialized version of this sentence.
      */
@@ -201,59 +1067,10 @@ $.widget("ui.sentence", {
         var ser     = {
             rank:       opts.rank,
             starred:    opts.starred,
-            notes:      self.serializeNotes()
+            notes:      self._serializeNotes()
         };
 
         return ser;
-    },
-
-    /** @brief  Apply serialized state to this sentence.
-     *  @param  ser     The serialized state to apply to this sentence
-     *                  (generated via serialize());
-     *
-     *  @return this for a fluent interface.
-     */
-    unserialize: function(ser) {
-        var self    = this;
-        var opts    = self.options;
-
-        $.each(ser, function(key, val) {
-            if (key === 'notes')    { return; }
-
-            self._setOption(key, val);
-        });
-
-        if ( $.isArray(ser.notes))
-        {
-            $.each(self.notes, function() {
-                ser.notes.push( this.serialize() );
-            });
-        }
-
-        return self;
-    },
-
-    /** @brief  Given an array of serialized notes, (re)apply them to the
-     *          current sentence.
-     *  @param  notes   An array of serialized notes;
-     *  @param  hide    If true, hide the notes widget once created.
-     *
-     *  @return this for a fluent interface
-     */
-    addNotes: function( notes, hide ) {
-        var self    = this;
-        var opts    = self.options;
-
-        $.each(notes, function() {
-            if (! this) { return; }
-
-            var notesInst   = ( this instanceof $.Notes
-                                    ? this
-                                    : new $.Notes( this ) );
-            self._addNotes( notesInst.getRange(), notesInst, hide );
-        });
-
-        return self;
     },
 
     /** @brief  Toggle the given option.
@@ -281,7 +1098,7 @@ $.widget("ui.sentence", {
      *
      *  @return this for a fluent interface.
      */
-    syncNotesPositions: function() {
+    syncNotePositions: function() {
         var self    = this;
         var opts    = self.options;
         var $s      = self.element;
@@ -289,43 +1106,18 @@ $.widget("ui.sentence", {
 
         $s.find('.tagged').each(function() {
             var $tagged = $(this);
-            var $notes  = $tagged.data('notes-associate');
+            var $note   = $tagged.data('note-associate');
 
-            if (! $notes)
-            {
-                $tagged.removeData('notes-associate');
-                $tagged.removeClass( opts.css.tagged );
-                return;
-            }
+            if (! $note)    { return; }
 
             /* If the sentence containing this tagged item is visible, ensure
              * that the associated note is visible (which will also adjust its
              * position).  Otherwise, hide the associated note.
              */
-            $notes.notes( (visible ? 'show' : 'hide') );
+            $note.note( (visible ? 'show' : 'hide') );
         });
 
         return self;
-    },
-
-    /** @brief  Return a serialized version of the $.Notes attached to this
-     *          sentend.
-     *
-     *  @return A serialized version of the $.Notes.
-     */
-    serializeNotes: function() {
-        var self        = this;
-        var serialized  = [];
-
-        // self.notes is an array of ui.notes instances.
-        $.each(self.notes, function(idex, val) {
-            if ( ! $(this).data('notes')) { return; }
-
-            //serialized.push(this.serialize());
-            serialized.push( this.notes('serialize') );
-        });
-
-        return serialized;
     },
 
     /** @brief  Destroy this widget.
@@ -353,6 +1145,9 @@ $.widget("ui.sentence", {
         var opts    = self.options;
         var $s      = self.element;
 
+        self.$content   = self.element.find('.content');
+        self.$content.contentOverlay();
+
         self.$notesPane = $('.notes-pane');
         self.notes      = [];
 
@@ -366,6 +1161,10 @@ $.widget("ui.sentence", {
         $s[ opts.noExpansion
                 ? 'addClass' : 'removeClass']( opts.css.noExpansion );
 
+        if (opts.notes)
+        {
+            self._unserializeNotes(opts.notes);
+        }
         return self;
     },
 
@@ -442,6 +1241,65 @@ $.widget("ui.sentence", {
         }
     },
 
+    /** @brief  Return a serialized version of the $.Note attached to this
+     *          sentence.
+     *
+     *  @return An array of serialized notes of the form:
+     *              { range: { start: , end: },
+     *                note:  serialized-note
+     *               }
+     */
+    _serializeNotes: function() {
+        var self        = this;
+        var serialized  = [];
+
+        // self.notes is an array of ui.note instances.
+        $.each(self.notes, function() {
+            // Is this a ui.note instance?
+            var $note   = $(this);
+            if ( ! $note.data('note'))  { return; }
+
+            //serialized.push(this.serialize());
+            var $group  = $note.data('note-associate');
+            serialized.push( {
+                range:  $group.overlayGroup('serialize'),
+                note:   $note.note('serialize')
+            });
+        });
+
+        return serialized;
+    },
+
+    /** @brief  Unserialize notes to attach to this sentence.
+     *  @param  notes   The notes serialization (from _serializeNotes());
+     *
+     *  @return An array of ui.note instances.
+     */
+    _unserializeNotes: function(notes) {
+        var self    = this;
+        var hide    = (! self.isVisible());
+
+        if (self.notes.length > 0)
+        {
+            // :TODO: cleanout the current notes
+        }
+
+        self.notes = [];
+        $.each(notes, function() {
+            if ( (! this.range) || (! this.note) )  { return; }
+
+            // Create an overlay for this range
+            var $group = self.$content.contentOverlay('addOverlay',
+                                                      this.range, 'tag');
+
+            // Now, using the new overlay, add a note
+            self._addNote( $group, this.note, hide);
+        });
+
+        return self.notes;
+    },
+
+
     /** @brief  Highlight this sentence. */
     _highlight: function() {
         var self    = this;
@@ -460,7 +1318,8 @@ $.widget("ui.sentence", {
             $s.css('display', '')       // Remove the 'display' style
               .removeData('isHighlighting');
 
-            self.syncNotesPositions();
+            self.$content.contentOverlay('refresh');
+            self.syncNotePositions();
 
             self._trigger('highlighted');
             self._trigger('change', null, 'highlighted');
@@ -488,7 +1347,8 @@ $.widget("ui.sentence", {
             $s.css('display', '')       // Remove the 'display' style
               .removeData('isHighlighting');
 
-            self.syncNotesPositions();
+            self.$content.contentOverlay('refresh');
+            self.syncNotePositions();
 
             self._trigger('unhighlighted');
             self._trigger('change', null, 'unhighlighted');
@@ -533,7 +1393,8 @@ $.widget("ui.sentence", {
 
             $ctl.attr('title', 'collapse');
 
-            self.syncNotesPositions();
+            self.$content.contentOverlay('refresh');
+            self.syncNotePositions();
 
             self._trigger('expanded');
             self._trigger('change', null, 'expanded');
@@ -584,19 +1445,20 @@ $.widget("ui.sentence", {
             {
                 /* The target sentence is NOT highlighted so ensure that
                  * sentence controls are hidden and NOT in "hover mode" and
-                 * that any selection controls are removed.
+                 * that any overlay controls are hidden.
                  */
                 $s.removeClass('ui-hover')
-                  .find('.controls .sui-icon')
+                  .find('.controls .ui-icon')
                     .css('opacity', '')
                   .end()
-                  .find('.selection-controls')
-                    .remove();
+                  .find('.overlay-controls')
+                    .hide();
             }
 
             $ctl.attr('title', 'expand');
 
-            self.syncNotesPositions();
+            self.$content.contentOverlay('refresh');
+            self.syncNotePositions();
 
             self._trigger('collapsed');
             self._trigger('change', null, 'collapsed');
@@ -640,209 +1502,116 @@ $.widget("ui.sentence", {
         }
     },
 
-    /** @brief  Given a range string, create a new $.Notes object to associate
-     *          with all items within the range.  The elements within the range
-     *          will also be wrapped in one or more '.tagged' containers.
-     *  @param  range   A range string of the form:
-     *                      sentence/child:offset,child:offset
-     *  @param  notes   If provided, a $.Notes instance representing the
-     *                  existing notes;
-     *  @param  hide    If true, hide the notes widget once created.
+    /** @brief  Given an ui.overlayGroup widget, create a new $.Note object to
+     *          associate with the overlay group.
+     *  @param  $group      The ui.overlayGroup instance to associate with the
+     *                      new note;
+     *  @param  note        If provided, note to be added -- either serialized
+     *                      or a $.Note instance.  If not provided, a new
+     *                      $.Note instance will be created;
+     *  @param  hide        If true, hide the note widget once created.
      */
-    _addNotes: function( range, notes, hide ) {
+    _addNote: function( $group, note, hide ) {
         var self    = this;
         var opts    = self.options;
-        var notesId;
+        var noteId; 
 
-        if ( (! notes) || (! notes instanceof $.Notes) )
+        if (! note)
         {
-            notesId = (notes && (notes.id !== undefined)
-                        ? notes.id
-                        : self.notes.length);
-
-            notes = {id:notesId, range:range};
+            noteId = self.notes.length;
+            note   = {id:noteId};
         }
         else
         {
-            notesId = notes.getId();
+            if (! (note instanceof $.Note) )
+            {
+                note = new $.Note( note );
+            }
+
+            noteId = note.getId();
         }
 
-        // Parse the incoming 'range' to generate a matching rangy selection.
-        var re          = /^([0-9\/]+:[0-9]+),([0-9\/]+:[0-9]+)$/;
-        var ranges      = range.match( re );
-        var rangeStart  = ranges[1];
-        var rangeEnd    = ranges[2];
-        var start       = rangy.deserializePosition(
-                                    rangeStart,
-                                    self.element.find('.content')[0]);
-        var end         = rangy.deserializePosition(
-                                    rangeEnd,
-                                    self.element.find('.content')[0]);
-        var rRange      = rangy.createRange();
-        var sel         = rangy.getSelection();
-
-        rRange.setStart(start.node, start.offset);
-        rRange.setEnd(end.node, end.offset);
-
-        sel.removeAllRanges();
-        sel.setSingleRange( rRange );
-
-        // Apply '.tagged' to the selection
-        cssTag.applyToSelection();
-
-        // Attach our $.Notes object to the FIRST element in the range.
-        var ranges  = sel.getAllRanges();
-        var $tagged = $(ranges[0].startContainer).parent();
-
-        /* Retrieve all '.tagged' items within the range and add a 'name'
-         * attribute identifying the notes to which the items belong.
-         */
-        ranges[0].getNodes([3], function(node) {
-            var $parent = $(node).parent();
-            if ($parent.hasClass('tagged'))
-            {
-                $parent.attr('name', 'summary-notes-'+ notesId);
-            }
-        });
-        sel.removeAllRanges();
-
-        /* Finally, generate a notes container in the right side-bar at the
-         * same vertical offset as $tagged.
-         */
-        var $notes  = $('<div />').notes({
+        // Generate a ui.note widget at the same vertical offset as $group.
+        var $note   = $('<div />').note({
                         container:  opts.notesPane,
-                        notes:      notes,
-                        position:   { of:$tagged },
+                        note:       note,
+                        position:   { of:$group },
                         hidden:     (hide ? true : false)
                       });
-        self.notes[ notesId ] = $notes; //$notes.notes('serialize');
-        $tagged.data('summary-notes', $notes);
+        self.notes[ noteId ] = $note; //$note.note('serialize');
 
-        /* Provide data-based links between the tagged item within content and
-         * the associated notes in the notes pane.
+        /* Provide data-based links between the overlay group  and the
+         * associated note.
          */
-        $notes.data('notes-associate', $tagged);
-        $tagged.data('notes-associate',  $notes);
+        $note.data( 'note-associate', $group);
+        $group.data('note-associate',  $note);
 
         /**************************************************
-         * Bind handlers for ui.notes and ui.note events
+         * Bind handlers for ui.note
          *
          */
-        $notes.bind('notes-change', function(e, type) {
-            if (type === 'noteRemoved')
-            {
-                // Are there any more note entries in the ui.notes widget?
-                if ($notes.notes('notesCount') < 1)
-                {
-                    // NO -- destroy the ui.notes widget
-                    var $tagged = $notes.data('notes-associate');
-
-                    self._removeNotes( $tagged );
-
-                    return false;
-                }
-            }
-
-            /* Reflect this 'notes-change' event up as a 'sentence-change'
+        $note.bind('note-change.ui-sentence', function(e, type) {
+            /* Reflect this 'note-change' event up as a 'sentence-change'
              * event.
              */
             self._trigger('change', null, type);
         });
 
-        // Reflect 'note-change/noteSaved' events
-        $notes.bind('note-change', function(e, type) {
-            if (type === 'noteSaved')
+        $note.bind('note-destroyed.ui-sentence', function(e) {
+            self._removeNote( $note );
+        });
+
+        // Reflect 'comment-change' events
+        $note.bind('comment-change.ui-sentence', function(e, type) {
+            if (type === 'commentSaved')
             {
-                /* Reflect this 'note-change' event up as a 'sentence-change'
-                 * event.
+                /* Reflect this 'comment-change/commentSaved'
+                 * event up as a 'sentence-change' event.
                  */
                 self._trigger('change', null, type);
             }
         });
 
-        // Trigger a 'sentence-change/notesAdded' event
-        self._trigger('change', null, 'notesAdded');
+        // Trigger a 'sentence-change/noteAdded' event
+        self._trigger('change', null, 'noteAdded');
     },
 
-    /** @brief  Given a jQuery DOM element that has been tagged via
-     *          _addNotes(), remove the tag for all items in the associated
-     *          range.
-     *  @param  $el     The jQuery DOM element that has been tagged.
+    /** @brief  Remove the identified note along with the associated overlay
+     *          group.
+     *  @param  $note   The ui.note widget being removed;
      */
-    _removeNotes: function( $el ) {
+    _removeNote: function( $note ) {
+        if (! $note)    { return; }
+
         var self    = this;
         var opts    = self.options;
-        var $notes  = $el.data('summary-notes');
+        var $group  = $note.data('note-associate');
+        var id      = $note.note('id');
 
-        if (! $notes)   { return; }
+        // Destroy the ui.note instance
+        if (! $note.data('note-destroying'))
+        {
+            /* Initiate destruction.  This will end with ui.note firing
+             * 'destroyed', which will be caught by our handler established in
+             * _addNote() causing _removeNote() to be called again.
+             */
+            $note.data('note-destroying', true);
+            $note.note('destroy');
+            return;
+        }
 
-        var id      = $notes.notes('id');
-        var name    = 'summary-notes-'+ id;
-        var $tags   = self.element.find('[name='+ name +']');
+        $note.unbind('.ui-sentence')
+             .removeData('note-associate');
 
-        $notes.unbind('notes-change note-change')
-              .removeData('tagged-item')
-              .notes('destroy');
+        // Destroy the ui.overlayGroup instance
+        $group.removeData('note-associate')
+              .overlayGroup('destroy');
 
-        $el.removeData('summary-notes');
-
-        //delete self.notes[ id ];
         self.notes[ id ] = undefined;
 
-        // Remove the '.tagged' container
-        $tags.each(function() {
-            var $tagged = $(this);
-            $tagged.replaceWith( $tagged.html() );
-        });
-
-        self._trigger('change', null, 'notesRemoved');
+        self._trigger('change', null, 'noteRemoved');
     },
     
-    /** @brief  Given a rangy selection object, generate a corresponding
-     *          summary range string.
-     *  @param  sel     The rangy selection object.  If not provided,
-     *                  retrieve the current rangy selection.
-     *
-     *  Note: We limit selection to WITHIN this sentence.
-     *
-     *  @return A range string of the form 'ss/se:so,es/ee:eo'.
-     */
-    _generateRange: function(sel) {
-        if (sel === undefined)  { sel = rangy.getSelection(); }
-
-        var self    = this;
-        var opts    = self.options;
-        var $s      = self.element;
-        var ranges  = sel.getAllRanges();
-
-        /* Compute the indices of the sentences, .text/.keyword
-         * children, and text offsents.
-         */
-        var start   = ranges[0];
-        var end     = ranges[ ranges.length - 1];
-
-        /* A sentence range is the child index and offset in the form:
-         *      ci:offset
-         *
-         * Grab the start and end sentence along with an array of
-         * sentences between the two.
-         */
-        var sRange  = {
-            start:  rangy.serializePosition(
-                                    start.startContainer,
-                                    start.startOffset,
-                                    $s.find('.content')[0]),
-            end:    rangy.serializePosition(
-                                    end.endContainer,
-                                    end.endOffset,
-                                    $s.find('.content')[0])
-        };
-
-        console.log("_generateRange: "+ sRange.start +','+ sRange.end);
-
-        return sRange.start +','+ sRange.end;
-    },
-
     /** @brief  Bind any relevant event handlers.
      *
      *  @return this for a fluent interface.
@@ -855,7 +1624,7 @@ $.widget("ui.sentence", {
          * Hover over sentence shows controls.
          *
          */
-        var hover   = function(e) {
+        $s.hoverIntent(function(e) {
             if ( $s.data('isCollapsing') || (! self.isVisible()) )
             {
                 // Do NOT show tools
@@ -873,9 +1642,7 @@ $.widget("ui.sentence", {
                 $s.removeClass('ui-hover');
                 break;
             }
-        };
-
-        $s.hoverIntent(hover);
+        });
 
         /*************************************************************
          * Mouse over sentence controls increases opacity.
@@ -925,230 +1692,69 @@ $.widget("ui.sentence", {
         });
 
         /*************************************************************
-         * Click handler for sentence selection controls
-         *
-         * This is broken into mousedown/mouseup in order to squelch
-         * any mouse events if necessary in order to avoid modifying
-         * the current selection.
+         * Click handler for sentence overlay controls
          *
          */
-        $s.delegate('.selection-controls .su-icon', 'mousedown mouseup',
-                    function(e) {
-            var $el     = $(e.target);
-            var $ctl    = $el.parents('.selection-controls:first');
+        $s.bind('overlaygroup-action.ui-sentence', function(e, control) {
+            var $group  = $(e.target);
+            var $ctl    = $(control);
 
-            console.log('selection-controls '+ e.type
-                        +': '+ $el.attr('class'));
+            console.log('overlaygroup-action: ctl[ '+ $ctl.attr('class') +' ]');
 
-            switch (e.type)
+            if ($ctl.hasClass('tag'))
             {
-            case 'mousedown':
-                $ctl.data('mousedown', true);
-                break;
+                // Convert $group to a tag/note
+                //$group.parent().contentOverlay('changeType', $group, 'tag');
+                $group.overlayGroup('changeType', 'tag');
 
-            case 'mouseup':
-                if (! $ctl.data('mousedown'))
-                {
-                    return;
-                }
-
-                // Count this as a click
-                var $target = $ctl.parent();
-                $ctl.removeData('mousedown')
-                    .remove();
-
-                if ($el.hasClass('tag'))
-                {
-                    // Tag the current selection
-                    var sel = rangy.getSelection();
-
-                    // Remove the rangy selection selection
-                    cssSelect.undoToSelection();
-
-                    // Generate a sentence-based range
-                    range = self._generateRange( sel );
-
-                    // Remove current selection
-                    sel.removeAllRanges();
-                
-                    // Create notes
-                    self._addNotes( range );
-                }
-                else
-                {
-                    // Remove all notes
-                    self._removeNotes( $target );
-                }
-
-                break;
+                self._addNote( $group );
             }
+            else if ($ctl.hasClass('remove'))
+            {
+                var $note   = $group.data('note-associate');
 
-
-            // Squelch this mouse event
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+                self._removeNote($note);
+                //$group.overlayGroup('destroy');
+            }
         });
+
+        $s.bind(  'overlaygroup-hover-in.ui-sentence '
+                + 'overlaygroup-hover-out.ui-sentence',
+                function(e) {
+            var $group  = $(e.target);
+            var $note   = $group.data('note-associate');
+
+            //console.log('overlaygroup-hover: [ '+ e.type +' ]');
+
+            if ($note)
+            {
+                if (e.type === 'overlaygroup-hover-in')
+                {
+                    $note.note('activate');
+                }
+                else if (! $note.note('hasFocus'))
+                {
+                    $note.note('deactivate');
+                }
+            }
+        });
+
 
         /*************************************************************
-         * On mouseup, see if there is a selection.
-         *
-         */
-        $s.bind('mouseup.ui-sentence', function(e) {
-            var $el = $(e.target);
-            var sel = rangy.getSelection();
-            var str = sel.toString();
-
-            // Remove any existing selection controls and selection
-            $s.find('.selection-controls').remove();
-            $s.find('.selected').each(function() {
-                var $sel    = $(this);
-                if ($sel.hasClass('keyword'))
-                {
-                    $sel.removeClass('selected');
-                }
-                else
-                {
-                    $sel.replaceWith( $sel.html() );
-                }
-            });
-            if (str.length < 1)
-            {
-                // No selection
-                return;
-            }
-
-            // Apply '.selected'
-            cssSelect.applyToSelection();
-
-            // Add a new selection control just above the current selection
-            var $sel    = $s.find('.selected:first');
-            $('#tmpl-selection-controls')
-                .tmpl()
-                .appendTo($sel)
-                .css({
-                    top:    -22,
-                    left:   0
-                });
-        });
-
-        /*************************************************************
-         * Hover over a 'tagged' section shows selection controls
-         * to allow removal.
-         *
-         */
-        $s.delegateHoverIntent('.tagged', function(e) {
-            /* Using the 'name' attribute of the target element, locate
-             * all similarly named elements along with the ui.notes instance
-             * associated with them.
-             */
-            var $el     = $(this);
-            var name    = $el.attr('name');
-            var $tagged = self.element.find('[name='+ name +']:first');
-            var $notes  = $tagged.data('notes-associate');
-
-            //console.log('.sentence hover: '+ e.type);
-
-            switch (e.type)
-            {
-            case 'hover-in':
-                // Add selection controls just above the item.
-                self._ignoreHoverOut = false;
-                $('#tmpl-selection-remove-controls')
-                    .tmpl()
-                    .appendTo($tagged)
-                    .css({
-                        top:    -22,
-                        left:   0
-                    });
-
-                // Activate any associated notes
-                if ($notes)
-                {
-                    $notes.notes('activate');
-                }
-                break;
-
-            case 'hover-out':
-                // De-active any associated notes
-                if ($notes && (self._ignoreHoverOut !== true))
-                {
-                    $notes.notes('deactivate');
-                }
-                self._ignoreHoverOut = false;
-
-                // Remove any selection controls.
-                var $s  = $el.parents('.sentence:first');
-                $s.find('.selection-controls').remove();
-                break;
-            }
-        });
-
-        /* If the user clicks on the tagged item, note that any following
-         * 'hover-out' event should be ignored so the associated notes
-         * remain activated.
+         * For clicks on a tagged overlay, activate the related note
+         * and focus on the comment reply.
          */
         $s.delegate('.tagged', 'click', function(e) {
-            /* Using the 'name' attribute of the target element, locate
-             * all similarly named elements along with the ui.notes instance
-             * associated with them.
-             */
-            var $el     = $(this);
-            var name    = $el.attr('name');
-            var $tagged = self.element.find('[name='+ name +']:first');
-            var $notes  = $tagged.data('notes-associate');
+            var $group  = $(e.target);
+            var $note   = $group.data('note-associate');
 
-            $notes.notes('focus');
-
-            self._ignoreHoverOut = true;
-            return false;
-        });
-
-        /*************************************************************
-         * Reflect any ui.notes 'notes-change' events up as a
-         * 'sentence-change' event.
-         *
-        self.$notesPane.delegate('.notes', 'notes-change',
-                                 function(e, type) {
-            var $notes  = $(this);
-            var $tagged = $notes.data('notes-associate');
-            var $s      = $tagged.parents('.sentence:first');
-
-            if ($s != self.element) { return; }
-
-            if (type === 'noteRemoved')
+            if ($note)
             {
-                // Are there any more note entries in the ui.notes widget?
-                if ($notes.notes('notesCount') < 1)
-                {
-                    // NO -- destroy the ui.notes widget
-                    var $tagged = $notes.data('notes-associate');
+                $note.note('focus');
 
-                    self._removeNotes( $tagged );
-
-                    return false;
-                }
-            }
-
-            // Reflect this 'notes-change' event up as a 'sentence-change'
-            // event.
-            self._trigger('change', null, type);
-        });
-         */
-
-        /*************************************************************
-         * Reflect any ui.note 'note-change/noteSaved' event up as a
-         * 'sentence-change' event.
-         *
-         */
-        self.$notesPane.delegate('.notes', 'note-change',
-                                 function(e, type) {
-            if (type === 'noteSaved')
-            {
-                /* Reflect this 'note-change' event up as a 'sentence-change'
-                 * event.
-                 */
-                self._trigger('change', null, type);
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
             }
         });
 
@@ -1167,10 +1773,9 @@ $.widget("ui.sentence", {
 
         $s.undelegate('.controls .su-icon', 'mouseenter mouseleave');
         $s.undelegate('.controls .su-icon', 'click');
-        $s.undelegate('.selection-controls .su-icon', 'mousedown mouseup');
+
         $s.unbind('.ui-sentence');
-        $s.undelegateHoverIntent('.tagged');
-        $s.undelegate('.tagged', 'click');
+        $s.unhoverIntent();
 
         return self;
     }
@@ -1179,6 +1784,989 @@ $.widget("ui.sentence", {
 
 }(jQuery));
 
+/** @file
+ *
+ *  Provide a UI overlay (ui.contentOverlay) over the target content element to
+ *  allow highlighting of a content area without modifying it directly.
+ *
+ *  Also provide an overlay group (ui.overlayGroup) to represent a single
+ *  overlay within ui.contentOverlay.
+ *
+ *  Requires:
+ *      jquery.js
+ *      jquery-ui.js
+ *
+ *      rangy.js
+ */
+/*jslint nomen:false, laxbreak:true, white:false, onevar:false */
+/*global jQuery:false */
+(function($) {
+
+$.widget("ui.contentOverlay", {
+    version: "0.0.1",
+
+    /* Change the prefix used by ui.widget._trigger() for events so we can bind
+     * to events like 'contentOverlay-change' instead of 'contentOverlaychange'.
+     */
+    widgetEventPrefix:    'contentOverlay-',
+
+    options: {
+        /* Valid types for addOverlay() along with the associated cssClass to
+         * apply to the group as well as a selector for controls to be
+         * presented for that group
+         */
+        types:      {
+            selection:  {
+                cssClass:   'selected',
+                template:   '#tmpl-overlay-controls'
+            },
+            tag:        {
+                cssClass:   'tagged',
+                template:   '#tmpl-overlay-remove-controls'
+            },
+        }
+    },
+
+    /** @brief  Initialize a new instance.
+     */
+    _init: function() {
+        var self     = this;
+        var opts     = this.options;
+
+        self.$groups = $(); // initialize as an empty set
+
+        rangy.init();
+
+        // Interaction events
+        self._widgetInit()
+            ._eventsBind();
+    },
+
+    /************************
+     * Public methods
+     *
+     */
+
+    /** @brief  Refresh after some DOM change that would alter overlay
+     *          positioning (i.e. expand/collapse of the content element).
+     */
+    refresh: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$groups = self.$overlay.find('.group');
+        self.$groups.overlayGroup('refresh');
+    },
+
+    /** @brief  Add a new overlay.
+     *  @param  range   A range either as a rangy WrappedRange object OR
+     *                  as a string of the form:
+     *                          sentence/child:offset,child:offset
+     *  @param  type    The overlay type (from $.ui.overlayGroup.types);
+     */
+    addOverlay: function(range, type) {
+        var self        = this;
+        var opts        = self.options;
+        var typeInfo    = $.ui.overlayGroup.types[ type ];
+        if (typeInfo === undefined)
+        {
+            // Invalid type
+            return;
+        }
+
+        // Create an overlay group and add an element for each segment.
+        var $group  = $('<div />')
+                        .appendTo( self.$overlay )
+                        .overlayGroup({
+                            cssClass:   typeInfo.cssClass,
+                            template:   typeInfo.template,
+                            content:    self.element,
+                            range:      range
+                        });
+
+        // Update our list of contained groups
+        self.$groups = self.$overlay.find('.group');
+
+        return $group;
+    },
+
+    /** @brief  Remove all overlays of the given type.
+     *  @param  type    The overlay type (from $.ui.overlayGroup.types);
+     *                  If not provided, remove ALL overlays;
+     */
+    removeAll: function(type) {
+        var self        = this;
+        var opts        = self.options;
+
+        // If there are no groups, return now.
+        if (self.$groups.length < 1)    { return; }
+
+        var $groups     = self.$groups;
+        if (type)
+        {
+            var typeInfo    = $.ui.overlayGroup.types[ type ];
+            if (typeInfo === undefined)
+            {
+                // Invalid type
+                return;
+            }
+
+            $groups = $groups.filter('.'+ typeInfo.cssClass);
+        }
+
+        $groups.overlayGroup('destroy');
+    },
+
+    /** @brief  Destroy this widget.
+     *
+     *  @return this for a fluent interface.
+     */
+    destroy: function() {
+        this._eventsUnbind()
+            ._widgetClean();
+
+        return this;
+    },
+
+    /************************
+     * "Private" methods
+     *
+     */
+
+    /** @brief  Create the widget.
+     *
+     *  @return this for a fluent interface.
+     */
+    _widgetInit: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$overlay = $('<div />')
+                            .addClass('overlay')
+                            .insertBefore( self.element );
+
+        return self;
+    },
+
+    /** @brief  Destroy the widget.
+     *
+     *  @return this for a fluent interface.
+     */
+    _widgetClean: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.removeAll();
+        self.$overlay.remove();
+
+        return self;
+    },
+
+    /** @brief  Bind any relevant event handlers.
+     *
+     *  @return this for a fluent interface.
+     */
+    _eventsBind: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        /*************************************************************
+         * Since overlays are absolutely positioned BELOW the content,
+         * in order to recognize hovers and clicks on an overlay, we
+         * must monitor events in the primary content area and adjust
+         * them for the overlay.
+         *
+         * For hover, this requires a mouse movement handler that
+         * performs hit testing on the overlay groups.
+         *
+         */
+        self.element.bind('mousemove mouseleave mousedown mouseup click',
+                           function(e) {
+
+            // Does this mouse event hit any of our overlays?
+            var hit     = null;
+            self.$groups.each(function() {
+                hit = $(this).overlayGroup('hitTest', e);
+
+                if (hit !== null)   { return false; }
+            });
+
+            if ( (hit === null) && (e.type === 'mouseup') )
+            {
+                /* If there was no hit AND this is a mouseup event,
+                 * see if we have a rangy selection.
+                 */
+                var sel     = rangy.getSelection();
+                var strSel  = sel.toString();
+
+                // Remove any existing selection overlay
+                self.removeAll('selection');
+                if (strSel.length > 0)
+                {
+                    // Create a new selection overlay
+                    self.addOverlay(sel.getRangeAt(0), 'selection');
+
+                    // Squelch this mouse event
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }
+        });
+
+        /*************************************************************
+         * Handle maintenance events from ui.overlayGroup.
+         *
+         */
+        self.$overlay.bind('overlaygroup-destroyed', function(e) {
+            // Remove the group element that we created
+            var $group  = $(e.target);
+            $group.remove();
+
+            // Update our list of contained groups
+            self.$groups = self.$overlay.find('.group');
+        });
+
+        return self;
+    },
+
+    /** @brief  Unbind any bound event handlers.
+     *
+     *  @return this for a fluent interface.
+     */
+    _eventsUnbind: function() {
+        var self    = this;
+
+        return self;
+    }
+});
+
+/****************************************************************************
+ * An overlay group, possibly with overlay controls.
+ *
+ */
+$.widget("ui.overlayGroup", {
+    version: "0.0.1",
+
+    /* Change the prefix used by ui.widget._trigger() for events so we can bind
+     * to events like 'overlayGroup-change' instead of 'overlayGroupchange'.
+     */
+    widgetEventPrefix:    'overlayGroup-',
+
+    options: {
+        cssClass:   'selected',
+        template:   '#tmpl-overlay-controls',
+
+        segments:   [],     /* An array of positions representing contiguous,
+                             * per-"line" areas within the overlay group.
+                             * Each entry should have the form:
+                             *      { top:      position value,
+                             *        left:     position value,
+                             *        height:   size value,
+                             *        width:    size value }
+                             */
+
+        content:    null,   // The jQuery/DOM element OR selector of the
+                            // overlayed content area
+
+        range:      null,   /* The serialized rangy range that fully defines
+                             * this group within the context of 'content'.
+                             */
+
+        /* How much of a delta should be allowed between mouse events before
+         * calling it a hover?
+         */
+        hoverDelta: 5
+    },
+
+    /** @brief  Initialize a new instance.
+     *
+     *  Valid options:
+     *      cssClass    The css class to apply to this overlay group;
+     *      template    If provided, a selector for the template to use
+     *                  for overlay controls;
+     *      segments    An array of positions representing contiguous,
+     *                  per-"line" areas within the overlay group.
+     *                  Each entry should have the form:
+     *                       { top:      position value,
+     *                         left:     position value,
+     *                         height:   size value,
+     *                         width:    size value }
+     *
+     *      range       The serialized rangy range that fully defines this
+     *                  group within the context of 'content' of the form:
+     *                      { start: serialized-start-position,
+     *                        end:   serialized-end-position }
+     *
+     *      content     The jQuery/DOM element OR selector of the overlayed
+     *                  content area [ the '.content' sibling of our parent ];
+     *
+     *      hoverDelta  How much of a delta should be allowed between mouse
+     *                  events before calling it a hover [ 2 ];
+     */
+    _init: function() {
+        var self      = this;
+        var opts      = this.options;
+
+        if ((opts.range !== null) &&
+            (opts.range instanceof rangy.WrappedRange))
+        {
+            // Serialize the range
+            self.wrappedRange = opts.range;
+        }
+
+        // Interaction events
+        self._widgetInit()
+            ._eventsBind();
+    },
+
+    /** @brief  Destroy this widget.
+     *
+     *  @return this for a fluent interface.
+     */
+    destroy: function() {
+        var self    = this;
+
+        if (self._destroyed)    { return; }
+
+        self._eventsUnbind()
+            ._widgetClean();
+
+        self.element.empty();
+
+        self._destroyed = true;
+        self._trigger('destroyed');
+
+        return self;
+    },
+
+    /** @brief  Serialize this group.
+     *
+     *  @return A serialized version of this group.
+     */
+    serialize: function() {
+        var self        = this;
+        var opts        = self.options;
+
+        return opts.range;
+    },
+
+    /** @brief  Unserialize this group.
+     *  @param  group   The serialized version (from serialize());
+     *
+     *  @return this for a fluent interface.
+     */
+    unserialize: function(group) {
+        var self    = this;
+        var opts    = self.options;
+
+        opts.range = group;
+
+        return this;
+    },
+
+
+    /** @brief  Retrieve the associated control element (if any).
+     *
+     *  @return The associated control element (or undefined).
+     */
+    getControl: function() {
+        return this.$ctl;
+    },
+
+    /** @brief  Refresh after some DOM change that would overlay positioning
+     *          (i.e. expand/collapse of the content element).
+     */
+    refresh: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        /********************************************************************
+         * Measure the location of the selection, breaking it into segments
+         * according to "lines".
+         *
+         * Start by locating the absolute offsets into the *text* of the
+         * content area, generating measurement elements ($pre, $sel),
+         * and extracting the selected *text* (strSel).
+         */
+        var range       = self.wrappedRange;
+        var strFull     = self.$content.text();
+        var $start      = $(range.startContainer).parent();
+        var $end        = $(range.endContainer).parent();
+
+        // All spans within the content
+        var $text       = self.$content.children();
+
+        // All spans BEFORE the startContainer
+        var $toStart    = $text.slice(0, $text.index($start) );
+        var offsetStart = $toStart.text().length + range.startOffset;
+
+        // All spans BEFORE the endContainer
+        var $toEnd      = $text.slice(0, $text.index($end) );
+        var offsetEnd   = $toEnd.text().length + range.endOffset;
+
+        // The selected string
+        var strSel      = strFull.substr(offsetStart,
+                                         (offsetEnd - offsetStart));
+
+        // Elements to measure offsets
+        var $pre        = $('<span />')
+                            .addClass('text')
+                            .css('visibility', 'hidden')
+                            .text( strFull.substr(0, offsetStart ) )
+                            .appendTo(self.$overlay);
+        var $sel        = $('<span />')
+                            .addClass('text')
+                            .css('visibility', 'hidden')
+                            .appendTo(self.$overlay);
+
+        /********************************************************************
+         * Split the selected text into words and add each as a separate,
+         * measureable element to $sel.
+         */
+        var re  = /([\w’']+)(\W+)?/i;
+        var parts;
+        while ( (parts = re.exec(strSel)) )
+        {
+            // Create elements for the word and word separator.
+            $('<span />')
+                .text(parts[1])
+                .appendTo($sel);
+
+            if (parts[2])
+            {
+                $('<span />')
+                    .text(parts[2])
+                    .appendTo($sel);
+            }
+
+            // Remove this word and word separator
+            strSel = strSel.substr(parts[1].length +
+                                   (parts[2] ? parts[2].length : 0));
+        }
+
+        /********************************************************************
+         * Using our constructed selection measurement element ($sel),
+         * generate overlay segments by grouping words based upon their top
+         * offsets.  This results in one segment per "line" of text.
+         */
+        var base        = self.$content.offset();
+        var segments    = [];
+        var segment;        // Current segment
+        var lastOffset;
+
+        $sel.children().each( function() {
+            var $word   = $(this);
+            var offset  = $word.offset();
+            if ( (! lastOffset) || (offset.top !== lastOffset.top))
+            {
+                // New segment
+                if (segment)
+                {
+                    if ((segment.width < 1) && (segment.height < 1))
+                    {
+                        /* Remove empty segments -- can happen if a selection
+                         * crosses a line boundry.
+                         */
+                        segments.pop();
+                    }
+                }
+
+                // Begin the new segment and add it to the list
+                segment = {
+                    top:    offset.top  - base.top,
+                    left:   offset.left - base.left,
+                    width:  $word.width(),
+                    height: $word.height()
+                };
+
+                segments.push( segment );
+            }
+            else
+            {
+                // Same "line" -- add the width to the current segment
+                segment.width += $word.width();
+            }
+
+            lastOffset = offset;
+        });
+
+        // Remove our measurement elements
+        $pre.remove();
+        $sel.remove();
+
+        // Remove the rangy selection (needed?)
+        rangy.getSelection().removeAllRanges();
+ 
+        /********************************************************************
+         * Create an overlay element for every segment
+         *
+         * In the process, generate an 'extents' object containing the
+         * maximal outer boundaries of the full group.
+         */
+        self.element.empty();
+
+        var extent  = {
+            top:    99999,
+            left:   99999,
+            bottom: 0,
+            right:  0
+        };
+        $.each(segments, function() {
+            var segment = this;
+
+            // Update our extent
+            extent.top    = Math.min(extent.top,    segment.top);
+            extent.left   = Math.min(extent.left,   segment.left);
+            extent.bottom = Math.max(extent.bottom, segment.top +
+                                                    segment.height);
+            extent.right  = Math.max(extent.right,  segment.left +
+                                                    segment.width);
+
+            // Expand the segment slightly to provide a better enclosure
+            segment.top  -= 1; segment.height += 2;
+            segment.left -= 2; segment.width  += 4;
+
+            // Create the overly element
+            $('<div />') 
+                .addClass('text '+ opts.cssClass)
+                //.css('position', 'absolute')
+                //.css('display',  'block')
+                .css( segment )
+                .data('contentOverlay-segment', segment)
+                .appendTo( self.element );
+        });
+        opts.extent = extent;
+
+        self.$segments = self.element.children();
+
+        if (self.$ctl)
+        {
+            // Adjust our control
+            var pos     = (self.$segments.length > 0
+                                ? self.$segments.position()
+                                : self.element.position());
+
+            pos.top -= self.$ctl.height();
+            self.$ctl.css( pos );
+        }
+    },
+
+    /** @brief  Change the type of this overlay group.
+     *  @param  type    The overlay type (from $.ui.overlayGroup.types);
+     */
+    changeType: function(type) {
+        var self        = this;
+        var opts        = self.options;
+        var typeInfo    = $.ui.overlayGroup.types[ type ];
+        if (typeInfo === undefined)
+        {
+            // Invalid type
+            return;
+        }
+
+        // Change the css class and control template
+        self._setOption('cssClass', typeInfo.cssClass);
+        self._setOption('template', typeInfo.template);
+    },
+
+    /** @brief  Given a mouse event, see if the pointer is within this overlay
+     *          group or it's associated overlay control.
+     *  @param  e       The mouse event;
+     *
+     *  @return Hit type ('element', 'control', or null if no hit).
+     */
+    hitTest: function(e) {
+        var self    = this;
+        var opts    = self.options;
+        var hit     = null;
+        var $group  = self.element;
+
+        self.$segments.each(function() {
+            var $el     = $(this);
+            var segment = $el.data('contentOverlay-segment');
+            if (! segment) { return; }
+
+            /*
+            console.log('ui.overlayGroup::hitTest: '
+                          + 'e[ '+ e.offsetX +', '+ e.offsetY +' ], '
+                          + 'group[ '+ $group.attr('class') +' ], '
+                          + 'segment[ '+ segment.left +', '
+                          +              segment.top +' x '
+                          +        '[ '+ segment.width +', '
+                          +              segment.height +' ]');
+            // */
+
+            var right   = segment.left + segment.width;
+            var bottom  = segment.top  + segment.height;
+
+            if ((e.offsetX >= segment.left) && (e.offsetX <= right) &&
+                (e.offsetY >= segment.top)  && (e.offsetY <= bottom))
+            {
+                // HIT -- within a segment.
+                hit = {
+                    type:   'element',
+                    $el:    $el,
+                    $group: $group
+                };
+                return false;
+            }
+        });
+
+        /* If we have an associated control, we need to adjust the control
+         * based upon hit or miss.
+         */
+        if (self.$ctl)
+        {
+            if (hit === null)
+            {
+                /* We don't yet have a hit.  See if the event occurred within
+                 * our control.
+                 */
+                var segment     = self.$ctl.offset();
+    
+                segment.left   -= 2
+                segment.top    -= 2
+                segment.width   = self.$ctl.width() + 4;
+                segment.height  = self.$ctl.height() + 4;
+    
+                right           = segment.left + segment.width;
+                bottom          = segment.top  + segment.height;
+    
+                if ((e.pageX >= segment.left) && (e.pageX <= right) &&
+                    (e.pageY >= segment.top)  && (e.pageY <= bottom))
+                {
+                    // HIT -- within the control
+                    hit = {
+                        type:   'control',
+                        $el:    self.$ctl,
+                        $group: $group
+                    };
+                }
+            }
+
+            if (hit !== null)
+            {
+                // We have a hit on this overlayGroup and we have a control.
+
+                /**************************************************************
+                 * This event hit within this group.
+                 *
+                 */
+                if ( // Always squelch (mousemove)
+                     (e.type === 'mousemove')                                ||
+                     // For 'control', squelch (mousedown, mouseup)
+                     ((hit.type === 'control') &&
+                      ((e.type  === 'mousedown') || (e.type === 'mouseup'))) )
+                {
+                    // Squelch all mouse events EXCEPT 'click'
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+
+                    /* If this is a mousemove event and the last location was
+                     * nearly the same as this AND we haven't triggered a hover
+                     * event, trigger one now.
+                     */
+                    if (! self.hovering)
+                    {
+                        var last    = self.lastEvent;
+                        if (last &&
+                            (Math.abs(last.pageX - e.pageX)
+                                                    < opts.hoverDelta) &&
+                            (Math.abs(last.pageY - e.pageY)
+                                                    < opts.hoverDelta) )
+                        {
+                            // Trigger a hover-in event
+                            self.hovering = true;
+                            self._trigger('hover-in');
+                        }
+                    }
+                }
+                else if ((hit.type === 'control') && (e.type === 'click'))
+                {
+                    /*
+                    console.log('ui.overlayGroup::hitTest: '
+                                + 'type[ '+ e.type +' ], '
+                                + 'target[ '+ $(e.target).attr('class') +' ]');
+                    // */
+
+                    /* Trigger a new event on our group that references
+                     * the click target
+                     */
+                    self._trigger('action', null, e.target);
+
+                    // Squelch the current event
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+                else if (e.type === 'click')
+                {
+                    // Trigger a new click event on our group.
+                    self.element.click();
+
+                    // Squelch the original event
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+
+                self.lastEvent = e;
+            }
+            else if (self.hovering)
+            {
+                // Trigger a hover-out
+                self._trigger('hover-out');
+
+                self.hovering = false;
+            }
+        }
+
+        return hit;
+    },
+
+    /************************
+     * "Private" methods
+     *
+     */
+
+    /** @brief  Override widget._setOption() to handle additional functionality
+     *  @param  key     The property being set;
+     *  @param  value   The new property value;
+     */
+    _setOption: function(key, value) {
+        var self    = this;
+        var opts    = self.options;
+
+        switch (key)
+        {
+        case 'cssClass':
+            self.element
+                    .removeClass(opts.cssClass)
+                    .addClass( value );
+            self.element.children()
+                    .removeClass(opts.cssClass)
+                    .addClass( value );
+
+            if (self.$ctl)
+            {
+                self.$ctl.removeClass(opts.cssClass)
+                         .addClass( value );
+            }
+            break;
+
+        case 'template':
+            if (self.$ctl)  { self.$ctl.remove(); }
+
+            /* Create a new overlay control element and append it to the
+             * content area.
+             */
+            var pos     = (self.$segments.length > 0
+                                ? self.$segments.position()
+                                : self.element.position());
+            self.$ctl   = $( value )
+                            .tmpl()
+                            .addClass('overlay-controls '+ opts.cssClass)
+                            .hide()
+                            .appendTo( self.$content );
+
+            pos.top -= self.$ctl.height();
+            self.$ctl.css( pos );
+
+            // Give the group and control knowledge of one another
+            self.$ctl.data(   'contentOverlay-group',   self.element);
+            self.element.data('contentOverlay-control', self.$ctl);
+            break;
+
+        case 'content':
+            self.$content = $( value );
+            if (self.$ctl)
+            {
+                // Move the exising controls to the new content area
+                self.$ctl.appendTo( self.$content );
+            }
+
+            if ((! self.wrappedRange) && (opts.range !== null))
+            {
+                // Attempt to generate a wrappedRange from opts.range
+                var rangeStart,
+                    rangeEnd;
+
+                if (opts.range instanceof rangy.WrappedRange)
+                {
+                    self.wrappedRange = opts.range;
+                }
+                else if (typeof opts.range === 'string')
+                {
+                    var re      = /^([0-9\/]+:[0-9]+),([0-9\/]+:[0-9]+)$/;
+                    var ranges  = range.match( re );
+
+                    rangeStart  = ranges[1];
+                    rangeEnd    = ranges[2];
+                }
+                else if ($.isPlainObject( opts.range ))
+                {
+                    /* Allow a range object of the form:
+                     *  { start:    serialized-range-string,
+                     *    end:      serialized-range-string}
+                     */
+                    rangeStart = opts.range.start;
+                    rangeEnd   = opts.range.end;
+                }
+
+                if (rangeStart && rangeEnd)
+                {
+                    var start   = rangy.deserializePosition(
+                                    rangeStart,
+                                    self.$content[0]);
+                    var end     = rangy.deserializePosition(
+                                    rangeEnd,
+                                    self.$content[0]);
+
+                    self.wrappedRange = rangy.createRange();
+
+                    self.wrappedRange.setStart(start.node, start.offset);
+                    self.wrappedRange.setEnd(end.node, end.offset);
+                }
+            }
+
+            if (self.wrappedRange)
+            {
+                // Serialize the range within the context of self.$content
+                opts.range = {
+                    start:  rangy.serializePosition(
+                                            self.wrappedRange.startContainer,
+                                            self.wrappedRange.startOffset,
+                                            self.$content[0]),
+                    end:    rangy.serializePosition(
+                                            self.wrappedRange.endContainer,
+                                            self.wrappedRange.endOffset,
+                                            self.$content[0])
+                };
+            }
+
+            // (Re)generate our segments
+            self.refresh();
+            break;
+        }
+
+        $.Widget.prototype._setOption.apply( self, arguments );
+    },
+
+    /** @brief  Create the widget.
+     *
+     *  @return this for a fluent interface.
+     */
+    _widgetInit: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.element.addClass('group');
+        self.$overlay = self.element.parent();
+
+        /* Ensure our initial options are properly reflected in our operating
+         * state by forcing calls to _setOption()
+         */
+        if (opts.cssClass)  { self._setOption('cssClass', opts.cssClass); }
+        if (opts.content)   { self._setOption('content',  opts.content);  }
+        if (opts.template)  { self._setOption('template', opts.template); }
+
+        return self;
+    },
+
+    /** @brief  Destroy the widget.
+     *
+     *  @return this for a fluent interface.
+     */
+    _widgetClean: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        if (self.$ctl)  { self.$ctl.remove(); }
+
+        self.element
+                .removeClass(opts.cssClass)
+                .removeClass('group');
+
+        return self;
+    },
+
+    /** @brief  Bind any relevant event handlers.
+     *
+     *  @return this for a fluent interface.
+     */
+    _eventsBind: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        var hoverIn = function(e) {
+            /* The overlay control is not currently visible.
+             *
+             * Show it now possibly positioned near the pointer.
+             */
+            var ctlHeight   = self.$ctl.height();
+            var top         = opts.extent.top - ctlHeight;
+
+            /* If we have multiple segments (i.e. multiple lines),
+             * see if we should align to the top or bottom.
+             *
+            if (opts.segments.length > 1)
+            {
+                if (e.offsetY >
+                        ((opts.extent.bottom - opts.extent.top) / 2))
+                {
+                    // Bottom
+                    top = opts.extent.bottom + ctlHeight;
+                }
+            }
+            // */
+
+            self.$ctl.css('top', top)
+                     .show();
+        };
+        var hoverOut    = function(e) {
+            self.$ctl.hide();
+        };
+
+
+        self.element.bind('overlaygroup-hover-in.overlayGroup',  hoverIn);
+        self.element.bind('overlaygroup-hover-out.overlayGroup', hoverOut);
+
+        //opts['hover-in']  = hoverIn;
+        //opts['hover-out'] = hoverOut;
+
+        return self;
+    },
+
+    /** @brief  Unbind any bound event handlers.
+     *
+     *  @return this for a fluent interface.
+     */
+    _eventsUnbind: function() {
+        var self    = this;
+
+        return self;
+    }
+});
+
+/* Valid types for addOverlay() along with the associated cssClass to
+ * apply to the group as well as a selector for controls to be
+ * presented for that group
+ */
+$.ui.overlayGroup.types = {
+    selection:  {
+        cssClass:   'selected',
+        template:   '#tmpl-overlay-controls'
+    },
+    tag:        {
+        cssClass:   'tagged',
+        template:   '#tmpl-overlay-remove-controls'
+    },
+};
+
+
+}(jQuery));
 /** @file
  *
  *  A simple jQuery widget to present an article along with summarization
@@ -1319,7 +2907,6 @@ $.Summary.prototype = {
 
         // Retrieve the filter state for the current meta-data URL
         var state   = self._getState(opts.metadata);
-        var notes   = [];
         if (state)
         {
             opts.threshold.min = state.threshold.min;
@@ -1327,8 +2914,6 @@ $.Summary.prototype = {
             opts.filter        = state.filter;
             
             self.state         = (state.state ? state.state : []);
-
-            if (state.notes)    { notes = state.notes; }
         }
 
         // Renter the XML
@@ -1340,7 +2925,9 @@ $.Summary.prototype = {
         self.$kws   = self.element.find('.keyword');
         self.ranks  = [];
 
-        // Instantiate the ui.sentence widgets using any serialized state
+        /* Instantiate the ui.sentence widgets using any parallel serialized
+         * state.
+         */
         self.$s.each(function(idex) {
             var $el     = $(this);
             var config  = ( self.state.length > idex
@@ -2105,16 +3692,21 @@ $.Summary.prototype = {
             case 'unhighlighted':
             case 'expanded':
             case 'collapsed':
-                self.$s.slice(idex).sentence('syncNotesPositions');
+                /* Notify all following sentences to synchronize their note
+                 * positions.
+                 */
+                self.$s.slice(idex + 1).each(function() {
+                    $(this).sentence('syncNotePositions');
+                });
                 break;
 
             case 'starred':
             case 'unstarred':
-            case 'notesAdded':
-            case 'notesRemoved':
-            case 'noteAdded':       // Reflected from ui.notes via ui.sentence
-            case 'noteRemoved':     // Reflected from ui.notes via ui.sentence
-            case 'noteSaved':       // Reflected from ui.notes via ui.sentence
+            case 'noteAdded':
+            case 'noteRemoved':
+            case 'commentAdded':    // Reflected from ui.note via ui.sentence
+            case 'commentRemoved':  // Reflected from ui.note via ui.sentence
+            case 'commentSaved':    // Reflected from ui.note via ui.sentence
                 // Save the serialize state of this sentence.
                 self.state[idex] = $s.sentence('serialize');
                 self._putState();
@@ -2326,7 +3918,6 @@ $.Summary.prototype = {
 
         // Retrieve the filter state for the current meta-data URL
         var state   = self._getState(opts.metadata);
-        var notes   = [];
         if (state)
         {
             opts.threshold.min = state.threshold.min;
@@ -2334,8 +3925,6 @@ $.Summary.prototype = {
             opts.filter        = state.filter;
             
             self.state         = (state.state ? state.state : []);
-
-            if (state.notes)    { notes = state.notes; }
         }
 
         // Renter the XML
@@ -2347,7 +3936,9 @@ $.Summary.prototype = {
         self.$kws   = self.element.find('.keyword');
         self.ranks  = [];
 
-        // Instantiate the ui.sentence widgets using any serialized state
+        /* Instantiate the ui.sentence widgets using any parallel serialized
+         * state.
+         */
         self.$s.each(function(idex) {
             var $el     = $(this);
             var config  = ( self.state.length > idex
@@ -3112,16 +4703,21 @@ $.Summary.prototype = {
             case 'unhighlighted':
             case 'expanded':
             case 'collapsed':
-                self.$s.slice(idex).sentence('syncNotesPositions');
+                /* Notify all following sentences to synchronize their note
+                 * positions.
+                 */
+                self.$s.slice(idex + 1).each(function() {
+                    $(this).sentence('syncNotePositions');
+                });
                 break;
 
             case 'starred':
             case 'unstarred':
-            case 'notesAdded':
-            case 'notesRemoved':
-            case 'noteAdded':       // Reflected from ui.notes via ui.sentence
-            case 'noteRemoved':     // Reflected from ui.notes via ui.sentence
-            case 'noteSaved':       // Reflected from ui.notes via ui.sentence
+            case 'noteAdded':
+            case 'noteRemoved':
+            case 'commentAdded':    // Reflected from ui.note via ui.sentence
+            case 'commentRemoved':  // Reflected from ui.note via ui.sentence
+            case 'commentSaved':    // Reflected from ui.note via ui.sentence
                 // Save the serialize state of this sentence.
                 self.state[idex] = $s.sentence('serialize');
                 self._putState();
