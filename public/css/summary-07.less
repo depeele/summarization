@@ -199,7 +199,7 @@ a {
                 display:  block;
               }
               .selected {
-                background-color: @colorSelectedBackground;
+                //background-color: @colorSelectedBackground;
               }
               .tagged {
                 background-color: @colorTagBackground;
@@ -257,6 +257,12 @@ a {
     
         .controls {
           display:    none;
+
+          /* Make it unselectable */
+          -moz-user-select:   none;
+          -webkit-user-select:none;
+          -khtml-user-select: none;
+          user-select:        none;
         }
 
         .keyword {

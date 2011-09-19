@@ -770,9 +770,6 @@ a {
   position: absolute;
   display: block;
 }
-.content-pane article section p .sentence .overlay .group .selected {
-  background-color: #999999;
-}
 .content-pane article section p .sentence .overlay .group .tagged {
   background-color: #d7ebf9;
 }
@@ -832,6 +829,12 @@ a {
 }
 .content-pane article section p .controls {
   display: none;
+  /* Make it unselectable */
+
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  user-select: none;
 }
 .content-pane article section p .keyword {
   border: 1px solid #ffffff;

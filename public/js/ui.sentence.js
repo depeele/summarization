@@ -799,6 +799,9 @@ $.widget("ui.sentence", {
                 //$group.parent().contentOverlay('changeType', $group, 'tag');
                 $group.overlayGroup('changeType', 'tag');
 
+                // Remove any remaining rangy selections.
+                rangy.getSelection().removeAllRanges();
+
                 self._addNote( $group );
             }
             else if ($ctl.hasClass('remove'))

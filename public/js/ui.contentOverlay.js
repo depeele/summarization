@@ -77,6 +77,8 @@ $.widget("ui.contentOverlay", {
      *                  as a string of the form:
      *                          sentence/child:offset,child:offset
      *  @param  type    The overlay type (from $.ui.overlayGroup.types);
+     *
+     *  @return The new overlayGroup.
      */
     addOverlay: function(range, type) {
         var self        = this;
@@ -185,6 +187,17 @@ $.widget("ui.contentOverlay", {
         var opts    = self.options;
 
         /*************************************************************
+         * Catch any mousedown events that reach 'document' and,
+         * when seen, remove any current selection within this
+         * overlay.
+         */
+        self._mouseDown = function(e) {
+            self.removeAll('selection');
+        };
+
+        $(document).bind('mousedown', self._mouseDown);
+
+        /*************************************************************
          * Since overlays are absolutely positioned BELOW the content,
          * in order to recognize hovers and clicks on an overlay, we
          * must monitor events in the primary content area and adjust
@@ -215,12 +228,59 @@ $.widget("ui.contentOverlay", {
 
                 // Remove any existing selection overlay
                 self.removeAll('selection');
+
                 if (strSel.length > 0)
                 {
-                    // Create a new selection overlay
-                    self.addOverlay(sel.getRangeAt(0), 'selection');
+                    /* Ensure that the wrappedRange has a start and end element
+                     * share the same grand-parent (content area).  If not,
+                     * contract the range and invoke addOverlay() on the proper
+                     * ui.contentOverlay.
+                     */
+                    var type            = 'selection';
+                    var range           = sel.getRangeAt(0);
+                    var $start          = $(range.startContainer);
+                    var $end            = $(range.endContainer);
+                    var $ancestorStart  = $start.parent().parent();
+                    var $ancestorEnd    = $end.parent().parent();
+                    var $group;
 
-                    // Squelch this mouse event
+                    if ($ancestorStart[0] !== $ancestorEnd[0])
+                    {
+                        /* Contract the range to end with the last offset
+                         * within the last child of $ancestorStart.
+                         */
+                        $end = $ancestorStart.children().last();
+
+                        range.setEnd($end[0].childNodes[0],
+                                     $end.text().length);
+
+                        if ($ancestorStart[0] !== self.element[0])
+                        {
+                            /* Reset the selection to include JUST the adjusted
+                             * range
+                             */
+                            sel.setSingleRange( range );
+
+                            /* Inovke addOverlay() on the ui.contentOverlay
+                             * widget associated with $ancestorStart
+                             */
+                            $group = $ancestorStart
+                                        .contentOverlay('addOverlay',
+                                                        range, type);
+                        }
+                    }
+
+                    if (! $group)
+                    {
+                        /* Range adjustment did NOT result in the creation of
+                         * an ui.overlayGroup by another ui.contentOverlay, so
+                         * create a new ui.overlayGroup now that is connected
+                         * with THIS ui.contentOverlay widget.
+                         */
+                        $group = self.addOverlay(range, type);
+                    }
+
+                    // Squelch this 'mouseup' event
                     e.preventDefault();
                     e.stopPropagation();
                     return false;
@@ -250,6 +310,11 @@ $.widget("ui.contentOverlay", {
      */
     _eventsUnbind: function() {
         var self    = this;
+
+        $(document).unbind('mousedown', self._mouseDown);
+
+        self.element.unbind('mousemove mouseleave mousedown mouseup click');
+        self.$overlay.unbind('overlaygroup-destroyed');
 
         return self;
     }
@@ -509,8 +574,15 @@ $.widget("ui.overlayGroup", {
         $pre.remove();
         $sel.remove();
 
-        // Remove the rangy selection (needed?)
-        rangy.getSelection().removeAllRanges();
+        /* Do NOT remove the rangy selection.  Let our parent do that if needed
+         * since a selection MAY be represented by a native selection object in
+         * order to ensure we have proper selection coloring (e.g. grey with
+         * revered text) without the need to insert disruptive elements.  The
+         * generated overlay group elements will be used for hit testing as
+         * well as a positining anchor for any overlay controls.
+         *
+         *  rangy.getSelection().removeAllRanges();
+         */
  
         /********************************************************************
          * Create an overlay element for every segment
@@ -539,7 +611,7 @@ $.widget("ui.overlayGroup", {
 
             // Expand the segment slightly to provide a better enclosure
             segment.top  -= 1; segment.height += 2;
-            segment.left -= 2; segment.width  += 4;
+            //segment.left -= 2; segment.width  += 4;
 
             // Create the overly element
             $('<div />') 
@@ -601,21 +673,35 @@ $.widget("ui.overlayGroup", {
             var segment = $el.data('contentOverlay-segment');
             if (! segment) { return; }
 
-            /*
-            console.log('ui.overlayGroup::hitTest: '
-                          + 'e[ '+ e.offsetX +', '+ e.offsetY +' ], '
-                          + 'group[ '+ $group.attr('class') +' ], '
-                          + 'segment[ '+ segment.left +', '
-                          +              segment.top +' x '
-                          +        '[ '+ segment.width +', '
-                          +              segment.height +' ]');
-            // */
-
             var right   = segment.left + segment.width;
             var bottom  = segment.top  + segment.height;
 
-            if ((e.offsetX >= segment.left) && (e.offsetX <= right) &&
-                (e.offsetY >= segment.top)  && (e.offsetY <= bottom))
+            /* Normalize the event's offsetX/offsetY
+             * (Firefox will have an undefined offsetX/offsetY,
+             *  Chrome  sets offsetX/offsetY to the offset of the event from
+             *          the target element).
+             */
+            var eOffset = {
+                x:  (e.offsetX !== undefined
+                        ? e.offsetX
+                        : e.pageX - $(e.target).offset().left),
+                y:  (e.offsetY !== undefined
+                        ? e.offsetY
+                        : e.pageY - $(e.target).offset().top)
+            };
+
+            /*
+            console.log('ui.overlayGroup::hitTest: '
+                          + 'eOffset[ '+ eOffset.x +', '+ eOffset.y +' ], '
+                          + 'group[ '+ $group.attr('class') +' ], '
+                          + 'segment[ '+ segment.left +', '
+                          +              segment.top +' - '
+                          +              right +', '
+                          +              bottom +' ]');
+            // */
+
+            if ((eOffset.x >= segment.left) && (eOffset.x <= right) &&
+                (eOffset.y >= segment.top)  && (eOffset.y <= bottom))
             {
                 // HIT -- within a segment.
                 hit = {
@@ -639,11 +725,9 @@ $.widget("ui.overlayGroup", {
                  */
                 var segment     = self.$ctl.offset();
     
-                segment.left   -= 2
-                segment.top    -= 2
-                segment.width   = self.$ctl.width() + 4;
-                segment.height  = self.$ctl.height() + 4;
-    
+                segment.top    -= 2; segment.height = self.$ctl.height() + 4;
+                segment.left   -= 2; segment.width  = self.$ctl.width()  + 4;
+
                 right           = segment.left + segment.width;
                 bottom          = segment.top  + segment.height;
     
