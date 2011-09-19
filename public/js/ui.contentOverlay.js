@@ -453,8 +453,8 @@ $.widget("ui.overlayGroup", {
         return this.$ctl;
     },
 
-    /** @brief  Refresh after some DOM change that would overlay positioning
-     *          (i.e. expand/collapse of the content element).
+    /** @brief  Refresh after some DOM change that would alter overlay
+     *          positioning (i.e. expand/collapse of the content element).
      */
     refresh: function() {
         var self    = this;
@@ -690,6 +690,13 @@ $.widget("ui.overlayGroup", {
                         : e.pageY - $(e.target).offset().top)
             };
 
+            if (e.offsetX === undefined)
+            {
+                // Include the normalized offset information in the event
+                e.offsetX = eOffset.x;
+                e.offsetY = eOffset.y;
+            }
+
             /*
             console.log('ui.overlayGroup::hitTest: '
                           + 'eOffset[ '+ eOffset.x +', '+ eOffset.y +' ], '
@@ -777,7 +784,7 @@ $.widget("ui.overlayGroup", {
                         {
                             // Trigger a hover-in event
                             self.hovering = true;
-                            self._trigger('hover-in');
+                            self._trigger('hover-in', e, hit);
                         }
                     }
                 }
@@ -815,7 +822,7 @@ $.widget("ui.overlayGroup", {
             else if (self.hovering)
             {
                 // Trigger a hover-out
-                self._trigger('hover-out');
+                self._trigger('hover-out', null);
 
                 self.hovering = false;
             }
@@ -998,30 +1005,67 @@ $.widget("ui.overlayGroup", {
         var self    = this;
         var opts    = self.options;
 
-        var hoverIn = function(e) {
+        /** @brief  handle a 'hover-in' event triggered on the element of this
+         *          widget.
+         *  @param  e       The triggered event;
+         *  @param  hit     The hit object generated via hitTest() that
+         *                  indicates the hit type ('element' | 'control') as
+         *                  well as the specific segment element;
+         */
+        var hoverIn = function(e, hit) {
             /* The overlay control is not currently visible.
              *
-             * Show it now possibly positioned near the pointer.
+             * Show it now positioned near the pointer.
              */
             var ctlHeight   = self.$ctl.height();
-            var top         = opts.extent.top - ctlHeight;
+            var ctlWidth    = self.$ctl.width();
+            var elPos       = hit.$el.position();
+            var css         = 'ui-corner-top';
+            elPos.bottom    = elPos.top  + hit.$el.height();
+            elPos.right     = elPos.left + hit.$el.width();
+
+            var pos         = {
+                top:    elPos.top - ctlHeight,
+                left:   e.offsetX - (ctlWidth / 2)
+            };
+            if (pos.left < elPos.left)
+            {
+                // Ctl will be left of the segment -- adjust
+                pos.left = elPos.left;
+            }
+
+            var posBottom = pos.top  + ctlHeight;
+            var posRight  = pos.left + ctlWidth;
+            if (posRight > (elPos.right - 4))
+            {
+                // Ctl will be right of the segment -- adjust
+                pos.left  = elPos.right - ctlWidth - 4;
+            }
 
             /* If we have multiple segments (i.e. multiple lines),
              * see if we should align to the top or bottom.
-             *
-            if (opts.segments.length > 1)
+             */
+            if ((self.$segments.length > 1) &&
+                (e.offsetY > ((opts.extent.bottom - opts.extent.top) / 2) - 4))
             {
-                if (e.offsetY >
-                        ((opts.extent.bottom - opts.extent.top) / 2))
-                {
-                    // Bottom
-                    top = opts.extent.bottom + ctlHeight;
-                }
+                /* Bottom - Position the control along the bottom of the
+                 *          segment
+                 */
+                pos.top = posBottom + ctlHeight - 2;
+                css     = 'ui-corner-bottom';
             }
-            // */
 
-            self.$ctl.css('top', top)
+            // /*
+            self.$ctl.css( pos )
+                     .removeClass('ui-corner-bottom ui-corner-top')
+                     .addClass( css )
                      .show();
+            // */
+            /*
+            self.$ctl.css( 'top',  pos.top )
+                     .css( 'left', pos.left )
+                     .show();
+            // */
         };
         var hoverOut    = function(e) {
             self.$ctl.hide();
