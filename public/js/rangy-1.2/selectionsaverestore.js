@@ -9,8 +9,8 @@
  *
  * Copyright 2011, Tim Down
  * Licensed under the MIT license.
- * Version: 1.2beta2
- * Build date: 5 August 2011
+ * Version: 1.2
+ * Build date: 22 August 2011
  */
 rangy.createModule("SaveRestore", function(api, module) {
     api.requireModules( ["DomUtil", "DomRange", "WrappedRange"] );
@@ -37,6 +37,7 @@ rangy.createModule("SaveRestore", function(api, module) {
         markerEl.id = markerId;
         markerEl.style.lineHeight = "0";
         markerEl.style.display = "none";
+        markerEl.className = "rangySelectionBoundary";
         markerEl.appendChild(doc.createTextNode(markerTextChar));
 
         boundaryRange.insertNode(markerEl);
