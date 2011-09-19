@@ -73,8 +73,12 @@ $.widget("ui.checkbox", {
         var self    = this;
         var opts    = this.options;
 
-        opts.enabled = self.element.attr('disabled') ? false : true;
-        opts.checked = self.element.attr('checked')  ? true  : false;
+        opts.enabled = (opts.enabled === undefined
+                            ? (self.element.attr('disabled') ? false : true)
+                            : opts.enabled);
+        opts.checked = (opts.checked === undefined
+                            ? (self.element.attr('checked')  ? true  : false)
+                            : opts.checked);
         opts.title   = '';
 
         // Remember the original value

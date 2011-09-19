@@ -602,6 +602,8 @@ $.widget("ui.sentence", {
      *                      or a $.Note instance.  If not provided, a new
      *                      $.Note instance will be created;
      *  @param  hide        If true, hide the note widget once created.
+     *
+     *  @return The new ui.note instance
      */
     _addNote: function( $group, note, hide ) {
         var self    = this;
@@ -666,6 +668,8 @@ $.widget("ui.sentence", {
 
         // Trigger a 'sentence-change/noteAdded' event
         self._trigger('change', null, 'noteAdded');
+
+        return $note;
     },
 
     /** @brief  Remove the identified note along with the associated overlay
@@ -802,7 +806,15 @@ $.widget("ui.sentence", {
                 // Remove any remaining rangy selections.
                 rangy.getSelection().removeAllRanges();
 
-                self._addNote( $group );
+                var $note   = self._addNote( $group );
+
+                if ($.ui.sentence.options.quickTag !== true)
+                {
+                    // Focus for input
+                    $note.note('activate', function() {
+                         $note.note('focus');
+                    });
+                }
             }
             else if ($ctl.hasClass('remove'))
             {
@@ -875,6 +887,11 @@ $.widget("ui.sentence", {
         return self;
     }
 });
+
+// Global sentence options (shared by all ui.sentence instance).
+$.ui.sentence.options = {
+    quickTag:   false
+};
 
 
 }(jQuery));

@@ -492,6 +492,12 @@ a:hover {
 .su-icon-reset {
   background-position: -112px 0;
 }
+.su-icon-tagQuick {
+  background-position: -128px 0;
+}
+.su-icon-tagNormal {
+  background-position: -144px 0;
+}
 .su-icon-star-blue {
   background-position: 0 -16px;
 }
@@ -516,6 +522,12 @@ a:hover {
 .su-icon-reset-blue {
   background-position: -112px -16px;
 }
+.su-icon-tagQuick-blue {
+  background-position: -128px -16px;
+}
+.su-icon-tagNormal-blue {
+  background-position: -144px -16px;
+}
 .su-icon-star-white {
   background-position: 0 -32px;
 }
@@ -539,6 +551,12 @@ a:hover {
 }
 .su-icon-reset-white {
   background-position: -112px -32px;
+}
+.su-icon-tagQuick-white {
+  background-position: -128px -32px;
+}
+.su-icon-tagNormal-white {
+  background-position: -144px -32px;
 }
 /* state-based positioning */
 .starred .su-icon-star {
@@ -568,6 +586,12 @@ a:hover {
 .su-state-active.su-icon-reset {
   background-position: -112px -16px;
 }
+.su-state-active.su-icon-tagQuick {
+  background-position: -128px -16px;
+}
+.su-state-active.su-icon-tagNormal {
+  background-position: -144px -16px;
+}
 .su-state-reverse.su-icon-star {
   background-position: 0 -32px;
 }
@@ -591,6 +615,12 @@ a:hover {
 }
 .su-state-reverse.su-icon-reset {
   background-position: -112px -32px;
+}
+.su-state-reverse.su-icon-tagQuick {
+  background-position: -128px -32px;
+}
+.su-state-reverse.su-icon-tagNormal {
+  background-position: -144px -32px;
 }
 /**************************************************************************
  * Global settings
@@ -945,7 +975,7 @@ a {
   font-size: 0.9em;
   cursor: text;
 }
-.control-pane .controls .threshold, .control-pane .controls .filter, .control-pane .controls .coverage {
+.control-pane .controls .threshold, .control-pane .controls .filter, .control-pane .controls .options {
   position: relative;
   padding: 0;
   vertical-align: top;
@@ -953,19 +983,19 @@ a {
   display: block;
   margin: 1em 0 0 0;
 }
-.control-pane .controls .filter .checkbox {
+.control-pane .controls .filter .checkbox, .control-pane .controls .options .checkbox {
   cursor: pointer;
 }
-.control-pane .controls .filter .checkbox span {
+.control-pane .controls .filter .checkbox span, .control-pane .controls .options .checkbox span {
   display: block;
   margin: 0 auto;
 }
-.control-pane .controls .filter .ui-state-default {
+.control-pane .controls .filter .ui-state-default, .control-pane .controls .options .ui-state-default {
   background: transparent;
   border-color: transparent;
   opacity: 0.6;
 }
-.control-pane .controls .filter .ui-state-hover {
+.control-pane .controls .filter .ui-state-hover, .control-pane .controls .options .ui-state-hover {
   opacity: 1.0;
 }
 .control-pane .controls .threshold .buttons {

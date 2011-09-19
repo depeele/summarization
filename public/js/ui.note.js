@@ -166,8 +166,9 @@ $.widget('ui.note', {
     },
 
     /** @brief  Mark this instance as 'active'
+     *  @param  cb      If provided, an activation completion callback
      */
-    activate: function() {
+    activate: function(cb) {
         var self    = this;
         var opts    = self.options;
 
@@ -199,6 +200,11 @@ $.widget('ui.note', {
                         // ...then remove the hard z-index and let
                         //    the CSS take over.
                         self.element.css('z-index', '');
+
+                        if ($.isFunction(cb))
+                        {
+                            cb.apply(this);
+                        }
         });
     },
 

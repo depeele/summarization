@@ -47,6 +47,8 @@ $.Summary.prototype = {
                                      * present
                                      */
 
+        quickTag:       true,       // Using quick tag?
+
         rankOpacity:    0.3,        // The default opacity for rank items
         animSpeed:      200         // Speed (in ms) of animations
     },
@@ -74,10 +76,18 @@ $.Summary.prototype = {
         // Initialize any widgets
         self.$buttons   = self.$control.find('.buttons button').button();
         self.$filters   = self.$control.find('.filter :checkbox');
+        self.$options   = self.$control.find('.options :checkbox');
 
+        /*********************************************************
+         * controls:threshold
+         *
+         */
         self.$control.find('.buttons .expansion').buttonset();
-        //self.$control.find('.buttons .global').buttonset();
 
+        /*********************************************************
+         * controls:filters
+         *
+         */
         var $tagged     = self.$filters.filter('#filter-tagged');
         var $starred    = self.$filters.filter('#filter-starred');
 
@@ -95,6 +105,35 @@ $.Summary.prototype = {
             titleOff:   'click to filter',
             hideLabel:  true
         });
+
+        /*********************************************************
+         * controls:options
+         *
+         */
+        var globalOpts  = self._getOptions();
+        var $quickTag   = self.$options.filter('#options-quickTag');
+
+        $.ui.sentence.options.quickTag = globalOpts.quickTag;
+
+        $quickTag.checkbox({
+            cssOn:      'su-icon su-icon-tagQuick',
+            cssOff:     'su-icon su-icon-tagQuick-blue',
+            titleOn:    'click to enable',
+            titleOff:   'click to disable',
+            hideLabel:  true,
+
+            /* Since we use the 'quickTag' icon as an indicator, the logic is a
+             * little backwards.  If the checkbox is NOT checked, we're in
+             * 'quick' mode, otherwise, 'normal' mode.
+             */
+            checked:    (! globalOpts.quickTag )
+        });
+
+
+        /*********************************************************
+         * Show the initialized control.
+         *
+         */
         self.$control.show();
 
         // Bind events
@@ -529,6 +568,40 @@ $.Summary.prototype = {
         
         $.jStorage.set(url, state);
     },
+
+    /** @brief  Retrieve global options.
+     */
+    _getOptions: function() {
+        var self    = this;
+        var opts    = self.options;
+        
+        var globalOpts  = $.jStorage.get('options:/');
+        if (! globalOpts)
+        {
+            globalOpts = {
+                quickTag:   true
+            };
+        }
+
+        return globalOpts;
+    },
+
+    /** @brief  Store the current global options.
+     */
+    _putOptions: function(url) {
+        var self    = this;
+        var opts    = self.options;
+
+        if (self._noPut === true)   { return; }
+        
+        // Remember the current settings
+        var opts   = {
+            quickTag:   opts.quickTag
+        };
+        
+        $.jStorage.set('options:/', opts);
+    },
+
     
     /** @brief  Compute the thresholds based upon opts.showSentences.
      * 
@@ -681,13 +754,12 @@ $.Summary.prototype = {
         });
 
         /*************************************************************
-         * Handle changes to the filter controls -- triggered by the
-         * ui.checkbox widget.
+         * Handle changes to the filter and option controls (triggered
+         * by the ui.checkbox widget).
          *
          */
-        $gp.delegate('.controls .filter', 'change',
+        $gp.delegate('.controls .filter, .controls .options', 'change',
                      function(e, type) {
-            var $filters    = $(this);
             var $el         = $(e.target);
             var name        = $el.attr('name');
 
@@ -701,6 +773,16 @@ $.Summary.prototype = {
                                 });
 
                 self._changeFilter( $.makeArray(filter).join(',') );
+                break;
+
+            case 'quickTag':
+                /* Since we use the 'quickTag' icon as an indicator, the logic
+                 * is a little backwards.  If the checkbox is NOT checked,
+                 * we're in 'quick' mode, otherwise, 'normal' mode.
+                 */
+                opts.quickTag = (! $el.checkbox('val') );
+                $.ui.sentence.options.quickTag = opts.quickTag;
+                self._putOptions();
                 break;
             }
         });

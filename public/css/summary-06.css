@@ -492,6 +492,12 @@ a:hover {
 .su-icon-reset {
   background-position: -112px 0;
 }
+.su-icon-tagQuick {
+  background-position: -128px 0;
+}
+.su-icon-tagNormal {
+  background-position: -144px 0;
+}
 .su-icon-star-blue {
   background-position: 0 -16px;
 }
@@ -516,6 +522,12 @@ a:hover {
 .su-icon-reset-blue {
   background-position: -112px -16px;
 }
+.su-icon-tagQuick-blue {
+  background-position: -128px -16px;
+}
+.su-icon-tagNormal-blue {
+  background-position: -144px -16px;
+}
 .su-icon-star-white {
   background-position: 0 -32px;
 }
@@ -539,6 +551,12 @@ a:hover {
 }
 .su-icon-reset-white {
   background-position: -112px -32px;
+}
+.su-icon-tagQuick-white {
+  background-position: -128px -32px;
+}
+.su-icon-tagNormal-white {
+  background-position: -144px -32px;
 }
 /* state-based positioning */
 .starred .su-icon-star {
@@ -568,6 +586,12 @@ a:hover {
 .su-state-active.su-icon-reset {
   background-position: -112px -16px;
 }
+.su-state-active.su-icon-tagQuick {
+  background-position: -128px -16px;
+}
+.su-state-active.su-icon-tagNormal {
+  background-position: -144px -16px;
+}
 .su-state-reverse.su-icon-star {
   background-position: 0 -32px;
 }
@@ -591,6 +615,12 @@ a:hover {
 }
 .su-state-reverse.su-icon-reset {
   background-position: -112px -32px;
+}
+.su-state-reverse.su-icon-tagQuick {
+  background-position: -128px -32px;
+}
+.su-state-reverse.su-icon-tagNormal {
+  background-position: -144px -32px;
 }
 /**************************************************************************
  * Global settings
