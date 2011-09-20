@@ -1019,12 +1019,22 @@ a {
   cursor: text;
 }
 /**************************************************************************
+ * Tags Pane (within .margin-right)
+ *
+ */
+.tags-pane {
+  position: absolute;
+  top: 0;
+  height: 7em;
+  z-index: 11;
+}
+/**************************************************************************
  * Notes Pane (within .margin-right)
  *
  */
 .notes-pane {
   position: absolute;
-  top: 10em;
+  top: 7em;
   z-index: 11;
 }
 /*******************

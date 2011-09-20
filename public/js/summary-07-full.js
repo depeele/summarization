@@ -461,21 +461,24 @@ $.widget('ui.note', {
         var self    = this;
         var opts    = self.options;
 
-        if (! self.element.hasClass('note-active'))
+        if ((! self.element.hasClass('note-active')) || self.deactivating)
         {
             // Already deactived
-            if ($.isFunction(cb))
-            {
-                cb.apply(this);
-            }
+            if ($.isFunction(cb)) { cb.apply(this); }
+
             return;
         }
+        self.deactivating = true;
 
         // Cancel any comment that is currently being edited
         self.$body.find('.comment').comment('cancelEdit');
 
         // And close ourselves up
-        self.element.removeClass('note-active', opts.animSpeed, cb);
+        self.element.removeClass('note-active', opts.animSpeed, function() {
+            if ($.isFunction(cb))   { cb.apply(this); }
+
+            self.deactivating = false;
+        });
     },
 
     /** @brief  Show this note container.
@@ -801,6 +804,16 @@ $.widget('ui.note', {
          */
         self.$reply.bind('keyup.ui-note', function(e) {
             var $reply  = self.$buttons.filter('[name=reply]');
+
+            // Special keys
+            switch (e.keyCode)
+            {
+            case $.ui.keyCode.ESCAPE:   // 27
+                self.$reply.val('');
+                self.$reply.blur();
+                break;
+            }
+
             if ((! self.$reply.hasClass('hint')) &&
                 (self.$reply.val().length > 0))
             {
@@ -926,7 +939,7 @@ $.widget('ui.comment', {
         var self    = this;
         var opts    = self.options;
 
-        if (self.editing)   { return; }
+        if (self.editing)   { return self; }
         self.editing = true;
 
         self.$edit.val( self.$comment.text() );
@@ -937,15 +950,18 @@ $.widget('ui.comment', {
 
         self._trigger('edit');
 
-        return this;
+        return self;
     },
 
-    /** @brief  Cancel edit mode. */
-    cancelEdit: function() {
+    /** @brief  Cancel edit mode.
+     *  @param  squelchEvent    If true, do NOT trigger the 'cancel-edit'
+     *                          event [ false ];
+     */
+    cancelEdit: function(squelchEvent) {
         var self    = this;
         var opts    = self.options;
 
-        if (! self.editing) { return; }
+        if (! self.editing) { return self; }
         self.editing = false;
 
         self.$editArea.hide( );
@@ -957,7 +973,12 @@ $.widget('ui.comment', {
          */
         self.$mainButtons.css('display', '');
 
-        return this;
+        if (squelchEvent !== true)
+        {
+            self._trigger('cancel-edit');
+        }
+
+        return self;
     },
 
     /** @brief  Save any changes and cancel edit mode. */
@@ -969,10 +990,13 @@ $.widget('ui.comment', {
 
         self.$comment.text( opts.comment.getText() );
 
+        // Cancel the edit WITHOUT triggering the 'cancel-edit' event
+        self.cancelEdit( true );
+
         self._trigger('change', null, 'commentSaved');
         self._trigger('saved',  null, opts.comment);
 
-        self.cancelEdit();
+        return self;
     },
 
     /*******************************
@@ -1059,10 +1083,24 @@ $.widget('ui.comment', {
             case 'cancel-edit':
                 // Cancel 'edit'
                 self.cancelEdit();
-                self._trigger('cancel-edit');
                 break;
             }
         });
+
+        /*****************************************************
+         * Handle 'keyup' in the edit element.
+         *
+         */
+        self.$editArea.bind('keyup.ui-comment', function(e) {
+            // Special keys
+            switch (e.keyCode)
+            {
+            case $.ui.keyCode.ESCAPE:   // 27
+                self.cancelEdit();
+                break;
+            }
+        });
+
 
         return self;
     },
