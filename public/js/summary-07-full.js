@@ -288,6 +288,18 @@ $.widget('ui.note', {
 
     /** @brief  Initialize a new instance.
      *
+     *  Options:
+     *      note        Either a serialize $.Note or a $.Note instance;
+     *      container   A selector or jQuery/DOM instance representing the
+     *                  element that will contain all note widgets
+     *                  [ '.notes-pane' ];
+     *      position    An object suitable for ui.position
+     *                  [ {my:'top', at:'top', of:null, using:null} ];
+     *      animSpeed   The speed (in ms) of animations [ 200 ];
+     *      hidden      Should the widget be initially hidden [ false ];
+     *      template    A selector representing the jQuery template to use
+     *                  when creating an instance [ '#tmpl-note' ];
+     *
      *  @triggers (with a 'note-' prefix):
      *      'change' -- 'commentAdded'
      *      'change' -- 'commentRemoved'
@@ -325,13 +337,13 @@ $.widget('ui.note', {
 
     /** @brief  Return the id of our $.Note instance.
      *
-     *  @return The id.
+     *  @return The id (null if not set).
      */
     id: function() {
         var self    = this;
         var opts    = self.options;
 
-        return opts.note.getId();
+        return (opts.note ? opts.note.getId() : null);
     },
 
     /** @brief  Return the number of $.Note instances.
@@ -345,15 +357,21 @@ $.widget('ui.note', {
         return opts.note.getCommentCount();
     },
 
-    /** @brief  Given a new $.Comment instance, add the comment to our
-     *          container.
-     *  @param  comment     The new $.Comment instance.
+    /** @brief  Add a new comment to our container.
+     *  @param  comment     The new $.Comment instance.  If not provided,
+     *                      create a new, empty comment.
      *
      *  @return this for a fluent interface.
      */
     addComment: function(comment) {
         var self    = this;
         var opts    = self.options;
+
+        if (! comment)
+        {
+            // Create an empty comment
+            comment = new $.Comment();
+        }
 
         // Create and append a new ui.comment widget
         var $comment    = $('<div />').comment({comment:comment});
@@ -381,15 +399,15 @@ $.widget('ui.note', {
         var self    = this;
         var opts    = self.options;
 
-        // Create and append a new ui.comment widget
+        // Remove the identified comment
         var comment = $comment.comment('option', 'comment');
-
         opts.note.removeComment(comment);
 
         self._trigger('change', null, 'commentRemoved');
 
         // If there are no more comments, self-destruct!
-        if (self.commentCount() < 1)
+        //if (self.commentCount() < 1)
+        if (opts.note.getCommentCount() < 1)
         {
             self.destroy();
         }
@@ -404,22 +422,18 @@ $.widget('ui.note', {
         var self    = this;
         var opts    = self.options;
 
-        if (self.element.hasClass('note-active'))      { return; }
+        if (self.element.hasClass('note-active'))
+        {
+            // Already actived
+            if ($.isFunction(cb))
+            {
+                cb.apply(this);
+            }
+            return;
+        }
 
-        var $reply  = self.$buttons.filter('[name=reply]');
-        if ((! self.$reply.hasClass('hint')) &&
-            (self.$reply.val().length > 0))
-        {
-            self.$buttons.show();
-            $reply.button('enable');
-        }
-        else
-        {
-            self.$buttons.hide();
-            $reply.button('disable');
-            self.$reply.addClass('hint')
-                       .val( self.$reply.attr('title') );
-        }
+        // Ensure proper reply input/button state by initially blurring
+        self.$reply.blur();
 
         /* NOTE: Popping to the top immediately relies on a z-index set for
          *       .note in both normal and activated states, with the activated
@@ -441,17 +455,27 @@ $.widget('ui.note', {
     },
 
     /** @brief  Mark this instance as 'inactive'
+     *  @param  cb      If provided, an deactivation completion callback
      */
-    deactivate: function() {
+    deactivate: function(cb) {
         var self    = this;
         var opts    = self.options;
 
-        if (! self.element.hasClass('note-active'))    { return; }
+        if (! self.element.hasClass('note-active'))
+        {
+            // Already deactived
+            if ($.isFunction(cb))
+            {
+                cb.apply(this);
+            }
+            return;
+        }
 
-        // Cancel any note that is currently being edited
-        self.element.find('.note .buttons [name=cancel]').click();
+        // Cancel any comment that is currently being edited
+        self.$body.find('.comment').comment('cancelEdit');
 
-        self.element.removeClass('note-active', opts.animSpeed);
+        // And close ourselves up
+        self.element.removeClass('note-active', opts.animSpeed, cb);
     },
 
     /** @brief  Show this note container.
@@ -492,7 +516,37 @@ $.widget('ui.note', {
         var self    = this;
         var opts    = self.options;
 
-        return self.$reply.is(':focus');
+        /* If our $input is hidden, we're currently editing a comment and so
+         * vicariously have focus
+         */
+        return ( self.$input.is(':hidden') ||
+                 self.$reply.is(':focus') );
+    },
+
+    /** @brief  Given a ui.comment widget, put it in edit mode.
+     *  @param  $comment    The jQuery DOM element that has a ui.comment widget
+     *                      attached [ null == first ].
+     *
+     *  @return this for a fluent interface.
+     */
+    editComment: function($comment) {
+        var self    = this;
+        var opts    = self.options;
+
+        if (! $comment)
+        {
+            $comment = self.$body.find('.comment:first');
+        }
+
+        self.directEdit = true;
+        self.$input.hide( );
+
+        // Activate and place the target comment in edit mode.
+        self.activate( function() {
+            $comment.comment('edit');
+        });
+
+        return self;
     },
 
     /** @brief  Return a serialized version of our underlying $.Note instance.
@@ -576,14 +630,18 @@ $.widget('ui.note', {
 
         self.$body    = self.element.find('.note-body');
         self.$reply   = self.element.find('.note-reply');
-        self.$buttons = self.element.find('.note-input-pane .buttons button');
+        self.$input   = self.element.find('.note-input-pane');
+        self.$buttons = self.$input.find('.buttons button');
 
         self.$buttons.button();
 
         // Generate a ui.Note widget for each current $.Note instance
-        $.each(opts.note.getComments(), function() {
-            self.addComment( this, true );
-        });
+        if (opts.note)
+        {
+            $.each(opts.note.getComments(), function() {
+                self.addComment( this, true );
+            });
+        }
 
         if (opts.hidden !== true)
         {
@@ -634,8 +692,7 @@ $.widget('ui.note', {
          * input pane.
          *
          */
-        self.element.delegate('.note-input-pane button',
-                              'click.ui-note', function(e) {
+        self.$buttons.bind('click.ui-note', function(e) {
             var $button = $(this);
 
             switch ($button.attr('name'))
@@ -646,18 +703,99 @@ $.widget('ui.note', {
                 self.$reply.val('');
                 break;
 
-            case 'cancel':
+            case 'cancel-reply':
                 self.$reply.val('');
                 self.$reply.blur();
-                //self.deactivate();
+
+                // If there are no (more) comments, self-destruct!
+                if (self.commentCount() < 1)
+                {
+                    self.destroy();
+                }
                 break;
             }
         });
 
         /*****************************************************
-         * Handle 'keyup' in the reply area.
+         * Handle click-to-activate
          *
-         * Enable/Disale the reply button based upon whether
+         */
+        self.element.bind('click.ui-note', function(e) {
+            self.activate();
+            return false;
+        });
+
+        /*****************************************************
+         * Handle comment edit/cancel
+         *
+         */
+        self.element.delegate('.comment',
+                                'comment-edit.ui-note '
+                              + 'comment-cancel-edit.ui-note',
+                              function(e) {
+            var $comment    = $(e.target);
+
+            switch (e.type)
+            {
+            case 'comment-edit':
+                self.$input.hide( );
+                break;
+
+            case 'comment-cancel-edit':
+                if (self.directEdit)
+                {
+                    /* On 'cancel-edit', destroy any pending comment.  This
+                     * will result in our 'comment-destroyed' handler (below)
+                     * once the comment is actually destroyed.
+                     */
+                    self.removeComment($comment);
+                }
+                else
+                {
+                    self.$input.css('display', '');
+                }
+                break;
+            }
+        });
+
+        /*****************************************************
+         * Handle the deletion of a comment
+         *
+         */
+        self.element.delegate('.comment',
+                                'comment-destroyed.ui-note '
+                              + 'comment-saved.ui-note',
+                              function(e, comment) {
+            var $comment    = $(e.target);
+
+            if (self.directEdit)
+            {
+                /* In direct edit mode (via editComment()), then we've arrived
+                 * here due to an edit cancellation (which resulted in a
+                 * deletion of the pending comment and a 'comment-destroyed'
+                 * event) or a comment save.  At this point the comment should
+                 * have been fully dealt with so all we need to do is
+                 * de-activate.
+                 */
+                self.deactivate( function() {
+                    self.$input.css('display', '');
+                    self.directEdit = false;
+                });
+            }
+            else if (e.type === 'comment-destroyed')
+            {
+                /* NOT in direct edit mode.  A comment has been destroyed,
+                 * likely via the user clicking on the 'delete' button for the
+                 * comment.  Make sure our state properly reflects deletion.
+                 */
+                self.removeComment($comment);
+            }
+        });
+
+        /*****************************************************
+         * Handle 'keyup' in the reply element.
+         *
+         * Enable/Disable the reply button based upon whether
          * the new content is empty.
          *
          */
@@ -672,26 +810,6 @@ $.widget('ui.note', {
             {
                 $reply.button('disable');
             }
-        });
-
-        /*****************************************************
-         * Handle click-to-activate
-         *
-         */
-        self.element.bind('click.ui-note', function(e) {
-            self.activate();
-            return false;
-        });
-
-        /*****************************************************
-         * Handle the deletion of a comment
-         *
-         */
-        self.element.delegate('.comment', 'comment-destroyed',
-                              function(e, comment) {
-            var $comment    = $(e.target);
-
-            self.removeComment($comment);
         });
 
         /*****************************************************
@@ -729,8 +847,14 @@ $.widget('ui.note', {
                 self.$reply.addClass('hint')
                            .val( self.$reply.attr('title') );
 
-                self.$buttons.hide();
-                 $reply.button('disable');
+                // Disable the reply button and hide the buttons
+                $reply.button('disable');
+
+                // If there are comments, hide the buttons
+                if (self.commentCount() > 0)
+                {
+                    self.$buttons.hide();
+                }
              }
         });
 
@@ -741,10 +865,10 @@ $.widget('ui.note', {
         var self    = this;
         var opts    = self.options;
 
-        self.element.undelegate('.note-input-pane button', 'click.ui-note');
-        self.$reply.unbind('.ui-note');
+        self.element.undelegate('.comment', '.ui-note');
         self.element.unbind('.ui-note');
-        self.element.undelegate('.comment', 'comment-destroyed');
+        self.$reply.unbind('.ui-note');
+        self.$buttons.unbind('.ui-note');
 
         $(document).bind('click.ui-note', self._docClick);
 
@@ -795,7 +919,60 @@ $.widget('ui.comment', {
 
         // Notify our container that this comment has been destroyed.
         self._trigger('destroyed', null, opts.comment);
-        //self.element.trigger('destroyed', opts.comment);
+    },
+
+    /** @brief  Put this comment in edit mode. */
+    edit: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        if (self.editing)   { return; }
+        self.editing = true;
+
+        self.$edit.val( self.$comment.text() );
+        self.$comment.hide( opts.animSpeed );
+        self.$mainButtons.hide( opts.animSpeed );
+        self.$editArea.show();
+        self.$edit.focus();
+
+        self._trigger('edit');
+
+        return this;
+    },
+
+    /** @brief  Cancel edit mode. */
+    cancelEdit: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        if (! self.editing) { return; }
+        self.editing = false;
+
+        self.$editArea.hide( );
+        self.$comment.show( );
+
+        /* Note: Do NOT use show() -- it will add a direct style setting which
+         *       will override any CSS rules.  We simply want to remove the
+         *       'display:none' style added by .hide() in edit().
+         */
+        self.$mainButtons.css('display', '');
+
+        return this;
+    },
+
+    /** @brief  Save any changes and cancel edit mode. */
+    save: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        opts.comment.setText( self.$edit.val() );
+
+        self.$comment.text( opts.comment.getText() );
+
+        self._trigger('change', null, 'commentSaved');
+        self._trigger('saved',  null, opts.comment);
+
+        self.cancelEdit();
     },
 
     /*******************************
@@ -865,15 +1042,10 @@ $.widget('ui.comment', {
             switch ($button.attr('name'))
             {
             case 'edit':
-                self.$edit.val( self.$comment.text() );
-                self.$comment.hide();
-                self.$mainButtons.css('display', 'none');
-                self.$editArea.show();
-                self.$edit.focus();
+                self.edit();
                 break;
 
             case 'delete':
-                //self.destroy();
                 self.element.slideUp(function() {
                     self.element.remove();
                 });
@@ -881,19 +1053,13 @@ $.widget('ui.comment', {
 
             case 'save':
                 // Save any changes in self.$edit
-                opts.comment.setText( self.$edit.val() );
+                self.save();
+                break;
 
-                self.$comment.text( opts.comment.getText() );
-
-                self._trigger('change', null, 'commentSaved');
-
-                // Fall-through to 'cancel' to restore non-edit mode
-
-            case 'cancel':
+            case 'cancel-edit':
                 // Cancel 'edit'
-                self.$editArea.hide();
-                self.$comment.show();
-                self.$mainButtons.css('display', '');
+                self.cancelEdit();
+                self._trigger('cancel-edit');
                 break;
             }
         });
@@ -1522,22 +1688,6 @@ $.widget("ui.sentence", {
     _addNote: function( $group, note, hide ) {
         var self    = this;
         var opts    = self.options;
-        var noteId; 
-
-        if (! note)
-        {
-            noteId = self.notes.length;
-            note   = {id:noteId};
-        }
-        else
-        {
-            if (! (note instanceof $.Note) )
-            {
-                note = new $.Note( note );
-            }
-
-            noteId = note.getId();
-        }
 
         // Generate a ui.note widget at the same vertical offset as $group.
         var $note   = $('<div />').note({
@@ -1546,7 +1696,8 @@ $.widget("ui.sentence", {
                         position:   { of:$group },
                         hidden:     (hide ? true : false)
                       });
-        self.notes[ noteId ] = $note; //$note.note('serialize');
+
+        self.notes[ $note.note('id') ] = $note;
 
         /* Provide data-based links between the overlay group  and the
          * associated note.
@@ -1720,14 +1871,13 @@ $.widget("ui.sentence", {
                 // Remove any remaining rangy selections.
                 rangy.getSelection().removeAllRanges();
 
-                var $note   = self._addNote( $group );
+                var note    = { id: self.notes.length };
+                var $note   = self._addNote( $group, note );
 
                 if ($.ui.sentence.options.quickTag !== true)
                 {
-                    // Focus for input
-                    $note.note('activate', function() {
-                         $note.note('focus');
-                    });
+                    // Edit the first (empty) command
+                    $note.note('editComment');
                 }
             }
             else if ($ctl.hasClass('remove'))
@@ -3502,7 +3652,7 @@ $.Summary.prototype = {
         if (! globalOpts)
         {
             globalOpts = {
-                quickTag:   true
+                quickTag:   false
             };
         }
 
@@ -4595,7 +4745,7 @@ $.Summary.prototype = {
         if (! globalOpts)
         {
             globalOpts = {
-                quickTag:   true
+                quickTag:   false
             };
         }
 

@@ -579,7 +579,7 @@ $.Summary.prototype = {
         if (! globalOpts)
         {
             globalOpts = {
-                quickTag:   true
+                quickTag:   false
             };
         }
 

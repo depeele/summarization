@@ -608,22 +608,6 @@ $.widget("ui.sentence", {
     _addNote: function( $group, note, hide ) {
         var self    = this;
         var opts    = self.options;
-        var noteId; 
-
-        if (! note)
-        {
-            noteId = self.notes.length;
-            note   = {id:noteId};
-        }
-        else
-        {
-            if (! (note instanceof $.Note) )
-            {
-                note = new $.Note( note );
-            }
-
-            noteId = note.getId();
-        }
 
         // Generate a ui.note widget at the same vertical offset as $group.
         var $note   = $('<div />').note({
@@ -632,7 +616,8 @@ $.widget("ui.sentence", {
                         position:   { of:$group },
                         hidden:     (hide ? true : false)
                       });
-        self.notes[ noteId ] = $note; //$note.note('serialize');
+
+        self.notes[ $note.note('id') ] = $note;
 
         /* Provide data-based links between the overlay group  and the
          * associated note.
@@ -806,14 +791,13 @@ $.widget("ui.sentence", {
                 // Remove any remaining rangy selections.
                 rangy.getSelection().removeAllRanges();
 
-                var $note   = self._addNote( $group );
+                var note    = { id: self.notes.length };
+                var $note   = self._addNote( $group, note );
 
                 if ($.ui.sentence.options.quickTag !== true)
                 {
-                    // Focus for input
-                    $note.note('activate', function() {
-                         $note.note('focus');
-                    });
+                    // Edit the first (empty) command
+                    $note.note('editComment');
                 }
             }
             else if ($ctl.hasClass('remove'))
