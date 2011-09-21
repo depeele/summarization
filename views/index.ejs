@@ -17,9 +17,9 @@ Req(true, 'summary', function() {
     });
 });
 </script>
+
 <div class='margin-left'><!-- margin-left { -->
- <div class='control-pane ui-corner-br'
-      style='display:none;'><!-- control-pane { -->
+ <div class='control-pane ui-corner-br' style='display:none;'><!-- control-pane { -->
   <div class='controls ui-layout-north'><!-- controls { -->
    <div class='filter'><!-- filter { -->
     <label for="filter" class='primary'>Filter</label>
@@ -30,7 +30,7 @@ Req(true, 'summary', function() {
     <input name="filter" id="filter-starred"
            type="checkbox" value="starred" />
     <label for="filter-starred">starred sentences:</label>
-   </div><!-- filter { -->
+   </div><!-- filter } -->
 
    <div class='threshold'><!-- threshold { -->
     <label for="threshold" class='primary'>Threshold</label>
@@ -55,6 +55,13 @@ Req(true, 'summary', function() {
      </div>
     </div>
    </div><!-- threshold } -->
+
+   <div class='options'><!-- options { -->
+    <label for="options" class='primary'>Options</label>
+    <input name="quickTag" id="options-quickTag"
+           type="checkbox" value="normal" />
+    <label for="options-quickTag">quick tag:</label>
+   </div><!-- options } -->
   </div><!-- controls } -->
  </div><!-- control-pane } -->
 </div><!-- margin-left } -->
@@ -62,8 +69,8 @@ Req(true, 'summary', function() {
  <article id='article' class='loading'></article>
 </div><!-- content-pane } -->
 <div class='margin-right'><!-- margin-right { -->
- <div class='notes-pane'>
- </div>
+ <div class='tags-pane'></div>
+ <div class='notes-pane'></div>
 </div><!-- margin-right } -->
 
 <!-- Templates { -->
@@ -98,30 +105,30 @@ Req(true, 'summary', function() {
        name='${keyword}'>${text}</span>
 </script>
 
-<script id='tmpl-selection-controls' type='text/x-jquery-tmpl'>
- <div class='selection-controls ui-corner-top'><div
+<script id='tmpl-overlay-controls' type='text/x-jquery-tmpl'>
+ <div class='overlay-controls ui-corner-top'><div
       class='tag su-icon su-state-reverse su-icon-tag'
       title='tag' /></div>
 </script>
 
-<script id='tmpl-selection-remove-controls' type='text/x-jquery-tmpl'>
- <div class='selection-controls ui-corner-top'><div
+<script id='tmpl-overlay-remove-controls' type='text/x-jquery-tmpl'>
+ <div class='overlay-controls ui-corner-top'><div
       class='remove su-icon su-icon-cancel-blue ui-state-default'
       title='remove tag' /></div>
 </script>
 
-<!-- The BODY of a note (without the outter <div class='note' /> ) -->
-<script id='tmpl-note' type='text/x-jquery-tmpl'>
+<!-- The BODY of a comment (without the outter <div class='comment' /> ) -->
+<script id='tmpl-comment' type='text/x-jquery-tmpl'>
   <img class='avatar' src='${note.getAuthor().getAvatarUrl()}' />
   <div class='author'>${note.getAuthor().getFullName()}</div>
   <div class='created'>${ $.prettyDate(note.getCreated()) }</div>
-  <div class='comment'>${note.getText()}</div>
+  <div class='text'>${note.getText()}</div>
   <div class='edit'>
    <textarea class='edit-comment'></textarea>
    <div class='buttons'>
     <button name='save'>save</button>
-    <button name='cancel'>cancel</button>
-    </div>
+    <button name='cancel-edit'>cancel</button>
+   </div>
   </div>
   <div class='buttons'>
    <button name='edit'>edit</button>
@@ -129,22 +136,20 @@ Req(true, 'summary', function() {
   </div>
 </script>
 
-<!-- The BODY of a notes container
-       (without the outter <div class='notes' /> ) -->
-<script id='tmpl-notes' type='text/x-jquery-tmpl'>
+<!-- The BODY of a note container
+       (without the outter <div class='note' /> ) -->
+<script id='tmpl-note' type='text/x-jquery-tmpl'>
   <div class='arrow-outer'></div>
   <div class='arrow-inner'></div>
-  <div class='notes-body'>
-   <!-- note entries will be placed here -->
+  <div class='note-body'>
+   <!-- comments will be placed here -->
   </div>
-  <div class='notes-input-pane'>
-   <textarea class='notes-reply' title="Reply to this comment..."></textarea>
-    <div class='buttons'>
-     <button name='reply'>reply</button>
-     <button name='cancel'>cancel</button>
-    </div>
+  <div class='note-input-pane'>
+   <textarea class='note-reply' title="Reply to this comment..."></textarea>
+   <div class='buttons'>
+    <button name='reply'>reply</button>
+    <button name='cancel-reply'>cancel</button>
+   </div>
  </div>
 </script>
 <!-- Templates } -->
-
-</script>

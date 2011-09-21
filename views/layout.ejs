@@ -2,12 +2,14 @@
 <html>
  <head>
   <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 
   <title><%= title %></title>
 
   <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.min.css" />
-  <link rel="stylesheet" type="text/css" href="css/summary-06.min.css" />
+  <link rel="stylesheet" type="text/css" href="css/summary-07.min.css" />
 
   <script src='js/req.min.js'></script>
   <script>
@@ -18,7 +20,7 @@ if (development === true)
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.js' },
         'jquery':       {
-            src:    'js/jquery.min.js',
+            src:    'js/jquery.js',
     
             // script.onload handler that runs as soon as the script has loaded
             onload: function () {
@@ -40,34 +42,38 @@ if (development === true)
                 };
             }
         },
-        'rangy':        { src: 'js/rangy.min.js' },
+        'rangy':        { src: 'js/rangy.js' },
         'rangy.serializer':
-                        { src: 'js/rangy/serializer.min.js',
-                                                        req: ['rangy'] },
-        'rangy.cssClassApplier':
-                        { src: 'js/rangy/cssclassapplier.min.js',
-                                                        req: ['rangy'] },
+                        { src: 'js/rangy/serializer.js',req: ['rangy'] },
     
         'utils':        { src: 'js/jquery.utils.js',    req: ['jquery'] },
-        'tmpl':         { src: 'js/jquery.tmpl.min.js', req: ['jquery'] },
-        'json':         { src: 'js/jquery.json.min.js', req: ['jquery'] },
-        'jstorage':     { src: 'js/jstorage.min.js',    req: ['jquery'] },
-        'delegateHoverIntent':
-                        { src: 'js/jquery.delegateHoverIntent.js',
+        'tmpl':         { src: 'js/jquery.tmpl.js',     req: ['jquery'] },
+        'json':         { src: 'js/jquery.json.js',     req: ['jquery'] },
+        'jstorage':     { src: 'js/jstorage.js',        req: ['jquery'] },
+        'hoverIntent':  { src: 'js/jquery.hoverIntent.js',
                                                         req: ['jquery'] },
+        'delegateHoverIntent':
+                        { src:    'js/jquery.delegateHoverIntent.js',
+                                                        req:    ['jquery'] },
         'user':         { src: 'js/jquery.user.js',     req: ['jquery'] },
-        'notes':        { src: 'js/jquery.notes.js',    req: ['jquery'] },
-        'jquery-ui':    { src: 'js/jquery-ui.min.js',   req: ['jquery'] },
+        'note':         { src: 'js/jquery.note.js',     req: ['jquery'] },
+        'jquery-ui':    { src: 'js/jquery-ui.js',       req: ['jquery'] },
     
         'ui.checkbox':  { src: 'js/ui.checkbox.js',     req: ['jquery-ui'] },
-        'ui.notes':     { src: 'js/ui.notes.js',        req: ['jquery-ui'] },
+        'ui.note':      { src: 'js/ui.note.js',         req: ['jquery-ui'] },
+        'ui.sentence':  { src: 'js/ui.sentence.js',     req: ['jquery-ui'] },
+        'ui.contentOverlay':
+                        { src: 'js/ui.contentOverlay.js',
+                          req: ['jquery-ui', 'rangy',
+                                'rangy.serializer' ] },
     
-        'summary':      { src: 'js/jquery.summary-06.js',
+        'summary':      { src: 'js/jquery.summary-07.js',
                           req: [ 'jquery',
-                                 'rangy.serializer', 'rangy.cssClassApplier',
                                  'utils', 'tmpl', 'json', 'jstorage',
-                                 'delegateHoverIntent', 'user', 'notes',
-                                 'ui.notes', 'ui.checkbox' ] }
+                                 'hoverIntent', 'delegateHoverIntent', 'user',
+                                 'note',
+                                 'ui.note', 'ui.checkbox', 'ui.sentence',
+                                 'ui.contentOverlay'] }
     };
 }
 else
@@ -75,14 +81,15 @@ else
     // Define production script dependencies
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.min.js' },
-        'summary':      { src: 'js/summary-06-full.js' }
+        'summary':      { src: 'js/summary-07-full.js' }
     };
 }
 
 Req('preloadImages', function() {
         // Preload global images/sprites
         preloadImages('css/images/loading.gif', 'css/images/icons-16.png');
-});
+    }
+);
   </script>
  </head>
  <body>
