@@ -5,6 +5,7 @@
  */
 @import "reset";
 @import "sprites-16";
+@import "mixins";
 
 /**************************************************************************
  * Global settings
@@ -107,7 +108,7 @@ a {
       display:      block;
     }
     author, time {
-      display:      inline-block;
+      .inlineBlock();
     }
 
     h1 {
@@ -132,7 +133,7 @@ a {
       font-size:    0.8em;
 
       .keyword {
-        display:    inline-block;
+        .inlineBlock();
         cursor:     pointer;
         border:     1px solid @colorArticleBackground;
       }
@@ -297,7 +298,7 @@ a {
     
         .controls .su-icon,
         .overlay-controls .su-icon {
-          display:    inline-block;
+          .inlineBlock();
           cursor:     pointer;
           border:     none;
         }
@@ -310,10 +311,10 @@ a {
         }
     
         .ui-hover .controls .su-icon {
-          opacity:    0.6;
+          .opacity(60);
         }
         .starred .controls .star {
-          opacity:    1.0;
+          .opacity(100);
         }
     
         /* When expanded, present the expand icon as collapse by mirroring
@@ -442,10 +443,10 @@ a {
       .ui-state-default {
         background:   transparent;
         border-color: transparent;
-        opacity:      0.6;
+        .opacity(60);
       }
       .ui-state-hover {
-        opacity:      1.0;
+        .opacity(100);
       }
     }
 

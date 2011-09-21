@@ -1,0 +1,64 @@
+@ms_filter_base: "progid:DXImageTransform.Microsoft.";
+
+.corners(@radius) {
+  border-radius:        @radius;
+  -moz-border-radius:   @radius;
+  -webkit-border-radius:@radius;
+  -ms-border-radius:    @radius;
+  -o-border-radius:     @radius;
+  -khtml-border-radius: @radius;
+}
+
+// 10% opacity: +opacity(10)
+.opacity(@pct) {
+  // Firefox, Safari, Opera, Chrome
+  opacity:          (@pct / 100);
+
+  // Mozilla, Netscape
+  -moz-opacity:     (@pct / 100);
+
+  // IE5-7
+  filter:           ~"alpha(opacity=@{pct})";
+
+  // IE8
+  -ms-filter:       ~"@{ms_filter_base}Alpha(Opacity=@{pct})";
+
+  // Opera
+  -o-opacity:       (@pct / 100);
+
+  // KHTML, old Safari
+  -khtml-opacity:   (@pct / 100);
+}
+
+// inline-block normalization per:
+//  http://foohack.com/2007/11/cross-browser-support-for-inline-block-styling/
+.inlineBlock() {
+  // OLD Mozilla browsers
+  display:  -moz-inline-stack;
+
+  // Modern browsers
+  display:  inline-block;
+
+  // IE - Trigger 'hasLayout' and set display to inline == inline-block
+  zoom:     1;
+  *display: inline;
+}
+
+// float clearfix per:
+//    http://www.positioniseverything.net/easyclearing.html
+//
+//  MUST be WITHIN the CSS rule to which it is applied.
+.clearFix() {
+  &:after {
+    content:    ".";
+    display:    block;
+    height:     0;
+    clear:      both;
+    visibility: hidden;
+
+    // IE
+    *display:   inline-block;
+    zoom:       1;
+    *display:   block;
+  }
+}

@@ -694,7 +694,10 @@ a {
   display: block;
 }
 .content-pane header author, .content-pane header time {
+  display: -moz-inline-stack;
   display: inline-block;
+  zoom: 1;
+  *display: inline;
 }
 .content-pane header h1 {
   font-size: 1.2em;
@@ -718,7 +721,10 @@ a {
   font-size: 0.8em;
 }
 .content-pane header .keywords .keyword {
+  display: -moz-inline-stack;
   display: inline-block;
+  zoom: 1;
+  *display: inline;
   cursor: pointer;
   border: 1px solid #ffffff;
 }
@@ -894,7 +900,10 @@ a {
   border-bottom: none;
 }
 .content-pane article section p .controls .su-icon, .content-pane article section p .overlay-controls .su-icon {
+  display: -moz-inline-stack;
   display: inline-block;
+  zoom: 1;
+  *display: inline;
   cursor: pointer;
   border: none;
 }
@@ -906,9 +915,19 @@ a {
 }
 .content-pane article section p .ui-hover .controls .su-icon {
   opacity: 0.6;
+  -moz-opacity: 0.6;
+  filter: alpha(opacity=60);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=60);
+  -o-opacity: 0.6;
+  -khtml-opacity: 0.6;
 }
 .content-pane article section p .starred .controls .star {
-  opacity: 1.0;
+  opacity: 1;
+  -moz-opacity: 1;
+  filter: alpha(opacity=100);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+  -o-opacity: 1;
+  -khtml-opacity: 1;
 }
 .content-pane article section p .expanded .controls .su-icon-expand {
   background-position: -16px 0;
@@ -994,9 +1013,19 @@ a {
   background: transparent;
   border-color: transparent;
   opacity: 0.6;
+  -moz-opacity: 0.6;
+  filter: alpha(opacity=60);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=60);
+  -o-opacity: 0.6;
+  -khtml-opacity: 0.6;
 }
 .control-pane .controls .filter .ui-state-hover, .control-pane .controls .options .ui-state-hover {
-  opacity: 1.0;
+  opacity: 1;
+  -moz-opacity: 1;
+  filter: alpha(opacity=100);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+  -o-opacity: 1;
+  -khtml-opacity: 1;
 }
 .control-pane .controls .threshold .buttons {
   margin: 0;
