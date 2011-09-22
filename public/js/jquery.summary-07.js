@@ -70,6 +70,7 @@ $.Summary.prototype = {
 
         var $gp         = self.element.parent().parent();
         self.$control         = $gp.find('.control-pane');
+        self.$tags            = $gp.find('.tags-pane');
         self.$threshold       = self.$control.find('.threshold');
         self.$thresholdValues = self.$threshold.find('.values');
         
@@ -1023,6 +1024,18 @@ $.Summary.prototype = {
                 // Save the serialize state of this sentence.
                 self.state[idex] = $s.sentence('serialize');
                 self._putState();
+
+                // Use the current state to update the global list of tags
+                var tags    = [];
+                $.each(self.state, function() {
+                    if ((! this) || (! this.notes)) { return; }
+
+                    $.each(this.notes, function() {
+                        tags = tags.concat( this.note.tags );
+                    });
+                });
+
+                self.$tags.text( tags.join(', ') );
                 break;
             }
         });

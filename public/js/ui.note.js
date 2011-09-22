@@ -43,7 +43,11 @@ $.widget('ui.note', {
                              * (e.g. the tagged/selected text within a
                              *       sentence).
                              */
-            using:  null    // A movement function (defaults to animate())
+
+            using:  null    /* A movement function. Defaults to a custom
+                             * function that works to avoid note collisions.
+                             */
+
         },
 
         animSpeed:  200,    // The speed (in ms) of animations
@@ -358,14 +362,18 @@ $.widget('ui.note', {
 
         if (opts.position.using === null)
         {
+            /* A custom movement function that works to avoid note collisions.
+             *
+             * Position animation can be disabled by setting the
+             * 'noPositionAnimation' option to true.
+             */
             opts.position.using = function( to ) {
 
-                // See if there is an existing note we will be colliding with
+                // See if we have any collisions with other notes
                 var myExtent    = self.element.offset();
                 var newTop      = myExtent.top + to.top;
                 var newBot      = newTop + self.element.height();
                 var myId        = self.element.attr('id');
-
                 self.$container.find('.note').each(function() {
                     var $note   = $(this);
                     if (myId === $note.attr('id'))  { return; }
@@ -384,12 +392,19 @@ $.widget('ui.note', {
                     }
                 });
 
-                $(this).animate( {top: to.top}, opts.animSpeed );
+                if (opts.noPositionAnimation === true)
+                {
+                    $(this).css( 'top', to.top );
+                }
+                else
+                {
+                    $(this).animate( {top: to.top}, opts.animSpeed );
+                }
             };
         }
 
         self.element
-                .addClass('note ui-corner-all')
+                .addClass('note')
                 .attr('id', 'note-'+ self.id())
                 .append( $( opts.template ).tmpl() )
                 .appendTo( self.$container );
@@ -442,6 +457,11 @@ $.widget('ui.note', {
         var self    = this;
         var opts    = self.options;
 
+        /*****************************************************
+         * General click handler for document.  If we see
+         * this event, deactivate this note widget.
+         *
+         */
         self._docClick = function(e) {
             var $target = $(e.target);
 
@@ -451,11 +471,6 @@ $.widget('ui.note', {
             }
         };
 
-        /*****************************************************
-         * General click handler for document.  If we see
-         * this event, deactivate this note widget.
-         *
-         */
         $(document).bind('click.ui-note', self._docClick);
 
         /*****************************************************

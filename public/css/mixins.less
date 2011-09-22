@@ -1,5 +1,37 @@
 @ms_filter_base: "progid:DXImageTransform.Microsoft.";
 
+.cornersBottom(@radius) {
+  border-radius:        0 0 @radius @radius;
+  -moz-border-radius:   0 0 @radius @radius;
+  -webkit-border-radius:0 0 @radius @radius;
+  -ms-border-radius:    0 0 @radius @radius;
+  -o-border-radius:     0 0 @radius @radius;
+  -khtml-border-radius: 0 0 @radius @radius;
+}
+.cornersTop(@radius) {
+  border-radius:        @radius @radius 0 0;
+  -moz-border-radius:   @radius @radius 0 0;
+  -webkit-border-radius:@radius @radius 0 0;
+  -ms-border-radius:    @radius @radius 0 0;
+  -o-border-radius:     @radius @radius 0 0;
+  -khtml-border-radius: @radius @radius 0 0;
+}
+.cornersLeft(@radius) {
+  border-radius:        @radius 0 0 @radius;
+  -moz-border-radius:   @radius 0 0 @radius;
+  -webkit-border-radius:@radius 0 0 @radius;
+  -ms-border-radius:    @radius 0 0 @radius;
+  -o-border-radius:     @radius 0 0 @radius;
+  -khtml-border-radius: @radius 0 0 @radius;
+}
+.cornersRight(@radius) {
+  border-radius:        0 @radius @radius 0;
+  -moz-border-radius:   0 @radius @radius 0;
+  -webkit-border-radius:0 @radius @radius 0;
+  -ms-border-radius:    0 @radius @radius 0;
+  -o-border-radius:     0 @radius @radius 0;
+  -khtml-border-radius: 0 @radius @radius 0;
+}
 .corners(@radius) {
   border-radius:        @radius;
   -moz-border-radius:   @radius;

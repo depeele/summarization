@@ -1020,7 +1020,7 @@ $.widget("ui.overlayGroup", {
             var ctlHeight   = self.$ctl.height();
             var ctlWidth    = self.$ctl.width();
             var elPos       = hit.$el.position();
-            var css         = 'ui-corner-top';
+            var css         = 'corner-top';
             elPos.bottom    = elPos.top  + hit.$el.height();
             elPos.right     = elPos.left + hit.$el.width();
 
@@ -1052,20 +1052,13 @@ $.widget("ui.overlayGroup", {
                  *          segment
                  */
                 pos.top = posBottom + ctlHeight - 2;
-                css     = 'ui-corner-bottom';
+                css     = 'corner-bottom';
             }
 
-            // /*
             self.$ctl.css( pos )
-                     .removeClass('ui-corner-bottom ui-corner-top')
+                     .removeClass('corner-bottom corner-top')
                      .addClass( css )
                      .show();
-            // */
-            /*
-            self.$ctl.css( 'top',  pos.top )
-                     .css( 'left', pos.left )
-                     .show();
-            // */
         };
         var hoverOut    = function(e) {
             self.$ctl.hide();

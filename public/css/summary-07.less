@@ -12,8 +12,22 @@
  *
  */
 @baseFont:                      16px;
-@noteWidth:                     210px;
 
+/*******************
+ * Widths
+ *
+ */
+@widthLeft:                     55px;
+@widthMain:                     700px;
+@widthRight:                    240px;
+
+@noteOffset:                    10px;
+@noteWidth:                     @widthRight - (@noteOffset * 3);    // 210px
+
+/*******************
+ * Colors
+ *
+ */
 @colorBackground:               #eee;
 @colorBorder:                   darken(@colorBackground, 10%);
 
@@ -65,6 +79,13 @@ a {
   min-height:           25px;
 }
 
+.corner-top {
+  .cornersTop(5px);
+}
+.corner-bottom {
+  .cornersBottom(5px);
+}
+
 /**************************************************************************
  * Primary Structure
  *
@@ -79,15 +100,15 @@ a {
 }
 
 .margin-left {
-  min-width:  55px;
+  min-width:  @widthLeft;
 }
 .content-pane {
-  width:      700px;
-  min-width:  700px;
-  max-width:  700px;
+  width:      @widthMain;
+  min-width:  @widthMain;
+  max-width:  @widthMain;
 }
 .margin-right {
-  min-width:  240px;
+  min-width:  @widthRight;
 }
 
 /**************************************************************************
@@ -482,9 +503,16 @@ a {
  *
  */
 .tags-pane {
-  position:         absolute;
+  position:         fixed;
   top:              0;
   height:           7em;
+  width:            @widthRight;
+
+  background-color: @colorBackground;
+  border:           1px solid @colorBorder;
+
+  .cornersBottom(10px);
+  .opacity(90);
 
   z-index:          11;
 }
@@ -497,7 +525,7 @@ a {
   position:         absolute;
   top:              7em;
 
-  z-index:          11;
+  //z-index:          11;
 }
 
 /*******************
@@ -507,7 +535,9 @@ a {
 .note {
   display:          block;
   position:         absolute;
-  left:             10px;
+  left:             @noteOffset;
+
+  .corners(5px);
 
   font-size:        0.7em;
   width:            @noteWidth;
@@ -591,7 +621,7 @@ a {
  *
  */
 .note-active {
-  left:             -10px;
+  left:             ~"-@{noteOffset}px";
 
   border:           1px solid @colorActiveNoteBorder;
   background-color: @colorActiveNoteBackground;

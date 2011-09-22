@@ -626,6 +626,14 @@ a:hover {
  * Global settings
  *
  */
+/*******************
+ * Widths
+ *
+ */
+/*******************
+ * Colors
+ *
+ */
 /**************************************************************************
  * General styles
  *
@@ -649,6 +657,22 @@ a {
   background-repeat: no-repeat;
   background-position: 50%;
   min-height: 25px;
+}
+.corner-top {
+  border-radius: 5px 5px 0 0;
+  -moz-border-radius: 5px 5px 0 0;
+  -webkit-border-radius: 5px 5px 0 0;
+  -ms-border-radius: 5px 5px 0 0;
+  -o-border-radius: 5px 5px 0 0;
+  -khtml-border-radius: 5px 5px 0 0;
+}
+.corner-bottom {
+  border-radius: 0 0 5px 5px;
+  -moz-border-radius: 0 0 5px 5px;
+  -webkit-border-radius: 0 0 5px 5px;
+  -ms-border-radius: 0 0 5px 5px;
+  -o-border-radius: 0 0 5px 5px;
+  -khtml-border-radius: 0 0 5px 5px;
 }
 /**************************************************************************
  * Primary Structure
@@ -1052,9 +1076,24 @@ a {
  *
  */
 .tags-pane {
-  position: absolute;
+  position: fixed;
   top: 0;
   height: 7em;
+  width: 240px;
+  background-color: #eeeeee;
+  border: 1px solid #d5d5d5;
+  border-radius: 0 0 10px 10px;
+  -moz-border-radius: 0 0 10px 10px;
+  -webkit-border-radius: 0 0 10px 10px;
+  -ms-border-radius: 0 0 10px 10px;
+  -o-border-radius: 0 0 10px 10px;
+  -khtml-border-radius: 0 0 10px 10px;
+  opacity: 0.9;
+  -moz-opacity: 0.9;
+  filter: alpha(opacity=90);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=90);
+  -o-opacity: 0.9;
+  -khtml-opacity: 0.9;
   z-index: 11;
 }
 /**************************************************************************
@@ -1064,7 +1103,6 @@ a {
 .notes-pane {
   position: absolute;
   top: 7em;
-  z-index: 11;
 }
 /*******************
  * Note
@@ -1074,6 +1112,12 @@ a {
   display: block;
   position: absolute;
   left: 10px;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  -khtml-border-radius: 5px;
   font-size: 0.7em;
   width: 210px;
   border: 1px solid #d5d5d5;
