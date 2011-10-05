@@ -1,0 +1,588 @@
+/** @file
+ *
+ *  This file may be used to generate summary-07.min.css using
+ *  lessc (http://lesscss.org/).
+ */
+@import "reset";
+@import "sprites-16";
+@import "mixins";
+
+/**************************************************************************
+ * Global settings
+ *
+ */
+@baseFont:                      16px;
+
+/*******************
+ * Widths
+ *
+ */
+@widthLeft:                     55px;
+@widthMain:                     700px;
+@widthRight:                    240px;
+
+@noteOffset:                    10px;
+@noteWidth:                     @widthRight - (@noteOffset * 3);    // 210px
+
+/*******************
+ * Colors
+ *
+ */
+@colorBackground:               #eee;
+@colorBorder:                   darken(@colorBackground, 10%);
+
+@colorTextDarkest:              #000;
+@colorText:                     #444;
+@colorTextLight:                #999;
+
+@colorArticleBackground:        #fff;
+
+@colorKeyword:                  #f6931f;
+
+@colorActiveNoteBackground:     #fffce9;
+@colorActiveNoteBorder:         darken(@colorActiveNoteBackground, 20%);
+
+@colorSentenceHidden:           lighten(@colorText, 60%);
+
+@colorControls:                 lighten(@colorText, 40%);
+
+@colorSelectedBackground:       @colorTextLight;
+
+@colorTagBackground:            #d7ebf9;
+@colorTag:                      #2779aa;
+@colorInputHint:                #aaa;
+
+/**************************************************************************
+ * General styles
+ *
+ */
+body {
+  font:             ~"@{baseFont}px/1.231 arial,helvetica,clean,sans-serif";
+  background-color: @colorBackground;
+
+  display:          table;
+  margin-left:      auto;
+  margin-right:     auto;
+}
+
+a {
+  text-decoration:  none;
+}
+
+.keyword-hover {
+  color:  @colorKeyword;
+}
+
+.loading {
+  background-position:  0     0;
+  background-image:     url('images/loading.gif');
+  background-repeat:    no-repeat;
+  background-position:  50%;
+
+  min-height:           25px;
+}
+
+.corner-top {
+  .cornersTop(5px);
+}
+.corner-bottom {
+  .cornersBottom(5px);
+}
+
+/**************************************************************************
+ * Primary Structure
+ *
+ * Optimized for a minimum 1024x768 with 24 pixels
+ * for window decoration and vertical scrollbar
+ * (i.e. a client/document width of 1000 pixels)
+ */
+.margin-left,
+.content-pane,
+.margin-right {
+  display:  table-cell;
+}
+
+.margin-left {
+  min-width:  @widthLeft;
+}
+.content-pane {
+  width:      @widthMain;
+  min-width:  @widthMain;
+  max-width:  @widthMain;
+}
+.margin-right {
+  min-width:  @widthRight;
+}
+
+/**************************************************************************
+ * Content Pane
+ *
+ */
+.content-pane {
+
+  /*******************
+   * Header
+   */
+  header {
+    display:        block;
+    padding:        1em;
+    border-bottom:  0.5em solid @colorBorder;
+
+    h1, .keywords {
+      display:      block;
+    }
+    author, time {
+      .inlineBlock();
+    }
+
+    h1 {
+      font-size:    1.2em;
+      font-weight:  bold;
+    }
+    author, time, .keywords {
+      font-size:    0.8em;
+      padding-left: 2em;
+      color:        @colorTextLight;
+    }
+    time {
+      font-size:    0.7em;
+    }
+    author:before {
+      content:      'by ';
+    }
+    time {
+      font-style:   italic;
+    }
+    .keywords {
+      font-size:    0.8em;
+
+      .keyword {
+        .inlineBlock();
+        cursor:     pointer;
+        border:     1px solid @colorArticleBackground;
+      }
+      .keyword:before {
+        content:      ' / ';
+      }
+    }
+  }
+
+  /*******************
+   * Article
+   */
+  article {
+    margin:           0 0.2em;
+    padding:          1em;
+    border:           1px solid @colorBorder;
+    background-color: @colorArticleBackground;
+
+    /*******************
+     * Section
+     *
+     */
+    section {
+      display:        block;
+      padding:        0.25em 0.5em 0.25em 0;
+      margin:         0;
+      border-top:     1px solid @colorBackground;
+      border-bottom:  1px solid @colorBackground;
+
+      p {
+        display:      block;
+        position:     relative;
+        padding:      0.25em 0.25em 0.25em 3em;
+  
+        margin:       0;
+        margin-left:  0;
+  
+        .box-shadow(1px, -1px, 1px, lighten(@colorBackground, 2.5%));
+        //border-bottom:1px solid @colorBackground;
+        //border-right: 1px solid @colorBackground;
+  
+        cursor:       pointer;
+
+        .controls {
+          position:   absolute;
+          display:    block;
+          z-index:    10;
+
+          font-size:  0.7em;
+          top:        -0.35em;
+          left:       -0.35em;
+          color:      @colorControls;
+          visibility: hidden;
+    
+          /* Make it unselectable */
+          -moz-user-select:   none;
+          -webkit-user-select:none;
+          -khtml-user-select: none;
+          user-select:        none;
+        }
+
+        .sentence {
+          position:     relative;
+          display:      block;
+          padding:      0 0.1em;
+          margin:       0;
+          font-size:    1px;
+          color:        @colorSentenceHidden;
+
+          .rank {
+            position:     absolute;
+            top:          -0.2em;
+            left:         -1.2em;
+ 
+            font-size:    0.7em;
+
+            color:        @colorKeyword;
+            .opacity(60);
+
+            /* Make it unselectable */
+            -moz-user-select:   none;
+            -webkit-user-select:none;
+            -khtml-user-select: none;
+            user-select:        none;
+
+            &:hover {
+              .opacity(100);
+            }
+          }
+
+          .text {
+            position:   relative;
+            border:     none;
+          }
+        }
+
+        .expanded {
+          font-size:    1em;
+          line-height:  1.2em;
+          color:        @colorText;
+          cursor:       text;
+          .content {
+            background-color: #f0f0f0;
+          }
+        }
+
+        &:hover {
+          .box-shadow(2px, 0px, 4px, lighten(@colorControls, 10%));
+          .controls {
+            visibility: visible;
+          }
+
+          .expanded {
+            color:      @colorTextDarkest;
+          }
+        }
+
+      }
+
+      .collapsed {
+        line-height:  2px;
+        .controls {
+          top:        1px;
+        }
+      }
+    }
+
+    /*******************
+     * Article:Normal
+     *
+     */
+
+    /*******************
+     * Article:Starred
+     *
+     */
+
+    /*******************
+     * Article:Tagged
+     *
+     */
+
+    /*******************
+     * Article:All
+     *
+     */
+  }
+}
+
+/**************************************************************************
+ * Control Pane (within .margin-right)
+ *
+ */
+.control-pane {
+  position:         fixed;
+  top:              11em;
+  width:            55px;
+
+  font-size:        0.7em;
+
+  margin:           0;
+
+  z-index:          10;
+
+  .toggle-controls {
+    position:         absolute;
+    top:              4px;
+    right:            4px;
+    cursor:           pointer;
+  }
+
+  /*******************
+   * Controls
+   *
+   */
+  .controls {
+    overflow:   hidden;
+    text-align: center;
+
+    label.primary,
+    label.values {
+      display:      block;
+    }
+    label.primary {
+      color:        @colorBorder;
+    }
+    .values {
+      color:        @colorKeyword;
+      font-size:    0.9em;
+      cursor:       text;
+    }
+    .threshold,
+    .filter,
+    .options {
+      position:       relative;
+      padding:        0;
+      vertical-align: top;
+      text-align:     center;
+  
+      display:        block;
+      margin:         1em 0 0 0;
+    }
+  
+    .filter,
+    .options {
+      .checkbox {
+        cursor:         pointer;
+
+        span {
+          display:        block;
+          margin:         0 auto;
+        }
+      }
+      .ui-state-default {
+        background:   transparent;
+        border-color: transparent;
+        .opacity(60);
+      }
+      .ui-state-hover {
+        .opacity(100);
+      }
+    }
+
+    .threshold {
+      .buttons {
+        margin:       0;
+
+        .expansion,
+        .global {
+          margin:       0 0.4em;
+        }
+        .expansion {
+          margin:       0;
+        }
+        button {
+          margin:       0;
+        }
+        .ui-button-text {
+          padding:        0.4em;
+          line-height:    1;
+        }
+      }
+    }
+  }
+}
+.margin-left:hover .control-pane .controls label.primary {
+  color:        @colorTextLight;
+  cursor:       text;
+}
+
+/**************************************************************************
+ * Tags Pane (within .margin-right)
+ *
+ */
+.tags-pane {
+  position:         fixed;
+  top:              0;
+  height:           7em;
+  width:            @widthRight;
+
+  background-color: @colorBackground;
+  border:           1px solid @colorBorder;
+
+  .cornersBottom(10px);
+  .opacity(90);
+
+  z-index:          11;
+}
+
+/**************************************************************************
+ * Notes Pane (within .margin-right)
+ *
+ */
+.notes-pane {
+  position:         absolute;
+  top:              7em;
+
+  //z-index:          11;
+}
+
+/*******************
+ * Note
+ *
+ */
+.note {
+  display:          block;
+  position:         absolute;
+  left:             @noteOffset;
+
+  .corners(5px);
+
+  font-size:        0.7em;
+  width:            @noteWidth;
+  
+  border:           1px solid @colorBorder;
+  background-color: @colorArticleBackground;
+
+  z-index:          10;
+
+  cursor:           pointer;
+
+  .arrow-outer,
+  .arrow-inner,
+  .note-input-pane,
+  .note-body .comment .buttons,
+  .note-body .comment .edit {
+    display:        none;
+  }
+
+  .note-body {
+    .comment {
+      position:       relative;
+      padding:        0.5em;
+    
+      border-top:     1px dashed @colorBorder;
+
+      &:first-child {
+        border-top:     none;
+      }
+
+      .avatar {
+        position:     absolute;
+        left:         0.5em;
+        top:          0.5em;
+    
+        width:        24px;
+        height:       24px;
+      }
+      .author,
+      .created {
+        margin-left:  32px;
+      }
+      .author {
+        font-weight:  bold;
+      }
+      .created {
+        font-size:    0.8em;
+      }
+      .text, .edit {
+        margin-top:   0.5em;
+      }
+    }
+  }
+
+  .note-body .comment .buttons,
+  .note-input-pane .buttons {
+    text-align:   right;
+    padding-top:  0.5em;
+    
+    font-size:    0.8em;
+  
+    .ui-button-text {
+      padding:      0.2em 0.5em;
+    }
+  }
+
+  textarea {
+    width:  @noteWidth - @baseFont;  // 1em
+  }
+
+  .note-input-pane {
+
+    .hint {
+      color:        @colorInputHint;
+    }
+  }
+}
+
+/*******************
+ * Note (active)
+ *
+ */
+.note-active {
+  left:             ~"-@{noteOffset}px";
+
+  border:           1px solid @colorActiveNoteBorder;
+  background-color: @colorActiveNoteBackground;
+
+  .box-shadow(2px, 2px, 8px, @colorBorder);
+  z-index:          11;
+
+  .note-body .comment {
+    border-top:       1px dashed @colorActiveNoteBorder;
+
+    &:first-child {
+      border-top:     none;
+    }
+  }
+  
+  .note-body .comment .buttons,
+  .note-input-pane {
+    display:        block;
+  }
+  
+  .note-input-pane {
+    border-top:     1px dashed @colorActiveNoteBorder;
+    padding:        0.5em;
+    text-align:     right;
+  }
+  .arrow-outer {
+    display:        block;
+    position:       absolute;
+    left:           -15px;
+    top:            -1px;
+  
+    height:         0;
+    width:          0;
+  
+    border-top:     none;
+    border-bottom:  14px solid transparent;
+    border-left:    none;
+    border-right:   14px solid @colorActiveNoteBorder;
+  }
+  .arrow-inner {
+    display:        block;
+    position:       absolute;
+    left:           -13px;
+    top:            0;
+  
+    height:         0;
+    width:          0;
+  
+    border-top:     none;
+    border-bottom:  14px solid transparent;
+    border-left:    none;
+    border-right:   14px solid @colorActiveNoteBackground;
+  }
+}

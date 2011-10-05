@@ -38,6 +38,14 @@
      *
      */
 
+    /** @brief  Month Strings. */
+    $.months    = [
+        "January",      "Febrary",  "March",    "April",
+        "May",          "June",     "July",     "August",
+        "September",    "October",  "November", "December"
+    ];
+
+
     /** @brief  Convert a Date instance to a client-localized string of the
      *          form:
      *              YYYY-MM-DD g:mm a
@@ -58,7 +66,10 @@
             date = new Date(date);
         }
 
-        var dateStr     = '';
+        var dateStr     = $.months[date.getMonth()]  //.substr(0,3)
+                        +' '+  date.getDate()
+                        +' '+ date.getFullYear()
+                        +', ';
         var hour        = date.getHours();
         var meridian    = 'am';
         if (hour === 0)
@@ -81,19 +92,9 @@
          * We use the span to try and ensure that we'll always align properly
          * since the only value that MIGHT be in the empty field is 1.
          */
-        dateStr += $.padString(hour, 2,
-                               "<span style='visibility:hidden;'>1</span>")
-                + ':'+ $.padString(date.getMinutes())
-                + ' '+ meridian;
-
-        if (timeOnly !== true)
-        {
-            dateStr += ', '+ date.getFullYear()
-                    +  '-'+  $.padString((date.getMonth() + 1))
-                    +  '-'+  $.padString(date.getDate())
-                    +  ' ';
-        }
-
+        dateStr += hour
+                +':'+ $.padString(date.getMinutes())
+                +' '+ meridian;
 
         return dateStr;
     };
@@ -140,15 +141,8 @@
             }
         }
 
-        return num + suffix;
+        return num +'<sup>'+ suffix +'</sup>';
     };
-
-    /** @brief  Month Strings. */
-    $.months    = [
-        "January",      "Febrary",  "March",    "April",
-        "May",          "June",     "July",     "August",
-        "September",    "October",  "November", "December"
-    ];
 
     /** @brief  Takes a date/time and returns a string representing how long
      *          ago the date occurred.

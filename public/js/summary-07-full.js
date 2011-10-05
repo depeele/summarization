@@ -59,7 +59,7 @@ $.Note = function(props) {
     var defaults    = {
         id:         null,
         comments:   [],
-        tags:       []
+        tags:       null
     };
 
     return this.init( $.extend(defaults, true, props || {}) );
@@ -144,7 +144,7 @@ $.Note.prototype = {
     getTags: function()
     {
         var self    = this;
-        if (! self.props.tags)
+        //if (! self.props.tags)
         {
             // Create a full set of tags from all comments.
             self.props.tags = [];
@@ -374,7 +374,7 @@ $.Comment.prototype = {
 
         if (text)
         {
-            var matches = text.match(/#[\w]+/g);
+            var matches = text.match(/#[\w\._\-]+/g);
 
             $.each(matches, function(idex, str) {
                 tags.push( str.substr(1) );

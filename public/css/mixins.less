@@ -1,5 +1,11 @@
 @ms_filter_base: "progid:DXImageTransform.Microsoft.";
 
+.box-shadow (@x: 0, @y: 0, @blur: 1px, @color: #000) {
+  box-shadow:         @arguments;
+  -moz-box-shadow:    @arguments;
+  -webkit-box-shadow: @arguments;
+}
+
 .cornersBottom(@radius) {
   border-radius:        0 0 @radius @radius;
   -moz-border-radius:   0 0 @radius @radius;

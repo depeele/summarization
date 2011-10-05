@@ -1,0 +1,146 @@
+{
+  "type":       "text/html",
+  "url":        "http://www.wired.com/wiredscience/2011/07/the-selfishness-of-trust/",
+  "title":      "The Collapse of Political Trust",
+  "author":     "Jonah Lehrer",
+  "published":  "2011-07-27T21:40:00",
+  "keywords":   [
+    {"name":"Politics", "rank":0.8,
+                        "forms":[ "politics", "political", "politicians" ] },
+    {"name":"Trust",    "rank":0.9,
+                        "forms":[ "trust", "trusting", "trusted", "trustworthy" ] }
+  ],
+
+  "sections":   [
+    {"paragraphs":  [
+      {"sentences": [
+        {"rank":    0.1,
+         "content": "American politics makes me sad."},
+        {"rank":    0.7,
+         "content": "One can’t help but imagine the history books of the future, highlighting this moment as an example of why the decline began, how a country this rich and free developed such a dysfunctional political system."}
+      ]},
+      {"sentences": [
+        {"rank":    0.1,
+         "content": "But this post is not a lament for a bygone politics, because lord knows there are enough of those."},
+        {"rank":    0.1,
+         "content": "Instead, I think the current breakdown in Washington highlights the fragility of a human capability we’ve long taken for granted: trust."},
+        {"rank":    0.9,
+         "content": "While economists have begun focusing on trust as a crucial factor in economic development – a country without trust can’t build the institutions that make growth possible – trust is also an essential component of effective politics."},
+        {"rank":    0.3,
+         "content": "Democracies, after all, depend on compromise."},
+        {"rank":    0.3,
+         "content": "And compromise requires trust."}
+      ]},
+      {"sentences": [
+        {"rank":    0.1,
+         "content": "At the moment, the neuroscience of trust remains extremely provisional."},
+        {"rank":    0.4,
+         "content": "We still don’t know why some societies are awash in trust while others are forced to do without, subsisting on nothing but the instinctive faith in close friends and family."},
+        {"rank":    0.4,
+         "content": "We don’t know why some people are so much more trusting than others or what happens when the bonds of trust are broken."},
+        {"rank":    0.1,
+         "content": "Nevertheless, there have been some interesting glimmers into the formation of trust in the brain."}
+      ]},
+      {"sentences": [
+        {"rank":    0.1,
+         "content": "Consider this elegant investigation of trust, led by Brooks King-Casas, Colin Camerer, Read Montague, et. al."},
+        {"rank":    0.1,
+         "content": "The research was born out of a serious limitation of conventional fMRI, which looks at the individual brain in splendid isolation."},
+        {"rank":    0.1,
+         "content": "(A subject is put in a claustrophobic scanner and told to perform a task.)"},
+        {"rank":    0.3,
+         "content": "Humans, of course, are a social species – our behavior is often influenced by the behavior of others – so the scientists pioneered a technique known as hyper-scanning, which allows subjects in different fMRI machines to interact in real time."}
+      ]},
+      {"sentences": [
+        {"rank":    0.2,
+         "content": "The experiment revolved around a simple economic game in which getting the maximum reward required the strangers to trust one another."},
+        {"rank":    0.3,
+         "content": "However, if one of the players grew especially selfish, he or she could always steal from the pot and erase the tenuous sense of trust."},
+        {"rank":    0.4,
+         "content": "By monitoring the players’ brains, the scientists were able to predict whether or not someone would steal money several seconds before the theft actually occurred."},
+        {"rank":    0.7,
+         "content": "The secret was a cortical area known as the caudate nucleus, which closely tracked the payouts from the other player."},
+        {"rank":    0.1,
+         "content": "(The caudate is usually discussed in the context of addiction, since it plays a central role in modulating our expectation of pleasure.)"},
+        {"rank":    0.1,
+         "content": "Montague noticed that whenever the caudate exhibited reduced activity, trust tended to break down."}
+      ]},
+      {"sentences": [
+        {"rank":    0.1,
+         "content": "But what exactly is the caudate computing?"},
+        {"rank":    0.1,
+         "content": "How do we decide whom to trust with our money?"},
+        {"rank":    0.6,
+         "content": "At first, the caudate didn’t get excited until the subjects actually trusted one another and garnered their separate rewards."},
+        {"rank":    0.6,
+         "content": "But over time this brain area started to expect those rewards, so that it fired long before the money actually arrived."},
+        {"rank":    0.1,
+         "content": "It’s only at this point – once we take those future benefits for granted – that the bonds of trust between the players began to form."}
+      ]},
+      {"sentences": [
+        {"rank":    0.8,
+         "content": "The moral is that trust is ultimately about the expectation of rewards."},
+        {"rank":    0.4,
+         "content": "We see trust as such a noble trait, but it’s ultimately rooted in a greedy calculation, emanating from our primal dopaminergic circuitry:"}
+      ]},
+      {"sentences": [
+        {"rank":    0.8,
+         "content": "Taken together, these results suggest that the head of the caudate nucleus receives or computes information about (i) the fairness of a social partner’s decision and (ii) the intention to repay that decision with trust."},
+        {"rank":    0.5,
+         "content": "In early rounds of the game, the ”intention to trust” is evident only after an investment is revealed."},
+        {"rank":    0.5,
+         "content": "With experience, this signal shifts to a time preceding the revelation of the investment."}
+      ]},
+      {"sentences": [
+        {"rank":    0.6,
+         "content": "In other words, we don’t trust people because they seem nice or virtuous or trustworthy, whatever those adjectives mean."},
+        {"rank":    0.6,
+         "content": "We trust them because they get us the good stuff, delivering what Montague refers to as the “social juice” of reciprocity."},
+        {"rank":    0.8,
+         "content": "When we say we trust someone, what we’re really saying is that they’re a reliable source of what we want."},
+        {"rank":    0.4,
+         "content": "I scratch your back, you scratch mine."}
+      ]},
+      {"sentences": [
+        {"rank":    0.1,
+         "content": "And this returns us to the present dysfunction in Washington."},
+        {"rank":    0.9,
+         "content": "If trust is about the distribution of rewards – about learning to expect bonuses from others – then it’s going to be a lot harder to share those rewards in an age of scarcity and deficits."},
+        {"rank":    0.7,
+         "content": "For the first time in decades, congresspeople aren’t trading pork barrel projects and tax breaks – they’re negotiating steep budget cuts."},
+        {"rank":    0.8,
+         "content": "Those cuts might be necessary, but they’re aren’t going to excite the caudate or generate that requisite burst of “social juice."},
+        {"rank":    0.1,
+         "content": "The traditional means of developing trust among Congresspeople have disappeared."}
+      ]},
+      {"sentences": [
+        {"rank":    0.1,
+         "content": "There are, of course, myriad reasons for the increasing polarization of Congress."},
+        {"rank":    0.1,
+         "content": "But I can’t help but wonder if one of the reasons has to with this newfound lack of favor trading, as it’s increasingly difficult for politicians to barter projects in exchange for votes."},
+        {"rank":    0.1,
+         "content": "It’s easy to hate on Congressional pork and mock all those silly projects that get snuck into bills."},
+        {"rank":    0.7,
+         "content": "But when we do without pork, we also deny our politicians a means of building trusting relationships across the aisle."},
+        {"rank":    0.5,
+         "content": "In this sense, those bridges to nowhere are a sort of benevolent inefficiency, a form of waste that, just maybe, keeps us from becoming a banana republic."},
+        {"rank":    0.1,
+         "content": "Such are the hazards of politics in age of cutting."},
+        {"rank":    0.7,
+         "content": "If trust begins when we share the treasure, what happens when there’s no treasure left to share?"}
+      ]},
+      {"sentences": [
+        {"rank":    0.01,
+         "content": "PS. I also love Bill Clinton’s theory that the extreme partisanship of Congress is largely due to…sleep deprivation."}
+      ]},
+      {"sentences": [
+        {"rank":    0.01,
+         "content": "PPS. For more on the hidden benefits of Congressional pork, check out this paper by the political scientists John Ellwood and Eric Patashnik."}
+      ]},
+      {"sentences": [
+        {"rank":    0.01,
+         "content": "Image: President Barack Obama sits next to House Speaker John Boehner of Ohio, left, in the Cabinet Room of the White House, Saturday, July 23, 2011, in Washington, as they meet to discuss the debt. (AP Photo/Carolyn Kaster)"}
+      ]}
+    ]}
+  ]
+}
