@@ -20,25 +20,55 @@
             var tModule = require('./comment.js');
             _.extend(app, tModule.app);
         }
+
+        if (!app.Model.Position)
+        {
+            var tModule = require('./position.js');
+            _.extend(app, tModule.app);
+        }
     }
 
     app.Model.Note  = Backbone.Model.extend({
         defaults: {
             id:         null,
-            // Position within the document to highlight for this note
-            highlight:  {
-                start:  null,
-                end:    null
+
+            /* Position within the document of the content highlight associated
+             * with this note.
+             */
+            position:   {
+                start:  {
+                    sentence:   null,   /* The app.Model.Sentence instance or
+                                         * identifier.
+                                         */
+                    relativePos:null    /* Serialized position rooted in the
+                                         * identified sentence.
+                                         */
+                },
+                end:    {
+                    sentence:   null,   /* The app.Model.Sentence instance or
+                                         * identifier.
+                                         */
+                    relativePos:null    /* Serialized position rooted in the
+                                         * identified sentence.
+                                         */
+                }
             },
+
             // Comments associated with this note
             comments:   null
         },
 
         initialize: function(spec) {
             var comments    = this.get('comments');
-            if ( ! (comments instanceof app.Model.Comments) )
+            var position    = this.get('position');
+            if ((! comments) || ! (comments instanceof app.Model.Comments) )
             {
-                this.set({'comments': new app.Model.Comments(comments)});
+                this.set({comments: new app.Model.Comments(comments)});
+            }
+
+            if ((! position) || ! (position instanceof app.Model.Position) )
+            {
+                this.set({position: new app.Model.Position(position)});
             }
         }
     });

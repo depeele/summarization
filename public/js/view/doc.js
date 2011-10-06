@@ -24,6 +24,7 @@
         render:     function() {
             var self    = this;
 
+            self.$el.attr('id', self.model.cid);
             self.$el.html( self.template( self.model.toJSON() ) );
 
             // Append a view of each section
@@ -33,7 +34,22 @@
                 self.$el.append( view.render().el );
             });
 
+            self.model.get('notes').each(function(model) {
+                // :TODO: Render this note
+            });
+
             return self;
+        },
+
+        /** @brief  Add a new note to this document.
+         *
+         *  This makes use of the current (rangy) selection to generate a new
+         *  note.
+         */
+        addNote: function() {
+            var notes       = this.get('notes');
+            var position    = new app.Model.Position();
+            notes.add( {position:position} );
         }
     });
 

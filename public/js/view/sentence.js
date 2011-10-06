@@ -46,6 +46,7 @@
             var self    = this;
             var rank    = Math.floor( self.model.get('rank') * 100 );
 
+            self.$el.attr('id',   self.model.cid);
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
 
