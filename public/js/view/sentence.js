@@ -120,7 +120,13 @@
 
         /** @brief  Toggle this sentence iff collapsed to use 'expansion'. */
         expansionToggle: function(e) {
-            if (this.$el.hasClass('expanded'))  { return; }
+            if (this.$el.hasClass('expanded'))
+            {
+                // Mark this event as "handled" by stopping its propagation
+                if (e)  { e.stopPropagation(); }
+                return;
+            }
+
             if (this.$el.hasClass('expansion')) { this.expansionCollapse(e); }
             else                                { this.expansionExpand(e); }
         }
