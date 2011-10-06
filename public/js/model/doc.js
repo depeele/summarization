@@ -9,20 +9,21 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var Sections    = this.Sections;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!Sections)
+        if (!app.Model.Sections)
         {
             var tModule = require('./section.js');
-            Sections   = tModule.Sections;
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Doc    = Backbone.Model.extend({
+    app.Model.Doc   = Backbone.Model.extend({
         defaults: {
             id:         null,
             type:       'text/html',
@@ -47,15 +48,15 @@
                 this.set({'published': published});
             }
 
-            if (! (sections instanceof Sections))
+            if (! (sections instanceof app.Model.Sections))
             {
-                this.set({'sections': new Sections(sections)});
+                this.set({'sections': new app.Model.Sections(sections)});
             }
         }
     });
 
-    this.Docs   = Backbone.Collection.extend({
-        model:  this.Document,
+    app.Model.Docs  = Backbone.Collection.extend({
+        model:  app.Model.Document,
 
         initialize: function() {
         }

@@ -9,20 +9,21 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var Sentences   = this.Sentences;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!Sentences)
+        if (!app.Model.Sentences)
         {
             var tModule = require('./sentence.js');
-            Sentences   = tModule.Sentences;
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Paragraph  = Backbone.Model.extend({
+    app.Model.Paragraph = Backbone.Model.extend({
         defaults: {
             id:         null,
             rank:       0.0,
@@ -31,15 +32,15 @@
 
         initialize: function(spec) {
             var sentences   = this.get('sentences');
-            if (! (sentences instanceof Sentences))
+            if (! (sentences instanceof app.Model.Sentences))
             {
-                this.set({'sentences': new Sentences(sentences)});
+                this.set({'sentences': new app.Model.Sentences(sentences)});
             }
         }
     });
 
-    this.Paragraphs = Backbone.Collection.extend({
-        model:  this.Paragraph,
+    app.Model.Paragraphs    = Backbone.Collection.extend({
+        model:  app.Model.Paragraph,
 
         initialize: function() {
         }

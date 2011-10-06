@@ -8,20 +8,21 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var Comments    = this.Comments;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!Comments)
+        if (!app.Model.Comments)
         {
             var tModule = require('./comment.js');
-            Comments    = tModule.Comments;
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Note   = Backbone.Model.extend({
+    app.Model.Note  = Backbone.Model.extend({
         defaults: {
             id:         null,
             // Position within the document to highlight for this note
@@ -35,15 +36,15 @@
 
         initialize: function(spec) {
             var comments    = this.get('comments');
-            if ( ! (comments instanceof Comments) )
+            if ( ! (comments instanceof app.Model.Comments) )
             {
-                this.set({'comments': new Comments(comments)});
+                this.set({'comments': new app.Model.Comments(comments)});
             }
         }
     });
 
-    this.Notes  = Backbone.Collection.extend({
-        model:  this.Note,
+    app.Model.Notes = Backbone.Collection.extend({
+        model:  app.Model.Note,
 
         initialize: function() {
         }

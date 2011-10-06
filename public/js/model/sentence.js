@@ -8,14 +8,16 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    if (!Backbone && (typeof require !== 'undefined'))
+    if (typeof require !== 'undefined')
     {
-        Backbone = require('../backbone.js');
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
     }
 
-    this.Sentence   = Backbone.Model.extend({
+    app.Model.Sentence  = Backbone.Model.extend({
         defaults: {
             id:         null,
             rank:       0.0,
@@ -26,8 +28,8 @@
         }
     });
 
-    this.Sentences  = Backbone.Collection.extend({
-        model:  this.Sentence,
+    app.Model.Sentences = Backbone.Collection.extend({
+        model:  app.Model.Sentence,
 
         initialize: function() {
         }

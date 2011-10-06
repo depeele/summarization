@@ -254,14 +254,17 @@ a {
           }
         }
 
-        .expanded {
+        .expanded,
+        .expansion {
           font-size:    1em;
           line-height:  1.2em;
-          color:        @colorText;
-          cursor:       text;
           .content {
             background-color: #f0f0f0;
           }
+        }
+        .expanded {
+          cursor:       text;
+          color:        @colorText;
         }
 
         &:hover {
@@ -273,12 +276,17 @@ a {
           .expanded {
             color:      @colorTextDarkest;
           }
+          .expansion {
+            color:      darken(@colorSentenceHidden, 10%);
+          }
         }
 
       }
 
       .collapsed {
         line-height:  2px;
+        padding:      0.1em 0.1em 0.1em 3em;
+
         .controls {
           top:        1px;
         }

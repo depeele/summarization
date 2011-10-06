@@ -9,20 +9,21 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var Paragraphs  = this.Paragraphs;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!Paragraphs)
+        if (!app.Model.Paragraphs)
         {
             var tModule = require('./paragraph.js');
-            Paragraphs  = tModule.Paragraphs;
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Section    = Backbone.Model.extend({
+    app.Model.Section   = Backbone.Model.extend({
         defaults: {
             id:         null,
             rank:       0.0,
@@ -31,15 +32,15 @@
 
         initialize: function(spec) {
             var paragraphs  = this.get('paragraphs');
-            if (! (paragraphs instanceof Paragraphs))
+            if (! (paragraphs instanceof app.Model.Paragraphs))
             {
-                this.set({'paragraphs': new Paragraphs(paragraphs)});
+                this.set({'paragraphs': new app.Model.Paragraphs(paragraphs)});
             }
         }
     });
 
-    this.Sections   = Backbone.Collection.extend({
-        model:  this.Section,
+    app.Model.Sections  = Backbone.Collection.extend({
+        model:  app.Model.Section,
 
         initialize: function() {
         }

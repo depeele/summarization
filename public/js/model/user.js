@@ -8,14 +8,14 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
     var Backbone    = this.Backbone;
     if (!Backbone && (typeof require !== 'undefined'))
     {
         Backbone = require('../backbone.js');
     }
 
-    this.User        = Backbone.Model.extend({
+    app.Model.User  = Backbone.Model.extend({
         defaults:   {
             id:         null,
             name:       'anonymous',
@@ -28,8 +28,8 @@
         }
     });
 
-    this.Users       = Backbone.Collection.extend({
-        model:  this.User,
+    app.Model.Users = Backbone.Collection.extend({
+        model:  app.Model.User,
 
         initialize: function() {
         }

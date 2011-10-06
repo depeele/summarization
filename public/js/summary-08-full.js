@@ -2117,14 +2117,14 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
     var Backbone    = this.Backbone;
     if (!Backbone && (typeof require !== 'undefined'))
     {
         Backbone = require('../backbone.js');
     }
 
-    this.User        = Backbone.Model.extend({
+    app.Model.User  = Backbone.Model.extend({
         defaults:   {
             id:         null,
             name:       'anonymous',
@@ -2137,8 +2137,8 @@ Backbone.sync = function(method, model, options, error) {
         }
     });
 
-    this.Users       = Backbone.Collection.extend({
-        model:  this.User,
+    app.Model.Users = Backbone.Collection.extend({
+        model:  app.Model.User,
 
         initialize: function() {
         }
@@ -2155,20 +2155,21 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var User        = this.User;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!User)
+        if (!app.Model.User)
         {
-            var tModule = require('./user.js');
-            User        = tModule.User;
+            var tModule     = require('./user.js');
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Comment    = Backbone.Model.extend({
+    app.Model.Comment   = Backbone.Model.extend({
         defaults:   {
             id:         null,
             author:     null,
@@ -2179,9 +2180,9 @@ Backbone.sync = function(method, model, options, error) {
         initialize: function(spec) {
             var author  = this.get('author');
             var created = this.get('created');
-            if ( ! (author instanceof User) )
+            if ( ! (author instanceof app.Model.User) )
             {
-                this.set({'author': new User(author)});
+                this.set({'author': new app.Model.User(author)});
             }
 
             if ( ! (created instanceof Date) )
@@ -2195,8 +2196,8 @@ Backbone.sync = function(method, model, options, error) {
         }
     });
 
-    this.Comments   = Backbone.Collection.extend({
-        model:  this.Comment,
+    app.Model.Comments  = Backbone.Collection.extend({
+        model:  app.Model.Comment,
 
         initialize: function() {
         }
@@ -2213,20 +2214,21 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var Comments    = this.Comments;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!Comments)
+        if (!app.Model.Comments)
         {
             var tModule = require('./comment.js');
-            Comments    = tModule.Comments;
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Note   = Backbone.Model.extend({
+    app.Model.Note  = Backbone.Model.extend({
         defaults: {
             id:         null,
             // Position within the document to highlight for this note
@@ -2240,15 +2242,15 @@ Backbone.sync = function(method, model, options, error) {
 
         initialize: function(spec) {
             var comments    = this.get('comments');
-            if ( ! (comments instanceof Comments) )
+            if ( ! (comments instanceof app.Model.Comments) )
             {
-                this.set({'comments': new Comments(comments)});
+                this.set({'comments': new app.Model.Comments(comments)});
             }
         }
     });
 
-    this.Notes  = Backbone.Collection.extend({
-        model:  this.Note,
+    app.Model.Notes = Backbone.Collection.extend({
+        model:  app.Model.Note,
 
         initialize: function() {
         }
@@ -2265,14 +2267,16 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    if (!Backbone && (typeof require !== 'undefined'))
+    if (typeof require !== 'undefined')
     {
-        Backbone = require('../backbone.js');
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
     }
 
-    this.Sentence   = Backbone.Model.extend({
+    app.Model.Sentence  = Backbone.Model.extend({
         defaults: {
             id:         null,
             rank:       0.0,
@@ -2283,8 +2287,8 @@ Backbone.sync = function(method, model, options, error) {
         }
     });
 
-    this.Sentences  = Backbone.Collection.extend({
-        model:  this.Sentence,
+    app.Model.Sentences = Backbone.Collection.extend({
+        model:  app.Model.Sentence,
 
         initialize: function() {
         }
@@ -2302,20 +2306,21 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var Sentences   = this.Sentences;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!Sentences)
+        if (!app.Model.Sentences)
         {
             var tModule = require('./sentence.js');
-            Sentences   = tModule.Sentences;
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Paragraph  = Backbone.Model.extend({
+    app.Model.Paragraph = Backbone.Model.extend({
         defaults: {
             id:         null,
             rank:       0.0,
@@ -2324,15 +2329,15 @@ Backbone.sync = function(method, model, options, error) {
 
         initialize: function(spec) {
             var sentences   = this.get('sentences');
-            if (! (sentences instanceof Sentences))
+            if (! (sentences instanceof app.Model.Sentences))
             {
-                this.set({'sentences': new Sentences(sentences)});
+                this.set({'sentences': new app.Model.Sentences(sentences)});
             }
         }
     });
 
-    this.Paragraphs = Backbone.Collection.extend({
-        model:  this.Paragraph,
+    app.Model.Paragraphs    = Backbone.Collection.extend({
+        model:  app.Model.Paragraph,
 
         initialize: function() {
         }
@@ -2350,20 +2355,21 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var Paragraphs  = this.Paragraphs;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!Paragraphs)
+        if (!app.Model.Paragraphs)
         {
             var tModule = require('./paragraph.js');
-            Paragraphs  = tModule.Paragraphs;
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Section    = Backbone.Model.extend({
+    app.Model.Section   = Backbone.Model.extend({
         defaults: {
             id:         null,
             rank:       0.0,
@@ -2372,15 +2378,15 @@ Backbone.sync = function(method, model, options, error) {
 
         initialize: function(spec) {
             var paragraphs  = this.get('paragraphs');
-            if (! (paragraphs instanceof Paragraphs))
+            if (! (paragraphs instanceof app.Model.Paragraphs))
             {
-                this.set({'paragraphs': new Paragraphs(paragraphs)});
+                this.set({'paragraphs': new app.Model.Paragraphs(paragraphs)});
             }
         }
     });
 
-    this.Sections   = Backbone.Collection.extend({
-        model:  this.Section,
+    app.Model.Sections  = Backbone.Collection.extend({
+        model:  app.Model.Section,
 
         initialize: function() {
         }
@@ -2398,20 +2404,21 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-
+    var app         = this.app = (this.app || {Model:{}, View:{}});
+    var _           = this._;
     var Backbone    = this.Backbone;
-    var Sections    = this.Sections;
     if (typeof require !== 'undefined')
     {
+        if (!_)        { _        = require('../underscore.js'); }
         if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!Sections)
+        if (!app.Model.Sections)
         {
             var tModule = require('./section.js');
-            Sections   = tModule.Sections;
+            _.extend(app, tModule.app);
         }
     }
 
-    this.Doc    = Backbone.Model.extend({
+    app.Model.Doc   = Backbone.Model.extend({
         defaults: {
             id:         null,
             type:       'text/html',
@@ -2436,15 +2443,15 @@ Backbone.sync = function(method, model, options, error) {
                 this.set({'published': published});
             }
 
-            if (! (sections instanceof Sections))
+            if (! (sections instanceof app.Model.Sections))
             {
-                this.set({'sections': new Sections(sections)});
+                this.set({'sections': new app.Model.Sections(sections)});
             }
         }
     });
 
-    this.Docs   = Backbone.Collection.extend({
-        model:  this.Document,
+    app.Model.Docs  = Backbone.Collection.extend({
+        model:  app.Model.Document,
 
         initialize: function() {
         }
@@ -15741,138 +15748,117 @@ rangy.createModule("CssClassApplier", function(api, module) {
  *  information about that article.
  *
  *  Requires:
+ *      backbone.js
+ *      model/doc.js
+ *      view/doc.js
  *      jquery.js
  */
 (function($) {
+var app         = window.app = (window.app || {Model:{}, View:{}});
 
-/** @brief  Summary widget */
-$.fn.summary = function(options) {
-    options = options || {};
-
-    return this.each(function() {
-        var $el = $(this);
-        
-        $el.data('summary', new $.Summary( $el, options ));
-    });
-};
+// Application-wide defaults
+app = _.extend(app, {
+    quickTag:       true,       // Using quick tag?
+    animSpeed:      200     // Speed (in ms) of animations
+});
 
 
 /** @brief  The Summary class */
-$.Summary = function($el, options) {
-    return this.init($el, options);
-};
+$.Summary = Backbone.View.extend({
+    // Defaults
+    options:    {
+        doc:            null,   /* The app.Model.Doc instance or URL to
+                                 * retrieve a serialized, JSON version of the
+                                 * document.
+                                 */
 
-$.Summary.prototype = {
-    options: {
-        doc:        null,           /* The model.Doc instance OR URL of the
-                                     * JSON that describes the document to be
-                                     * presented.
-                                     */
-        template:   '#template-doc',/* The DOM selector for the template to use
-                                     * when rendering 'doc'.
-                                     */
-
-        filter:         'normal',   // The initial filter (tagged,starred)
-        showSentences:  5,          /* The minimum number of sentences to
-                                     * present
-                                     */
         threshold:      {           // The desired min/max threshold
             min:        -1,         // If -1,-1, dynamically determine the
             max:        -1          //  threshold based upon 'showSentences'
-        }
+        },
+        filter:         'normal',   // The initial filter (tagged,starred)
+        
+        showSentences:  5           /* The minimum number of sentences to
+                                     * present
+                                     */
     },
 
-    /** @brief  Initialize this new instance.
-     *  @param  el          The jQuery DOM element.
-     *  @param  options     Initialization options.
-     *
-     *  @return this for a fluent interface.
-     */
-    init: function(el, options) {
-        var self        = this;
-        var opts        = $.extend(true, {}, self.options, options);
+    events: {
+        'click .controls :input':   'controlClick',
+        'change .controls :input':  'controlClick',
+    },
 
-        self.element    = el;
-        self.options    = opts;
+    /** @brief  Initialize the app. */
+    initialize: function() {
+        var self    = this;
+        var opts    = self.options;
 
-        // Bind events
-        self._bindEvents();
+        self._initialize_controlPane();
 
-        // Kick off the retrieval of the metadata
-        self.element.addClass('loading');
+        self.$paneContent  = self.el.find('.content-pane');
+        self.$paneContent.addClass('loading');
 
-        var renderSuccess   = function() {
-            self.render();
-            self.element.removeClass('loading');
-        };
-
-        if (opts.doc instanceof Doc)
+        if (opts.doc instanceof app.Model.Doc)
         {
-            renderSuccess();
+            self.render();    
         }
         else
         {
             var getDoc  = $.getJSON(opts.doc);
-            getDoc.success(function( data ) {
-                opts.doc = new Doc( data );
 
-                renderSuccess();
+            getDoc.success(function( data ) {
+                opts.doc = new app.Model.Doc( data );
             });
+
             getDoc.error(function() {
-                alert("Cannot retrieve metadata '"+ opts.doc +"'");
-                self.element.removeClass('loading');
+                alert("Cannot retrieve document data '"+ opts.doc +"'");
+            });
+
+            getDoc.complete(function() {
+                self.render();
             });
         }
     },
 
-    /** @brief  Invoked to cleanup this widget. */
-    destroy: function() {
-        self._unbindEvents();
-    },
-
-    /** @brief  Render the document.
-     */
+    /** @brief  (Re)render the application. */
     render: function() {
         var self    = this;
         var opts    = self.options;
-        var doc     = opts.doc;
 
-        if (! (doc instanceof Doc)) { return; }
-
-        if (! opts.templateCompiled)
+        if (opts.doc instanceof app.Model.Doc)
         {
-            opts.templateCompiled = _.template( $( opts.template ).html() );
+            var view    = new app.View.Doc({model:opts.doc});
+
+            self.$paneContent.html( view.render().el );
+
+            // Gather the ranks
+            self.ranks  = [];
+            self.$p     = self.$paneContent.find('section p');
+            self.$s     = self.$paneContent.find('.sentence');
+            self.$s.each(function() {
+                var $s      = $(this);
+                var rank    = $s.attr('rank');
+                if (rank === undefined) { return; }
+
+                rank = Math.floor(rank * (rank < 1 ? 100 : 1));
+
+                if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
+                self.ranks[rank].push($s);
+            });
+
+            // Compute the threshold (unless explicitly provided)
+            var threshold   = opts.threshold;
+            if ((opts.threshold.min < 0) || (opts.threshold.max < 0))
+            {
+                threshold          = self._computeThreshold();
+                self.origThreshold = threshold;
+            }
+
+            // Apply the threshold
+            self.threshold( threshold.min, threshold.max );
         }
 
-        // Render the document
-        self.element.html( opts.templateCompiled( doc ) );
-
-        // Gather the ranks
-        self.ranks  = [];
-        self.$p     = self.element.find('section p');
-        self.$s     = self.element.find('.sentence');
-        self.$s.each(function() {
-            var $s      = $(this);
-            var rank    = $s.attr('rank');
-            if (rank === undefined) { return; }
-
-            rank = Math.floor(rank * (rank < 1 ? 100 : 1));
-
-            if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
-            self.ranks[rank].push($s);
-        });
-
-        // Compute the threshold (unless explicitly provided)
-        var threshold   = opts.threshold;
-        if ((opts.threshold.min < 0) || (opts.threshold.max < 0))
-        {
-            threshold          = self._computeThreshold();
-            self.origThreshold = threshold;
-
-        }
-
-        // Apply the threshold
-        self.threshold( threshold.min, threshold.max );
+        self.$paneContent.removeClass('loading');
     },
 
     /** @brief  Change the rank threshold.
@@ -15904,7 +15890,7 @@ $.Summary.prototype = {
         var opts        = self.options;
 
         var str = opts.threshold.min +' - ' + opts.threshold.max;
-        //self.$thresholdValues.text( str );
+        self.$thresholdValues.text( str );
 
         /* Initially mark all sentences as 'NOT highlighted' and all
          * paragraphs as 'NOT shown'
@@ -15952,88 +15938,148 @@ $.Summary.prototype = {
             }
         }
 
-        /* If a paragraphs has no sentences to be highlighted, add 'collapsed'
-         * as a style.
-         */
-        self.$p.each(function() {
-            var $p  = $(this);
-            if ($p.find('.sentence.toHighlight').length < 1)
-            {
-                $p.addClass('collapsed');
-            }
-            else
-            {
-                $p.removeClass('collapsed');
-            }
-        });
-
-        /* Hide expansion controls for sentences that have no siblings that
-         * would be expanded.
-        self.$s.sentence('option', 'noExpansion', false);
-        self.$p.each(function() {
-            var $p          = $(this);
-            var $ss         = $p.find('.sentence');
-
-            if ($ss.length === 1)
-            {
-                // Only one sentence period -- Always hide
-                $ss.sentence('option', 'noExpansion', true);
-                return;
-            }
-
-            $ss.each(function() {
-                var $s  = $(this);
-                var $pS = $s.prev();
-                var $nS = $s.next();
-                if ($pS.length < 1)
-                {
-                    // First sentence
-                    if ($s.hasClass('noHighlight') ||   // is NOT highlighted
-                        ($nS.length < 1)           ||   // No next
-                        $nS.hasClass('toHighlight'))    // Next is highlighted
-                    {
-                        $s.sentence('option', 'noExpansion', true);
-                    }
-                }
-                else if ($nS.length < 1)
-                {
-                    // Last sentence
-                    if ($s.hasClass('noHighlight') ||   // is NOT highlighted
-                        ($pS.length < 1)           ||   // No previous
-                        $pS.hasClass('toHighlight'))    // Prev is highlighted
-                    {
-                        $s.sentence('option', 'noExpansion', true);
-                    }
-                }
-                else if ( $pS.hasClass('toHighlight') &&// Prev is highlighted
-                          $nS.hasClass('toHighlight') ) // Next is highlighted
-                {
-                    $s.sentence('option', 'noExpansion', true);
-                }
-            });
-        });
-         */
-
         self.$s
-            // Hide sentences
+            // Collapse sentences
             .filter('.noHighlight')
-                .removeClass('noHighlight expanded')
-                //.sentence('unhighlight')
+                .removeClass('noHighlight')
+                .trigger('sentence:collapse')
             .end()
-            // Show sentences
+            // Expand sentences
             .filter('.toHighlight')
                 .removeClass('toHighlight')
-                .addClass('expanded')
-                //.sentence('highlight')
-                ;
+                .trigger('sentence:expand')
+            .end()
+            .trigger('paragraph:collapseCheck');
           
         //self._putState();
+    },
+
+    /** @brief  Handle a click on a button or checkbox control.
+     *  @param  e   The triggering event.
+     *
+     */
+    controlClick: function(e) {
+        var self    = this;
+        var opts    = self.options;
+        var $el     = $(e.currentTarget);
+        var name    = $el.attr('name');
+        var newMin  = opts.threshold.min;
+
+        switch (name)
+        {
+        case 'threshold-all':
+            // Set the threshold.min
+            opts.threshold.min = 0;
+
+            // Force 'filter' to 'normal' as well
+            self._changeFilter();
+            break;
+
+        case 'threshold-reset':
+            // Reset the threshold.min
+            if (self.origThreshold === undefined)
+            {
+                self.origThreshold = self._computeThreshold();
+            }
+            opts.threshold.min = self.origThreshold.min;
+
+            // Force 'filter' to 'normal' as well
+            self._changeFilter();
+            break;
+
+        case 'threshold-down':
+            // Decrease the minimum threshold
+            if (newMin > 9)                         { newMin -= 10; }
+            self.threshold(newMin, opts.threshold.max);
+            break;
+
+        case 'threshold-up':
+            // Increase the minimum threshold
+            if (newMin < (opts.threshold.max - 9))   { newMin += 10; }
+            self.threshold(newMin, opts.threshold.max);
+            break;
+
+        case 'filter':
+            // Assemble the filter as the value of all filter checkboxes
+            var filter  = self.$filters
+                            .map(function() {
+                                return $(this).checkbox('val');
+                            });
+
+            self._changeFilter( $.makeArray(filter).join(',') );
+            break;
+
+        case 'quickTag':
+            /* Since we use the 'quickTag' icon as an indicator, the logic
+             * is a little backwards.  If the checkbox is NOT checked,
+             * we're in 'quick' mode, otherwise, 'normal' mode.
+             */
+            app.quickTag = (! $el.checkbox('val') );
+            break;
+        }
     },
 
     /*************************************************************************
      * "Private" methods
      *
      */
+
+    /** @brief  Initialize the control pane */
+    _initialize_controlPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$paneControls = self.el.find('.control-pane');
+
+        self.$buttons   = self.$paneControls.find('.buttons button').button();
+        self.$filters   = self.$paneControls.find('.filter :checkbox');
+        self.$options   = self.$paneControls.find('.options :checkbox');
+
+        self.$threshold       = self.$paneControls.find('.threshold');
+        self.$thresholdValues = self.$threshold.find('.values');
+
+        /*********************************************************
+         * controls:threshold
+         *
+         */
+        self.$paneControls.find('.buttons .expansion').buttonset();
+
+        /*********************************************************
+         * controls:filters
+         *
+         */
+        var $tagged     = self.$filters.filter('#filter-tagged');
+
+        $tagged.checkbox({
+            cssOn:      'su-icon su-icon-tag-blue',
+            cssOff:     'su-icon su-icon-tag',
+            titleOn:    'click to remove filter',
+            titleOff:   'click to filter',
+            hideLabel:  true
+        });
+
+        /*********************************************************
+         * controls:options
+         *
+         */
+        var $quickTag   = self.$options.filter('#options-quickTag');
+
+        $quickTag.checkbox({
+            cssOn:      'su-icon su-icon-tagQuick',
+            cssOff:     'su-icon su-icon-tagQuick-blue',
+            titleOn:    'click to enable',
+            titleOff:   'click to disable',
+            hideLabel:  true,
+
+            /* Since we use the 'quickTag' icon as an indicator, the logic is a
+             * little backwards.  If the checkbox is NOT checked, we're in
+             * 'quick' mode, otherwise, 'normal' mode.
+             */
+            checked:    (! app.quickTag )
+        });
+
+        self.$paneControls.show();
+    },
 
     /** @brief  Compute the thresholds based upon opts.showSentences.
      * 
@@ -16067,24 +16113,62 @@ $.Summary.prototype = {
         return threshold;
     },
 
-    /** @brief  Set the caret/cursor position within the given element
-     *  @param  $el     The jQuery/DOM element representing the input control;
-     *  @param  pos     The desired caret/cursor position;
+    /** @brief  Change the filter value.
+     *  @param  filter      The new value ('normal', 'tagged', 'starred').
+     *  @param  noRefresh   If true, do NOT perform a refresh.
+     *
+     *  @return this for a fluent interface.
      */
-    _bindEvents: function() {
-        var self    = this;
-        var $parent = self.element.parent();
-        var $gp     = $parent.parent();
+    _changeFilter: function(filter, noRefresh) {
+        var self        = this;
+        var opts        = self.options;
+        var $buttons    = self.$paneControls.find(  '[name=threshold-up],'
+                                                  + '[name=threshold-down]');
+        var filters     = (filter
+                            ? filter.split(/\s*,\s*/)
+                            : [ 'normal' ]);
 
+        $.each(filters, function() {
+            switch (this.toString())
+            {
+            case 'tagged':
+                $buttons.button('disable');
+                break;
+
+            case 'starred':
+                $buttons.button('disable');
+                break;
+
+            case 'normal':
+            default:
+                filter = 'normal';
+                $buttons.button('enable');
+
+                self.$filters.checkbox('uncheck');
+                /*
+                self.$control.find('#filter-normal')
+                        .attr('checked', true)
+                        .button('refresh');
+                // */
+                break;
+            }
+        });
+
+        // Set the filter value
+        opts.filter = filter;
+        self.el.removeClass('starred tagged normal')
+                    .addClass(filters.join(' '));
+
+        if (noRefresh !== true)
+        {
+            // Re-apply the current threshold
+            self.refresh();
+        }
+
+        return self;
     },
 
-    _unbindEvents: function() {
-        var self    = this;
-        var $parent = self.element.parent();
-        var $gp     = $parent.parent();
-
-    }
-};
+});
 
 }(jQuery));
 /** @file
@@ -16093,138 +16177,117 @@ $.Summary.prototype = {
  *  information about that article.
  *
  *  Requires:
+ *      backbone.js
+ *      model/doc.js
+ *      view/doc.js
  *      jquery.js
  */
 (function($) {
+var app         = window.app = (window.app || {Model:{}, View:{}});
 
-/** @brief  Summary widget */
-$.fn.summary = function(options) {
-    options = options || {};
-
-    return this.each(function() {
-        var $el = $(this);
-        
-        $el.data('summary', new $.Summary( $el, options ));
-    });
-};
+// Application-wide defaults
+app = _.extend(app, {
+    quickTag:       true,       // Using quick tag?
+    animSpeed:      200     // Speed (in ms) of animations
+});
 
 
 /** @brief  The Summary class */
-$.Summary = function($el, options) {
-    return this.init($el, options);
-};
+$.Summary = Backbone.View.extend({
+    // Defaults
+    options:    {
+        doc:            null,   /* The app.Model.Doc instance or URL to
+                                 * retrieve a serialized, JSON version of the
+                                 * document.
+                                 */
 
-$.Summary.prototype = {
-    options: {
-        doc:        null,           /* The model.Doc instance OR URL of the
-                                     * JSON that describes the document to be
-                                     * presented.
-                                     */
-        template:   '#template-doc',/* The DOM selector for the template to use
-                                     * when rendering 'doc'.
-                                     */
-
-        filter:         'normal',   // The initial filter (tagged,starred)
-        showSentences:  5,          /* The minimum number of sentences to
-                                     * present
-                                     */
         threshold:      {           // The desired min/max threshold
             min:        -1,         // If -1,-1, dynamically determine the
             max:        -1          //  threshold based upon 'showSentences'
-        }
+        },
+        filter:         'normal',   // The initial filter (tagged,starred)
+        
+        showSentences:  5           /* The minimum number of sentences to
+                                     * present
+                                     */
     },
 
-    /** @brief  Initialize this new instance.
-     *  @param  el          The jQuery DOM element.
-     *  @param  options     Initialization options.
-     *
-     *  @return this for a fluent interface.
-     */
-    init: function(el, options) {
-        var self        = this;
-        var opts        = $.extend(true, {}, self.options, options);
+    events: {
+        'click .controls :input':   'controlClick',
+        'change .controls :input':  'controlClick',
+    },
 
-        self.element    = el;
-        self.options    = opts;
+    /** @brief  Initialize the app. */
+    initialize: function() {
+        var self    = this;
+        var opts    = self.options;
 
-        // Bind events
-        self._bindEvents();
+        self._initialize_controlPane();
 
-        // Kick off the retrieval of the metadata
-        self.element.addClass('loading');
+        self.$paneContent  = self.el.find('.content-pane');
+        self.$paneContent.addClass('loading');
 
-        var renderSuccess   = function() {
-            self.render();
-            self.element.removeClass('loading');
-        };
-
-        if (opts.doc instanceof Doc)
+        if (opts.doc instanceof app.Model.Doc)
         {
-            renderSuccess();
+            self.render();    
         }
         else
         {
             var getDoc  = $.getJSON(opts.doc);
-            getDoc.success(function( data ) {
-                opts.doc = new Doc( data );
 
-                renderSuccess();
+            getDoc.success(function( data ) {
+                opts.doc = new app.Model.Doc( data );
             });
+
             getDoc.error(function() {
-                alert("Cannot retrieve metadata '"+ opts.doc +"'");
-                self.element.removeClass('loading');
+                alert("Cannot retrieve document data '"+ opts.doc +"'");
+            });
+
+            getDoc.complete(function() {
+                self.render();
             });
         }
     },
 
-    /** @brief  Invoked to cleanup this widget. */
-    destroy: function() {
-        self._unbindEvents();
-    },
-
-    /** @brief  Render the document.
-     */
+    /** @brief  (Re)render the application. */
     render: function() {
         var self    = this;
         var opts    = self.options;
-        var doc     = opts.doc;
 
-        if (! (doc instanceof Doc)) { return; }
-
-        if (! opts.templateCompiled)
+        if (opts.doc instanceof app.Model.Doc)
         {
-            opts.templateCompiled = _.template( $( opts.template ).html() );
+            var view    = new app.View.Doc({model:opts.doc});
+
+            self.$paneContent.html( view.render().el );
+
+            // Gather the ranks
+            self.ranks  = [];
+            self.$p     = self.$paneContent.find('section p');
+            self.$s     = self.$paneContent.find('.sentence');
+            self.$s.each(function() {
+                var $s      = $(this);
+                var rank    = $s.attr('rank');
+                if (rank === undefined) { return; }
+
+                rank = Math.floor(rank * (rank < 1 ? 100 : 1));
+
+                if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
+                self.ranks[rank].push($s);
+            });
+
+            // Compute the threshold (unless explicitly provided)
+            var threshold   = opts.threshold;
+            if ((opts.threshold.min < 0) || (opts.threshold.max < 0))
+            {
+                threshold          = self._computeThreshold();
+                self.origThreshold = threshold;
+            }
+
+            // Apply the threshold
+            self.threshold( threshold.min, threshold.max );
         }
 
-        // Render the document
-        self.element.html( opts.templateCompiled( doc ) );
-
-        // Gather the ranks
-        self.ranks  = [];
-        self.$p     = self.element.find('section p');
-        self.$s     = self.element.find('.sentence');
-        self.$s.each(function() {
-            var $s      = $(this);
-            var rank    = $s.attr('rank');
-            if (rank === undefined) { return; }
-
-            rank = Math.floor(rank * (rank < 1 ? 100 : 1));
-
-            if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
-            self.ranks[rank].push($s);
-        });
-
-        // Compute the threshold (unless explicitly provided)
-        var threshold   = opts.threshold;
-        if ((opts.threshold.min < 0) || (opts.threshold.max < 0))
-        {
-            threshold          = self._computeThreshold();
-            self.origThreshold = threshold;
-
-        }
-
-        // Apply the threshold
-        self.threshold( threshold.min, threshold.max );
+        self.$paneContent.removeClass('loading');
     },
 
     /** @brief  Change the rank threshold.
@@ -16256,7 +16319,7 @@ $.Summary.prototype = {
         var opts        = self.options;
 
         var str = opts.threshold.min +' - ' + opts.threshold.max;
-        //self.$thresholdValues.text( str );
+        self.$thresholdValues.text( str );
 
         /* Initially mark all sentences as 'NOT highlighted' and all
          * paragraphs as 'NOT shown'
@@ -16304,88 +16367,148 @@ $.Summary.prototype = {
             }
         }
 
-        /* If a paragraphs has no sentences to be highlighted, add 'collapsed'
-         * as a style.
-         */
-        self.$p.each(function() {
-            var $p  = $(this);
-            if ($p.find('.sentence.toHighlight').length < 1)
-            {
-                $p.addClass('collapsed');
-            }
-            else
-            {
-                $p.removeClass('collapsed');
-            }
-        });
-
-        /* Hide expansion controls for sentences that have no siblings that
-         * would be expanded.
-        self.$s.sentence('option', 'noExpansion', false);
-        self.$p.each(function() {
-            var $p          = $(this);
-            var $ss         = $p.find('.sentence');
-
-            if ($ss.length === 1)
-            {
-                // Only one sentence period -- Always hide
-                $ss.sentence('option', 'noExpansion', true);
-                return;
-            }
-
-            $ss.each(function() {
-                var $s  = $(this);
-                var $pS = $s.prev();
-                var $nS = $s.next();
-                if ($pS.length < 1)
-                {
-                    // First sentence
-                    if ($s.hasClass('noHighlight') ||   // is NOT highlighted
-                        ($nS.length < 1)           ||   // No next
-                        $nS.hasClass('toHighlight'))    // Next is highlighted
-                    {
-                        $s.sentence('option', 'noExpansion', true);
-                    }
-                }
-                else if ($nS.length < 1)
-                {
-                    // Last sentence
-                    if ($s.hasClass('noHighlight') ||   // is NOT highlighted
-                        ($pS.length < 1)           ||   // No previous
-                        $pS.hasClass('toHighlight'))    // Prev is highlighted
-                    {
-                        $s.sentence('option', 'noExpansion', true);
-                    }
-                }
-                else if ( $pS.hasClass('toHighlight') &&// Prev is highlighted
-                          $nS.hasClass('toHighlight') ) // Next is highlighted
-                {
-                    $s.sentence('option', 'noExpansion', true);
-                }
-            });
-        });
-         */
-
         self.$s
-            // Hide sentences
+            // Collapse sentences
             .filter('.noHighlight')
-                .removeClass('noHighlight expanded')
-                //.sentence('unhighlight')
+                .removeClass('noHighlight')
+                .trigger('sentence:collapse')
             .end()
-            // Show sentences
+            // Expand sentences
             .filter('.toHighlight')
                 .removeClass('toHighlight')
-                .addClass('expanded')
-                //.sentence('highlight')
-                ;
+                .trigger('sentence:expand')
+            .end()
+            .trigger('paragraph:collapseCheck');
           
         //self._putState();
+    },
+
+    /** @brief  Handle a click on a button or checkbox control.
+     *  @param  e   The triggering event.
+     *
+     */
+    controlClick: function(e) {
+        var self    = this;
+        var opts    = self.options;
+        var $el     = $(e.currentTarget);
+        var name    = $el.attr('name');
+        var newMin  = opts.threshold.min;
+
+        switch (name)
+        {
+        case 'threshold-all':
+            // Set the threshold.min
+            opts.threshold.min = 0;
+
+            // Force 'filter' to 'normal' as well
+            self._changeFilter();
+            break;
+
+        case 'threshold-reset':
+            // Reset the threshold.min
+            if (self.origThreshold === undefined)
+            {
+                self.origThreshold = self._computeThreshold();
+            }
+            opts.threshold.min = self.origThreshold.min;
+
+            // Force 'filter' to 'normal' as well
+            self._changeFilter();
+            break;
+
+        case 'threshold-down':
+            // Decrease the minimum threshold
+            if (newMin > 9)                         { newMin -= 10; }
+            self.threshold(newMin, opts.threshold.max);
+            break;
+
+        case 'threshold-up':
+            // Increase the minimum threshold
+            if (newMin < (opts.threshold.max - 9))   { newMin += 10; }
+            self.threshold(newMin, opts.threshold.max);
+            break;
+
+        case 'filter':
+            // Assemble the filter as the value of all filter checkboxes
+            var filter  = self.$filters
+                            .map(function() {
+                                return $(this).checkbox('val');
+                            });
+
+            self._changeFilter( $.makeArray(filter).join(',') );
+            break;
+
+        case 'quickTag':
+            /* Since we use the 'quickTag' icon as an indicator, the logic
+             * is a little backwards.  If the checkbox is NOT checked,
+             * we're in 'quick' mode, otherwise, 'normal' mode.
+             */
+            app.quickTag = (! $el.checkbox('val') );
+            break;
+        }
     },
 
     /*************************************************************************
      * "Private" methods
      *
      */
+
+    /** @brief  Initialize the control pane */
+    _initialize_controlPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$paneControls = self.el.find('.control-pane');
+
+        self.$buttons   = self.$paneControls.find('.buttons button').button();
+        self.$filters   = self.$paneControls.find('.filter :checkbox');
+        self.$options   = self.$paneControls.find('.options :checkbox');
+
+        self.$threshold       = self.$paneControls.find('.threshold');
+        self.$thresholdValues = self.$threshold.find('.values');
+
+        /*********************************************************
+         * controls:threshold
+         *
+         */
+        self.$paneControls.find('.buttons .expansion').buttonset();
+
+        /*********************************************************
+         * controls:filters
+         *
+         */
+        var $tagged     = self.$filters.filter('#filter-tagged');
+
+        $tagged.checkbox({
+            cssOn:      'su-icon su-icon-tag-blue',
+            cssOff:     'su-icon su-icon-tag',
+            titleOn:    'click to remove filter',
+            titleOff:   'click to filter',
+            hideLabel:  true
+        });
+
+        /*********************************************************
+         * controls:options
+         *
+         */
+        var $quickTag   = self.$options.filter('#options-quickTag');
+
+        $quickTag.checkbox({
+            cssOn:      'su-icon su-icon-tagQuick',
+            cssOff:     'su-icon su-icon-tagQuick-blue',
+            titleOn:    'click to enable',
+            titleOff:   'click to disable',
+            hideLabel:  true,
+
+            /* Since we use the 'quickTag' icon as an indicator, the logic is a
+             * little backwards.  If the checkbox is NOT checked, we're in
+             * 'quick' mode, otherwise, 'normal' mode.
+             */
+            checked:    (! app.quickTag )
+        });
+
+        self.$paneControls.show();
+    },
 
     /** @brief  Compute the thresholds based upon opts.showSentences.
      * 
@@ -16419,23 +16542,61 @@ $.Summary.prototype = {
         return threshold;
     },
 
-    /** @brief  Set the caret/cursor position within the given element
-     *  @param  $el     The jQuery/DOM element representing the input control;
-     *  @param  pos     The desired caret/cursor position;
+    /** @brief  Change the filter value.
+     *  @param  filter      The new value ('normal', 'tagged', 'starred').
+     *  @param  noRefresh   If true, do NOT perform a refresh.
+     *
+     *  @return this for a fluent interface.
      */
-    _bindEvents: function() {
-        var self    = this;
-        var $parent = self.element.parent();
-        var $gp     = $parent.parent();
+    _changeFilter: function(filter, noRefresh) {
+        var self        = this;
+        var opts        = self.options;
+        var $buttons    = self.$paneControls.find(  '[name=threshold-up],'
+                                                  + '[name=threshold-down]');
+        var filters     = (filter
+                            ? filter.split(/\s*,\s*/)
+                            : [ 'normal' ]);
 
+        $.each(filters, function() {
+            switch (this.toString())
+            {
+            case 'tagged':
+                $buttons.button('disable');
+                break;
+
+            case 'starred':
+                $buttons.button('disable');
+                break;
+
+            case 'normal':
+            default:
+                filter = 'normal';
+                $buttons.button('enable');
+
+                self.$filters.checkbox('uncheck');
+                /*
+                self.$control.find('#filter-normal')
+                        .attr('checked', true)
+                        .button('refresh');
+                // */
+                break;
+            }
+        });
+
+        // Set the filter value
+        opts.filter = filter;
+        self.el.removeClass('starred tagged normal')
+                    .addClass(filters.join(' '));
+
+        if (noRefresh !== true)
+        {
+            // Re-apply the current threshold
+            self.refresh();
+        }
+
+        return self;
     },
 
-    _unbindEvents: function() {
-        var self    = this;
-        var $parent = self.element.parent();
-        var $gp     = $parent.parent();
-
-    }
-};
+});
 
 }(jQuery));
