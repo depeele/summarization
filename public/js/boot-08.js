@@ -10,9 +10,9 @@
 (function() {
 
 // Define the application object
-var app         = this.app = (this.app || {Model:{},      View:{},
-                                           Controller:{}, Helper:{}});
-var development = true;
+var app     = this.app = (this.app || {Model:{},      View:{},
+                                       Controller:{}, Helper:{}});
+app.mode    = 'development';
 
 /** @brief  Boot the application once all dependencies are loaded. */
 function bootApp()
@@ -38,9 +38,9 @@ function bootApp()
  * Load dependencies and, once loading is complete, invoke bootApp().
  *
  */
-if (development === true)
+if (app.mode === 'development')
 {
-    // Define development script dependencies
+    // Development dependencies
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.js' },
 
@@ -133,10 +133,10 @@ if (development === true)
 }
 else
 {
-    // Define production script dependencies
+    // Non-Development/Production dependencies
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.min.js' },
-        'summary':      { src: 'js/summary-08-full.js' }
+        'summary':      { src: 'js/summary-08-full.min.js' }
     };
 }
 

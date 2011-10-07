@@ -33,16 +33,24 @@ SRC_07	= $(SHRED)			\
 	  jquery.summary-07.js
 
 SRC_08	= underscore.js			\
+	  $(SHARED)			\
 	  backbone.js			\
 	  backbone.localStorage.js	\
 	  model/user.js			\
 	  model/comment.js		\
+	  model/range.js		\
 	  model/note.js			\
 	  model/sentence.js		\
 	  model/paragraph.js		\
 	  model/section.js		\
 	  model/doc.js			\
-	  $(SHARED)			\
+	  helper/click.js		\
+	  view/sentence.js		\
+	  view/paragraph.js		\
+	  view/section.js		\
+	  view/doc.js			\
+	  jquery-ui.js			\
+	  ui.checkbox.js		\
 	  jquery.summary-08.js
 
 summary-06-full.js: $(SRC_06)

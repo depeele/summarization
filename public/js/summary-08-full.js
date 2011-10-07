@@ -843,1673 +843,6 @@
   };
 
 })();
-//     Backbone.js 0.5.3
-//     (c) 2010 Jeremy Ashkenas, DocumentCloud Inc.
-//     Backbone may be freely distributed under the MIT license.
-//     For all details and documentation:
-//     http://documentcloud.github.com/backbone
-
-(function(){
-
-  // Initial Setup
-  // -------------
-
-  // Save a reference to the global object.
-  var root = this;
-
-  // Save the previous value of the `Backbone` variable.
-  var previousBackbone = root.Backbone;
-
-  // The top-level namespace. All public Backbone classes and modules will
-  // be attached to this. Exported for both CommonJS and the browser.
-  var Backbone;
-  if (typeof exports !== 'undefined') {
-    Backbone = exports;
-  } else {
-    Backbone = root.Backbone = {};
-  }
-
-  // Current version of the library. Keep in sync with `package.json`.
-  Backbone.VERSION = '0.5.3';
-
-  // Require Underscore, if we're on the server, and it's not already present.
-  var _ = root._;
-  if (!_ && (typeof require !== 'undefined')) _ = require('./underscore')._;
-
-  // For Backbone's purposes, jQuery, Zepto, or Ender owns the `$` variable.
-  var $ = root.jQuery || root.Zepto || root.ender;
-
-  // Runs Backbone.js in *noConflict* mode, returning the `Backbone` variable
-  // to its previous owner. Returns a reference to this Backbone object.
-  Backbone.noConflict = function() {
-    root.Backbone = previousBackbone;
-    return this;
-  };
-
-  // Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option will
-  // fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and set a
-  // `X-Http-Method-Override` header.
-  Backbone.emulateHTTP = false;
-
-  // Turn on `emulateJSON` to support legacy servers that can't deal with direct
-  // `application/json` requests ... will encode the body as
-  // `application/x-www-form-urlencoded` instead and will send the model in a
-  // form param named `model`.
-  Backbone.emulateJSON = false;
-
-  // Backbone.Events
-  // -----------------
-
-  // A module that can be mixed in to *any object* in order to provide it with
-  // custom events. You may `bind` or `unbind` a callback function to an event;
-  // `trigger`-ing an event fires all callbacks in succession.
-  //
-  //     var object = {};
-  //     _.extend(object, Backbone.Events);
-  //     object.bind('expand', function(){ alert('expanded'); });
-  //     object.trigger('expand');
-  //
-  Backbone.Events = {
-
-    // Bind an event, specified by a string name, `ev`, to a `callback` function.
-    // Passing `"all"` will bind the callback to all events fired.
-    bind : function(ev, callback, context) {
-      var calls = this._callbacks || (this._callbacks = {});
-      var list  = calls[ev] || (calls[ev] = []);
-      list.push([callback, context]);
-      return this;
-    },
-
-    // Remove one or many callbacks. If `callback` is null, removes all
-    // callbacks for the event. If `ev` is null, removes all bound callbacks
-    // for all events.
-    unbind : function(ev, callback) {
-      var calls;
-      if (!ev) {
-        this._callbacks = {};
-      } else if (calls = this._callbacks) {
-        if (!callback) {
-          calls[ev] = [];
-        } else {
-          var list = calls[ev];
-          if (!list) return this;
-          for (var i = 0, l = list.length; i < l; i++) {
-            if (list[i] && callback === list[i][0]) {
-              list[i] = null;
-              break;
-            }
-          }
-        }
-      }
-      return this;
-    },
-
-    // Trigger an event, firing all bound callbacks. Callbacks are passed the
-    // same arguments as `trigger` is, apart from the event name.
-    // Listening for `"all"` passes the true event name as the first argument.
-    trigger : function(eventName) {
-      var list, calls, ev, callback, args;
-      var both = 2;
-      if (!(calls = this._callbacks)) return this;
-      while (both--) {
-        ev = both ? eventName : 'all';
-        if (list = calls[ev]) {
-          for (var i = 0, l = list.length; i < l; i++) {
-            if (!(callback = list[i])) {
-              list.splice(i, 1); i--; l--;
-            } else {
-              args = both ? Array.prototype.slice.call(arguments, 1) : arguments;
-              callback[0].apply(callback[1] || this, args);
-            }
-          }
-        }
-      }
-      return this;
-    }
-
-  };
-
-  // Backbone.Model
-  // --------------
-
-  // Create a new model, with defined attributes. A client id (`cid`)
-  // is automatically generated and assigned for you.
-  Backbone.Model = function(attributes, options) {
-    var defaults;
-    attributes || (attributes = {});
-    if (defaults = this.defaults) {
-      if (_.isFunction(defaults)) defaults = defaults.call(this);
-      attributes = _.extend({}, defaults, attributes);
-    }
-    this.attributes = {};
-    this._escapedAttributes = {};
-    this.cid = _.uniqueId('c');
-    this.set(attributes, {silent : true});
-    this._changed = false;
-    this._previousAttributes = _.clone(this.attributes);
-    if (options && options.collection) this.collection = options.collection;
-    this.initialize(attributes, options);
-  };
-
-  // Attach all inheritable methods to the Model prototype.
-  _.extend(Backbone.Model.prototype, Backbone.Events, {
-
-    // A snapshot of the model's previous attributes, taken immediately
-    // after the last `"change"` event was fired.
-    _previousAttributes : null,
-
-    // Has the item been changed since the last `"change"` event?
-    _changed : false,
-
-    // The default name for the JSON `id` attribute is `"id"`. MongoDB and
-    // CouchDB users may want to set this to `"_id"`.
-    idAttribute : 'id',
-
-    // Initialize is an empty function by default. Override it with your own
-    // initialization logic.
-    initialize : function(){},
-
-    // Return a copy of the model's `attributes` object.
-    toJSON : function() {
-      return _.clone(this.attributes);
-    },
-
-    // Get the value of an attribute.
-    get : function(attr) {
-      return this.attributes[attr];
-    },
-
-    // Get the HTML-escaped value of an attribute.
-    escape : function(attr) {
-      var html;
-      if (html = this._escapedAttributes[attr]) return html;
-      var val = this.attributes[attr];
-      return this._escapedAttributes[attr] = escapeHTML(val == null ? '' : '' + val);
-    },
-
-    // Returns `true` if the attribute contains a value that is not null
-    // or undefined.
-    has : function(attr) {
-      return this.attributes[attr] != null;
-    },
-
-    // Set a hash of model attributes on the object, firing `"change"` unless you
-    // choose to silence it.
-    set : function(attrs, options) {
-
-      // Extract attributes and options.
-      options || (options = {});
-      if (!attrs) return this;
-      if (attrs.attributes) attrs = attrs.attributes;
-      var now = this.attributes, escaped = this._escapedAttributes;
-
-      // Run validation.
-      if (!options.silent && this.validate && !this._performValidation(attrs, options)) return false;
-
-      // Check for changes of `id`.
-      if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
-
-      // We're about to start triggering change events.
-      var alreadyChanging = this._changing;
-      this._changing = true;
-
-      // Update attributes.
-      for (var attr in attrs) {
-        var val = attrs[attr];
-        if (!_.isEqual(now[attr], val)) {
-          now[attr] = val;
-          delete escaped[attr];
-          this._changed = true;
-          if (!options.silent) this.trigger('change:' + attr, this, val, options);
-        }
-      }
-
-      // Fire the `"change"` event, if the model has been changed.
-      if (!alreadyChanging && !options.silent && this._changed) this.change(options);
-      this._changing = false;
-      return this;
-    },
-
-    // Remove an attribute from the model, firing `"change"` unless you choose
-    // to silence it. `unset` is a noop if the attribute doesn't exist.
-    unset : function(attr, options) {
-      if (!(attr in this.attributes)) return this;
-      options || (options = {});
-      var value = this.attributes[attr];
-
-      // Run validation.
-      var validObj = {};
-      validObj[attr] = void 0;
-      if (!options.silent && this.validate && !this._performValidation(validObj, options)) return false;
-
-      // Remove the attribute.
-      delete this.attributes[attr];
-      delete this._escapedAttributes[attr];
-      if (attr == this.idAttribute) delete this.id;
-      this._changed = true;
-      if (!options.silent) {
-        this.trigger('change:' + attr, this, void 0, options);
-        this.change(options);
-      }
-      return this;
-    },
-
-    // Clear all attributes on the model, firing `"change"` unless you choose
-    // to silence it.
-    clear : function(options) {
-      options || (options = {});
-      var attr;
-      var old = this.attributes;
-
-      // Run validation.
-      var validObj = {};
-      for (attr in old) validObj[attr] = void 0;
-      if (!options.silent && this.validate && !this._performValidation(validObj, options)) return false;
-
-      this.attributes = {};
-      this._escapedAttributes = {};
-      this._changed = true;
-      if (!options.silent) {
-        for (attr in old) {
-          this.trigger('change:' + attr, this, void 0, options);
-        }
-        this.change(options);
-      }
-      return this;
-    },
-
-    // Fetch the model from the server. If the server's representation of the
-    // model differs from its current attributes, they will be overriden,
-    // triggering a `"change"` event.
-    fetch : function(options) {
-      options || (options = {});
-      var model = this;
-      var success = options.success;
-      options.success = function(resp, status, xhr) {
-        if (!model.set(model.parse(resp, xhr), options)) return false;
-        if (success) success(model, resp);
-      };
-      options.error = wrapError(options.error, model, options);
-      return (this.sync || Backbone.sync).call(this, 'read', this, options);
-    },
-
-    // Set a hash of model attributes, and sync the model to the server.
-    // If the server returns an attributes hash that differs, the model's
-    // state will be `set` again.
-    save : function(attrs, options) {
-      options || (options = {});
-      if (attrs && !this.set(attrs, options)) return false;
-      var model = this;
-      var success = options.success;
-      options.success = function(resp, status, xhr) {
-        if (!model.set(model.parse(resp, xhr), options)) return false;
-        if (success) success(model, resp, xhr);
-      };
-      options.error = wrapError(options.error, model, options);
-      var method = this.isNew() ? 'create' : 'update';
-      return (this.sync || Backbone.sync).call(this, method, this, options);
-    },
-
-    // Destroy this model on the server if it was already persisted. Upon success, the model is removed
-    // from its collection, if it has one.
-    destroy : function(options) {
-      options || (options = {});
-      if (this.isNew()) return this.trigger('destroy', this, this.collection, options);
-      var model = this;
-      var success = options.success;
-      options.success = function(resp) {
-        model.trigger('destroy', model, model.collection, options);
-        if (success) success(model, resp);
-      };
-      options.error = wrapError(options.error, model, options);
-      return (this.sync || Backbone.sync).call(this, 'delete', this, options);
-    },
-
-    // Default URL for the model's representation on the server -- if you're
-    // using Backbone's restful methods, override this to change the endpoint
-    // that will be called.
-    url : function() {
-      var base = getUrl(this.collection) || this.urlRoot || urlError();
-      if (this.isNew()) return base;
-      return base + (base.charAt(base.length - 1) == '/' ? '' : '/') + encodeURIComponent(this.id);
-    },
-
-    // **parse** converts a response into the hash of attributes to be `set` on
-    // the model. The default implementation is just to pass the response along.
-    parse : function(resp, xhr) {
-      return resp;
-    },
-
-    // Create a new model with identical attributes to this one.
-    clone : function() {
-      return new this.constructor(this);
-    },
-
-    // A model is new if it has never been saved to the server, and lacks an id.
-    isNew : function() {
-      return this.id == null;
-    },
-
-    // Call this method to manually fire a `change` event for this model.
-    // Calling this will cause all objects observing the model to update.
-    change : function(options) {
-      this.trigger('change', this, options);
-      this._previousAttributes = _.clone(this.attributes);
-      this._changed = false;
-    },
-
-    // Determine if the model has changed since the last `"change"` event.
-    // If you specify an attribute name, determine if that attribute has changed.
-    hasChanged : function(attr) {
-      if (attr) return this._previousAttributes[attr] != this.attributes[attr];
-      return this._changed;
-    },
-
-    // Return an object containing all the attributes that have changed, or false
-    // if there are no changed attributes. Useful for determining what parts of a
-    // view need to be updated and/or what attributes need to be persisted to
-    // the server.
-    changedAttributes : function(now) {
-      now || (now = this.attributes);
-      var old = this._previousAttributes;
-      var changed = false;
-      for (var attr in now) {
-        if (!_.isEqual(old[attr], now[attr])) {
-          changed = changed || {};
-          changed[attr] = now[attr];
-        }
-      }
-      return changed;
-    },
-
-    // Get the previous value of an attribute, recorded at the time the last
-    // `"change"` event was fired.
-    previous : function(attr) {
-      if (!attr || !this._previousAttributes) return null;
-      return this._previousAttributes[attr];
-    },
-
-    // Get all of the attributes of the model at the time of the previous
-    // `"change"` event.
-    previousAttributes : function() {
-      return _.clone(this._previousAttributes);
-    },
-
-    // Run validation against a set of incoming attributes, returning `true`
-    // if all is well. If a specific `error` callback has been passed,
-    // call that instead of firing the general `"error"` event.
-    _performValidation : function(attrs, options) {
-      var error = this.validate(attrs);
-      if (error) {
-        if (options.error) {
-          options.error(this, error, options);
-        } else {
-          this.trigger('error', this, error, options);
-        }
-        return false;
-      }
-      return true;
-    }
-
-  });
-
-  // Backbone.Collection
-  // -------------------
-
-  // Provides a standard collection class for our sets of models, ordered
-  // or unordered. If a `comparator` is specified, the Collection will maintain
-  // its models in sort order, as they're added and removed.
-  Backbone.Collection = function(models, options) {
-    options || (options = {});
-    if (options.comparator) this.comparator = options.comparator;
-    _.bindAll(this, '_onModelEvent', '_removeReference');
-    this._reset();
-    if (models) this.reset(models, {silent: true});
-    this.initialize.apply(this, arguments);
-  };
-
-  // Define the Collection's inheritable methods.
-  _.extend(Backbone.Collection.prototype, Backbone.Events, {
-
-    // The default model for a collection is just a **Backbone.Model**.
-    // This should be overridden in most cases.
-    model : Backbone.Model,
-
-    // Initialize is an empty function by default. Override it with your own
-    // initialization logic.
-    initialize : function(){},
-
-    // The JSON representation of a Collection is an array of the
-    // models' attributes.
-    toJSON : function() {
-      return this.map(function(model){ return model.toJSON(); });
-    },
-
-    // Add a model, or list of models to the set. Pass **silent** to avoid
-    // firing the `added` event for every new model.
-    add : function(models, options) {
-      if (_.isArray(models)) {
-        for (var i = 0, l = models.length; i < l; i++) {
-          this._add(models[i], options);
-        }
-      } else {
-        this._add(models, options);
-      }
-      return this;
-    },
-
-    // Remove a model, or a list of models from the set. Pass silent to avoid
-    // firing the `removed` event for every model removed.
-    remove : function(models, options) {
-      if (_.isArray(models)) {
-        for (var i = 0, l = models.length; i < l; i++) {
-          this._remove(models[i], options);
-        }
-      } else {
-        this._remove(models, options);
-      }
-      return this;
-    },
-
-    // Get a model from the set by id.
-    get : function(id) {
-      if (id == null) return null;
-      return this._byId[id.id != null ? id.id : id];
-    },
-
-    // Get a model from the set by client id.
-    getByCid : function(cid) {
-      return cid && this._byCid[cid.cid || cid];
-    },
-
-    // Get the model at the given index.
-    at: function(index) {
-      return this.models[index];
-    },
-
-    // Force the collection to re-sort itself. You don't need to call this under normal
-    // circumstances, as the set will maintain sort order as each item is added.
-    sort : function(options) {
-      options || (options = {});
-      if (!this.comparator) throw new Error('Cannot sort a set without a comparator');
-      this.models = this.sortBy(this.comparator);
-      if (!options.silent) this.trigger('reset', this, options);
-      return this;
-    },
-
-    // Pluck an attribute from each model in the collection.
-    pluck : function(attr) {
-      return _.map(this.models, function(model){ return model.get(attr); });
-    },
-
-    // When you have more items than you want to add or remove individually,
-    // you can reset the entire set with a new list of models, without firing
-    // any `added` or `removed` events. Fires `reset` when finished.
-    reset : function(models, options) {
-      models  || (models = []);
-      options || (options = {});
-      this.each(this._removeReference);
-      this._reset();
-      this.add(models, {silent: true});
-      if (!options.silent) this.trigger('reset', this, options);
-      return this;
-    },
-
-    // Fetch the default set of models for this collection, resetting the
-    // collection when they arrive. If `add: true` is passed, appends the
-    // models to the collection instead of resetting.
-    fetch : function(options) {
-      options || (options = {});
-      var collection = this;
-      var success = options.success;
-      options.success = function(resp, status, xhr) {
-        collection[options.add ? 'add' : 'reset'](collection.parse(resp, xhr), options);
-        if (success) success(collection, resp);
-      };
-      options.error = wrapError(options.error, collection, options);
-      return (this.sync || Backbone.sync).call(this, 'read', this, options);
-    },
-
-    // Create a new instance of a model in this collection. After the model
-    // has been created on the server, it will be added to the collection.
-    // Returns the model, or 'false' if validation on a new model fails.
-    create : function(model, options) {
-      var coll = this;
-      options || (options = {});
-      model = this._prepareModel(model, options);
-      if (!model) return false;
-      var success = options.success;
-      options.success = function(nextModel, resp, xhr) {
-        coll.add(nextModel, options);
-        if (success) success(nextModel, resp, xhr);
-      };
-      model.save(null, options);
-      return model;
-    },
-
-    // **parse** converts a response into a list of models to be added to the
-    // collection. The default implementation is just to pass it through.
-    parse : function(resp, xhr) {
-      return resp;
-    },
-
-    // Proxy to _'s chain. Can't be proxied the same way the rest of the
-    // underscore methods are proxied because it relies on the underscore
-    // constructor.
-    chain: function () {
-      return _(this.models).chain();
-    },
-
-    // Reset all internal state. Called when the collection is reset.
-    _reset : function(options) {
-      this.length = 0;
-      this.models = [];
-      this._byId  = {};
-      this._byCid = {};
-    },
-
-    // Prepare a model to be added to this collection
-    _prepareModel: function(model, options) {
-      if (!(model instanceof Backbone.Model)) {
-        var attrs = model;
-        model = new this.model(attrs, {collection: this});
-        if (model.validate && !model._performValidation(attrs, options)) model = false;
-      } else if (!model.collection) {
-        model.collection = this;
-      }
-      return model;
-    },
-
-    // Internal implementation of adding a single model to the set, updating
-    // hash indexes for `id` and `cid` lookups.
-    // Returns the model, or 'false' if validation on a new model fails.
-    _add : function(model, options) {
-      options || (options = {});
-      model = this._prepareModel(model, options);
-      if (!model) return false;
-      var already = this.getByCid(model);
-      if (already) throw new Error(["Can't add the same model to a set twice", already.id]);
-      this._byId[model.id] = model;
-      this._byCid[model.cid] = model;
-      var index = options.at != null ? options.at :
-                  this.comparator ? this.sortedIndex(model, this.comparator) :
-                  this.length;
-      this.models.splice(index, 0, model);
-      model.bind('all', this._onModelEvent);
-      this.length++;
-      if (!options.silent) model.trigger('add', model, this, options);
-      return model;
-    },
-
-    // Internal implementation of removing a single model from the set, updating
-    // hash indexes for `id` and `cid` lookups.
-    _remove : function(model, options) {
-      options || (options = {});
-      model = this.getByCid(model) || this.get(model);
-      if (!model) return null;
-      delete this._byId[model.id];
-      delete this._byCid[model.cid];
-      this.models.splice(this.indexOf(model), 1);
-      this.length--;
-      if (!options.silent) model.trigger('remove', model, this, options);
-      this._removeReference(model);
-      return model;
-    },
-
-    // Internal method to remove a model's ties to a collection.
-    _removeReference : function(model) {
-      if (this == model.collection) {
-        delete model.collection;
-      }
-      model.unbind('all', this._onModelEvent);
-    },
-
-    // Internal method called every time a model in the set fires an event.
-    // Sets need to update their indexes when models change ids. All other
-    // events simply proxy through. "add" and "remove" events that originate
-    // in other collections are ignored.
-    _onModelEvent : function(ev, model, collection, options) {
-      if ((ev == 'add' || ev == 'remove') && collection != this) return;
-      if (ev == 'destroy') {
-        this._remove(model, options);
-      }
-      if (model && ev === 'change:' + model.idAttribute) {
-        delete this._byId[model.previous(model.idAttribute)];
-        this._byId[model.id] = model;
-      }
-      this.trigger.apply(this, arguments);
-    }
-
-  });
-
-  // Underscore methods that we want to implement on the Collection.
-  var methods = ['forEach', 'each', 'map', 'reduce', 'reduceRight', 'find', 'detect',
-    'filter', 'select', 'reject', 'every', 'all', 'some', 'any', 'include',
-    'contains', 'invoke', 'max', 'min', 'sortBy', 'sortedIndex', 'toArray', 'size',
-    'first', 'rest', 'last', 'without', 'indexOf', 'lastIndexOf', 'isEmpty', 'groupBy'];
-
-  // Mix in each Underscore method as a proxy to `Collection#models`.
-  _.each(methods, function(method) {
-    Backbone.Collection.prototype[method] = function() {
-      return _[method].apply(_, [this.models].concat(_.toArray(arguments)));
-    };
-  });
-
-  // Backbone.Router
-  // -------------------
-
-  // Routers map faux-URLs to actions, and fire events when routes are
-  // matched. Creating a new one sets its `routes` hash, if not set statically.
-  Backbone.Router = function(options) {
-    options || (options = {});
-    if (options.routes) this.routes = options.routes;
-    this._bindRoutes();
-    this.initialize.apply(this, arguments);
-  };
-
-  // Cached regular expressions for matching named param parts and splatted
-  // parts of route strings.
-  var namedParam    = /:([\w\d]+)/g;
-  var splatParam    = /\*([\w\d]+)/g;
-  var escapeRegExp  = /[-[\]{}()+?.,\\^$|#\s]/g;
-
-  // Set up all inheritable **Backbone.Router** properties and methods.
-  _.extend(Backbone.Router.prototype, Backbone.Events, {
-
-    // Initialize is an empty function by default. Override it with your own
-    // initialization logic.
-    initialize : function(){},
-
-    // Manually bind a single named route to a callback. For example:
-    //
-    //     this.route('search/:query/p:num', 'search', function(query, num) {
-    //       ...
-    //     });
-    //
-    route : function(route, name, callback) {
-      Backbone.history || (Backbone.history = new Backbone.History);
-      if (!_.isRegExp(route)) route = this._routeToRegExp(route);
-      Backbone.history.route(route, _.bind(function(fragment) {
-        var args = this._extractParameters(route, fragment);
-        callback.apply(this, args);
-        this.trigger.apply(this, ['route:' + name].concat(args));
-      }, this));
-    },
-
-    // Simple proxy to `Backbone.history` to save a fragment into the history.
-    navigate : function(fragment, triggerRoute) {
-      Backbone.history.navigate(fragment, triggerRoute);
-    },
-
-    // Bind all defined routes to `Backbone.history`. We have to reverse the
-    // order of the routes here to support behavior where the most general
-    // routes can be defined at the bottom of the route map.
-    _bindRoutes : function() {
-      if (!this.routes) return;
-      var routes = [];
-      for (var route in this.routes) {
-        routes.unshift([route, this.routes[route]]);
-      }
-      for (var i = 0, l = routes.length; i < l; i++) {
-        this.route(routes[i][0], routes[i][1], this[routes[i][1]]);
-      }
-    },
-
-    // Convert a route string into a regular expression, suitable for matching
-    // against the current location hash.
-    _routeToRegExp : function(route) {
-      route = route.replace(escapeRegExp, "\\$&")
-                   .replace(namedParam, "([^\/]*)")
-                   .replace(splatParam, "(.*?)");
-      return new RegExp('^' + route + '$');
-    },
-
-    // Given a route, and a URL fragment that it matches, return the array of
-    // extracted parameters.
-    _extractParameters : function(route, fragment) {
-      return route.exec(fragment).slice(1);
-    }
-
-  });
-
-  // Backbone.History
-  // ----------------
-
-  // Handles cross-browser history management, based on URL fragments. If the
-  // browser does not support `onhashchange`, falls back to polling.
-  Backbone.History = function() {
-    this.handlers = [];
-    _.bindAll(this, 'checkUrl');
-  };
-
-  // Cached regex for cleaning hashes.
-  var hashStrip = /^#*/;
-
-  // Cached regex for detecting MSIE.
-  var isExplorer = /msie [\w.]+/;
-
-  // Has the history handling already been started?
-  var historyStarted = false;
-
-  // Set up all inheritable **Backbone.History** properties and methods.
-  _.extend(Backbone.History.prototype, {
-
-    // The default interval to poll for hash changes, if necessary, is
-    // twenty times a second.
-    interval: 50,
-
-    // Get the cross-browser normalized URL fragment, either from the URL,
-    // the hash, or the override.
-    getFragment : function(fragment, forcePushState) {
-      if (fragment == null) {
-        if (this._hasPushState || forcePushState) {
-          fragment = window.location.pathname;
-          var search = window.location.search;
-          if (search) fragment += search;
-        } else {
-          fragment = window.location.hash;
-        }
-      }
-      fragment = decodeURIComponent(fragment.replace(hashStrip, ''));
-      if (!fragment.indexOf(this.options.root)) fragment = fragment.substr(this.options.root.length);
-      return fragment;
-    },
-
-    // Start the hash change handling, returning `true` if the current URL matches
-    // an existing route, and `false` otherwise.
-    start : function(options) {
-
-      // Figure out the initial configuration. Do we need an iframe?
-      // Is pushState desired ... is it available?
-      if (historyStarted) throw new Error("Backbone.history has already been started");
-      this.options          = _.extend({}, {root: '/'}, this.options, options);
-      this._wantsPushState  = !!this.options.pushState;
-      this._hasPushState    = !!(this.options.pushState && window.history && window.history.pushState);
-      var fragment          = this.getFragment();
-      var docMode           = document.documentMode;
-      var oldIE             = (isExplorer.exec(navigator.userAgent.toLowerCase()) && (!docMode || docMode <= 7));
-      if (oldIE) {
-        this.iframe = $('<iframe src="javascript:0" tabindex="-1" />').hide().appendTo('body')[0].contentWindow;
-        this.navigate(fragment);
-      }
-
-      // Depending on whether we're using pushState or hashes, and whether
-      // 'onhashchange' is supported, determine how we check the URL state.
-      if (this._hasPushState) {
-        $(window).bind('popstate', this.checkUrl);
-      } else if ('onhashchange' in window && !oldIE) {
-        $(window).bind('hashchange', this.checkUrl);
-      } else {
-        setInterval(this.checkUrl, this.interval);
-      }
-
-      // Determine if we need to change the base url, for a pushState link
-      // opened by a non-pushState browser.
-      this.fragment = fragment;
-      historyStarted = true;
-      var loc = window.location;
-      var atRoot  = loc.pathname == this.options.root;
-      if (this._wantsPushState && !this._hasPushState && !atRoot) {
-        this.fragment = this.getFragment(null, true);
-        window.location.replace(this.options.root + '#' + this.fragment);
-        // Return immediately as browser will do redirect to new url
-        return true;
-      } else if (this._wantsPushState && this._hasPushState && atRoot && loc.hash) {
-        this.fragment = loc.hash.replace(hashStrip, '');
-        window.history.replaceState({}, document.title, loc.protocol + '//' + loc.host + this.options.root + this.fragment);
-      }
-
-      if (!this.options.silent) {
-        return this.loadUrl();
-      }
-    },
-
-    // Add a route to be tested when the fragment changes. Routes added later may
-    // override previous routes.
-    route : function(route, callback) {
-      this.handlers.unshift({route : route, callback : callback});
-    },
-
-    // Checks the current URL to see if it has changed, and if it has,
-    // calls `loadUrl`, normalizing across the hidden iframe.
-    checkUrl : function(e) {
-      var current = this.getFragment();
-      if (current == this.fragment && this.iframe) current = this.getFragment(this.iframe.location.hash);
-      if (current == this.fragment || current == decodeURIComponent(this.fragment)) return false;
-      if (this.iframe) this.navigate(current);
-      this.loadUrl() || this.loadUrl(window.location.hash);
-    },
-
-    // Attempt to load the current URL fragment. If a route succeeds with a
-    // match, returns `true`. If no defined routes matches the fragment,
-    // returns `false`.
-    loadUrl : function(fragmentOverride) {
-      var fragment = this.fragment = this.getFragment(fragmentOverride);
-      var matched = _.any(this.handlers, function(handler) {
-        if (handler.route.test(fragment)) {
-          handler.callback(fragment);
-          return true;
-        }
-      });
-      return matched;
-    },
-
-    // Save a fragment into the hash history. You are responsible for properly
-    // URL-encoding the fragment in advance. This does not trigger
-    // a `hashchange` event.
-    navigate : function(fragment, triggerRoute) {
-      var frag = (fragment || '').replace(hashStrip, '');
-      if (this.fragment == frag || this.fragment == decodeURIComponent(frag)) return;
-      if (this._hasPushState) {
-        var loc = window.location;
-        if (frag.indexOf(this.options.root) != 0) frag = this.options.root + frag;
-        this.fragment = frag;
-        window.history.pushState({}, document.title, loc.protocol + '//' + loc.host + frag);
-      } else {
-        window.location.hash = this.fragment = frag;
-        if (this.iframe && (frag != this.getFragment(this.iframe.location.hash))) {
-          this.iframe.document.open().close();
-          this.iframe.location.hash = frag;
-        }
-      }
-      if (triggerRoute) this.loadUrl(fragment);
-    }
-
-  });
-
-  // Backbone.View
-  // -------------
-
-  // Creating a Backbone.View creates its initial element outside of the DOM,
-  // if an existing element is not provided...
-  Backbone.View = function(options) {
-    this.cid = _.uniqueId('view');
-    this._configure(options || {});
-    this._ensureElement();
-    this.delegateEvents();
-    this.initialize.apply(this, arguments);
-  };
-
-  // Element lookup, scoped to DOM elements within the current view.
-  // This should be prefered to global lookups, if you're dealing with
-  // a specific view.
-  var selectorDelegate = function(selector) {
-    return $(selector, this.el);
-  };
-
-  // Cached regex to split keys for `delegate`.
-  var eventSplitter = /^(\S+)\s*(.*)$/;
-
-  // List of view options to be merged as properties.
-  var viewOptions = ['model', 'collection', 'el', 'id', 'attributes', 'className', 'tagName'];
-
-  // Set up all inheritable **Backbone.View** properties and methods.
-  _.extend(Backbone.View.prototype, Backbone.Events, {
-
-    // The default `tagName` of a View's element is `"div"`.
-    tagName : 'div',
-
-    // Attach the `selectorDelegate` function as the `$` property.
-    $       : selectorDelegate,
-
-    // Initialize is an empty function by default. Override it with your own
-    // initialization logic.
-    initialize : function(){},
-
-    // **render** is the core function that your view should override, in order
-    // to populate its element (`this.el`), with the appropriate HTML. The
-    // convention is for **render** to always return `this`.
-    render : function() {
-      return this;
-    },
-
-    // Remove this view from the DOM. Note that the view isn't present in the
-    // DOM by default, so calling this method may be a no-op.
-    remove : function() {
-      $(this.el).remove();
-      return this;
-    },
-
-    // For small amounts of DOM Elements, where a full-blown template isn't
-    // needed, use **make** to manufacture elements, one at a time.
-    //
-    //     var el = this.make('li', {'class': 'row'}, this.model.escape('title'));
-    //
-    make : function(tagName, attributes, content) {
-      var el = document.createElement(tagName);
-      if (attributes) $(el).attr(attributes);
-      if (content) $(el).html(content);
-      return el;
-    },
-
-    // Set callbacks, where `this.events` is a hash of
-    //
-    // *{"event selector": "callback"}*
-    //
-    //     {
-    //       'mousedown .title':  'edit',
-    //       'click .button':     'save'
-    //     }
-    //
-    // pairs. Callbacks will be bound to the view, with `this` set properly.
-    // Uses event delegation for efficiency.
-    // Omitting the selector binds the event to `this.el`.
-    // This only works for delegate-able events: not `focus`, `blur`, and
-    // not `change`, `submit`, and `reset` in Internet Explorer.
-    delegateEvents : function(events) {
-      if (!(events || (events = this.events))) return;
-      if (_.isFunction(events)) events = events.call(this);
-      this.undelegateEvents();
-      for (var key in events) {
-        var method = this[events[key]];
-        if (!method) throw new Error('Event "' + events[key] + '" does not exist');
-        var match = key.match(eventSplitter);
-        var eventName = match[1], selector = match[2];
-        method = _.bind(method, this);
-        eventName += '.delegateEvents' + this.cid;
-        if (selector === '') {
-          $(this.el).bind(eventName, method);
-        } else {
-          $(this.el).delegate(selector, eventName, method);
-        }
-      }
-    },
-
-    // Clears all callbacks previously bound to the view with `delegateEvents`.
-    undelegateEvents: function() {
-      $(this.el).unbind('.delegateEvents' + this.cid);
-    },
-
-    // Performs the initial configuration of a View with a set of options.
-    // Keys with special meaning *(model, collection, id, className)*, are
-    // attached directly to the view.
-    _configure : function(options) {
-      if (this.options) options = _.extend({}, this.options, options);
-      for (var i = 0, l = viewOptions.length; i < l; i++) {
-        var attr = viewOptions[i];
-        if (options[attr]) this[attr] = options[attr];
-      }
-      this.options = options;
-    },
-
-    // Ensure that the View has a DOM element to render into.
-    // If `this.el` is a string, pass it through `$()`, take the first
-    // matching element, and re-assign it to `el`. Otherwise, create
-    // an element from the `id`, `className` and `tagName` properties.
-    _ensureElement : function() {
-      if (!this.el) {
-        var attrs = this.attributes || {};
-        if (this.id) attrs.id = this.id;
-        if (this.className) attrs['class'] = this.className;
-        this.el = this.make(this.tagName, attrs);
-      } else if (_.isString(this.el)) {
-        this.el = $(this.el).get(0);
-      }
-    }
-
-  });
-
-  // The self-propagating extend function that Backbone classes use.
-  var extend = function (protoProps, classProps) {
-    var child = inherits(this, protoProps, classProps);
-    child.extend = this.extend;
-    return child;
-  };
-
-  // Set up inheritance for the model, collection, and view.
-  Backbone.Model.extend = Backbone.Collection.extend =
-    Backbone.Router.extend = Backbone.View.extend = extend;
-
-  // Map from CRUD to HTTP for our default `Backbone.sync` implementation.
-  var methodMap = {
-    'create': 'POST',
-    'update': 'PUT',
-    'delete': 'DELETE',
-    'read'  : 'GET'
-  };
-
-  // Backbone.sync
-  // -------------
-
-  // Override this function to change the manner in which Backbone persists
-  // models to the server. You will be passed the type of request, and the
-  // model in question. By default, makes a RESTful Ajax request
-  // to the model's `url()`. Some possible customizations could be:
-  //
-  // * Use `setTimeout` to batch rapid-fire updates into a single request.
-  // * Send up the models as XML instead of JSON.
-  // * Persist models via WebSockets instead of Ajax.
-  //
-  // Turn on `Backbone.emulateHTTP` in order to send `PUT` and `DELETE` requests
-  // as `POST`, with a `_method` parameter containing the true HTTP method,
-  // as well as all requests with the body as `application/x-www-form-urlencoded` instead of
-  // `application/json` with the model in a param named `model`.
-  // Useful when interfacing with server-side languages like **PHP** that make
-  // it difficult to read the body of `PUT` requests.
-  Backbone.sync = function(method, model, options) {
-    var type = methodMap[method];
-
-    // Default JSON-request options.
-    var params = _.extend({
-      type:         type,
-      dataType:     'json'
-    }, options);
-
-    // Ensure that we have a URL.
-    if (!params.url) {
-      params.url = getUrl(model) || urlError();
-    }
-
-    // Ensure that we have the appropriate request data.
-    if (!params.data && model && (method == 'create' || method == 'update')) {
-      params.contentType = 'application/json';
-      params.data = JSON.stringify(model.toJSON());
-    }
-
-    // For older servers, emulate JSON by encoding the request into an HTML-form.
-    if (Backbone.emulateJSON) {
-      params.contentType = 'application/x-www-form-urlencoded';
-      params.data        = params.data ? {model : params.data} : {};
-    }
-
-    // For older servers, emulate HTTP by mimicking the HTTP method with `_method`
-    // And an `X-HTTP-Method-Override` header.
-    if (Backbone.emulateHTTP) {
-      if (type === 'PUT' || type === 'DELETE') {
-        if (Backbone.emulateJSON) params.data._method = type;
-        params.type = 'POST';
-        params.beforeSend = function(xhr) {
-          xhr.setRequestHeader('X-HTTP-Method-Override', type);
-        };
-      }
-    }
-
-    // Don't process data on a non-GET request.
-    if (params.type !== 'GET' && !Backbone.emulateJSON) {
-      params.processData = false;
-    }
-
-    // Make the request.
-    return $.ajax(params);
-  };
-
-  // Helpers
-  // -------
-
-  // Shared empty constructor function to aid in prototype-chain creation.
-  var ctor = function(){};
-
-  // Helper function to correctly set up the prototype chain, for subclasses.
-  // Similar to `goog.inherits`, but uses a hash of prototype properties and
-  // class properties to be extended.
-  var inherits = function(parent, protoProps, staticProps) {
-    var child;
-
-    // The constructor function for the new subclass is either defined by you
-    // (the "constructor" property in your `extend` definition), or defaulted
-    // by us to simply call `super()`.
-    if (protoProps && protoProps.hasOwnProperty('constructor')) {
-      child = protoProps.constructor;
-    } else {
-      child = function(){ return parent.apply(this, arguments); };
-    }
-
-    // Inherit class (static) properties from parent.
-    _.extend(child, parent);
-
-    // Set the prototype chain to inherit from `parent`, without calling
-    // `parent`'s constructor function.
-    ctor.prototype = parent.prototype;
-    child.prototype = new ctor();
-
-    // Add prototype properties (instance properties) to the subclass,
-    // if supplied.
-    if (protoProps) _.extend(child.prototype, protoProps);
-
-    // Add static properties to the constructor function, if supplied.
-    if (staticProps) _.extend(child, staticProps);
-
-    // Correctly set child's `prototype.constructor`.
-    child.prototype.constructor = child;
-
-    // Set a convenience property in case the parent's prototype is needed later.
-    child.__super__ = parent.prototype;
-
-    return child;
-  };
-
-  // Helper function to get a URL from a Model or Collection as a property
-  // or as a function.
-  var getUrl = function(object) {
-    if (!(object && object.url)) return null;
-    return _.isFunction(object.url) ? object.url() : object.url;
-  };
-
-  // Throw an error when a URL is needed, and none is supplied.
-  var urlError = function() {
-    throw new Error('A "url" property or function must be specified');
-  };
-
-  // Wrap an optional error callback with a fallback error event.
-  var wrapError = function(onError, model, options) {
-    return function(resp) {
-      if (onError) {
-        onError(model, resp, options);
-      } else {
-        model.trigger('error', model, resp, options);
-      }
-    };
-  };
-
-  // Helper function to escape a string for HTML rendering.
-  var escapeHTML = function(string) {
-    return string.replace(/&(?!\w+;|#\d+;|#x[\da-f]+;)/gi, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g,'&#x2F;');
-  };
-
-}).call(this);
-/**
- * Backbone localStorage Adapter v1.0
- * https://github.com/jeromegn/Backbone.localStorage
- *
- * Date: Sun Aug 14 2011 09:53:55 -0400
- */
-
-// A simple module to replace `Backbone.sync` with *localStorage*-based
-// persistence. Models are given GUIDS, and saved into a JSON object. Simple
-// as that.
-
-// Generate four random hex digits.
-function S4() {
-   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-};
-
-// Generate a pseudo-GUID by concatenating random hexadecimal.
-function guid() {
-   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
-};
-
-// Our Store is represented by a single JS object in *localStorage*. Create it
-// with a meaningful name, like the name you'd give a table.
-window.Store = function(name) {
-  this.name = name;
-  var store = localStorage.getItem(this.name);
-  this.records = (store && store.split(",")) || [];
-};
-
-_.extend(Store.prototype, {
-
-  // Save the current state of the **Store** to *localStorage*.
-  save: function() {
-    localStorage.setItem(this.name, this.records.join(","));
-  },
-
-  // Add a model, giving it a (hopefully)-unique GUID, if it doesn't already
-  // have an id of it's own.
-  create: function(model) {
-    if (!model.id) model.id = model.attributes.id = guid();
-    localStorage.setItem(this.name+"-"+model.id, JSON.stringify(model));
-    this.records.push(model.id.toString());
-    this.save();
-    return model;
-  },
-
-  // Update a model by replacing its copy in `this.data`.
-  update: function(model) {
-    localStorage.setItem(this.name+"-"+model.id, JSON.stringify(model));
-    if (!_.include(this.records, model.id.toString())) this.records.push(model.id.toString()); this.save();
-    return model;
-  },
-
-  // Retrieve a model from `this.data` by id.
-  find: function(model) {
-    return JSON.parse(localStorage.getItem(this.name+"-"+model.id));
-  },
-
-  // Return the array of all models currently in storage.
-  findAll: function() {
-    return _.map(this.records, function(id){return JSON.parse(localStorage.getItem(this.name+"-"+id));}, this);
-  },
-
-  // Delete a model from `this.data`, returning it.
-  destroy: function(model) {
-    localStorage.removeItem(this.name+"-"+model.id);
-    this.records = _.reject(this.records, function(record_id){return record_id == model.id.toString();});
-    this.save();
-    return model;
-  }
-
-});
-
-// Override `Backbone.sync` to use delegate to the model or collection's
-// *localStorage* property, which should be an instance of `Store`.
-Backbone.sync = function(method, model, options, error) {
-
-  // Backwards compatibility with Backbone <= 0.3.3
-  if (typeof options == 'function') {
-    options = {
-      success: options,
-      error: error
-    };
-  }
-
-  var resp;
-  var store = model.localStorage || model.collection.localStorage;
-
-  switch (method) {
-    case "read":    resp = model.id ? store.find(model) : store.findAll(); break;
-    case "create":  resp = store.create(model);                            break;
-    case "update":  resp = store.update(model);                            break;
-    case "delete":  resp = store.destroy(model);                           break;
-  }
-
-  if (resp) {
-    options.success(resp);
-  } else {
-    options.error("Record not found");
-  }
-};/** @file
- *
- *  Backbone Model for a user or collection of users.
- *
- *  Requires:
- *      backbone.js
- */
-/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
-/*global Backbone:false */
-(function() {
-    var app         = this.app = (this.app || {Model:{}, View:{}});
-    var Backbone    = this.Backbone;
-    if (!Backbone && (typeof require !== 'undefined'))
-    {
-        Backbone = require('../backbone.js');
-    }
-
-    app.Model.User  = Backbone.Model.extend({
-        defaults:   {
-            id:         null,
-            name:       'anonymous',
-            fullName:   'Anonymous',
-            avatarUrl:  'images/avatar.jpg'
-        },
-
-        // id, name, fullName, avatarUrl
-        initialize: function(spec) {
-        }
-    });
-
-    app.Model.Users = Backbone.Collection.extend({
-        model:  app.Model.User,
-
-        initialize: function() {
-        }
-    });
-
- }).call(this);
-/** @file
- *
- *  Backbone Model for a comment or collection of comments.
- *
- *  Requires:
- *      backbone.js
- */
-/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
-/*global Backbone:false */
-(function() {
-    var app         = this.app = (this.app || {Model:{}, View:{}});
-    var _           = this._;
-    var Backbone    = this.Backbone;
-    if (typeof require !== 'undefined')
-    {
-        if (!_)        { _        = require('../underscore.js'); }
-        if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!app.Model.User)
-        {
-            var tModule     = require('./user.js');
-            _.extend(app, tModule.app);
-        }
-    }
-
-    app.Model.Comment   = Backbone.Model.extend({
-        defaults:   {
-            id:         null,
-            author:     null,
-            text:       '',
-            created:    null
-        },
-
-        initialize: function(spec) {
-            var author  = this.get('author');
-            var created = this.get('created');
-            if ( ! (author instanceof app.Model.User) )
-            {
-                this.set({'author': new app.Model.User(author)});
-            }
-
-            if ( ! (created instanceof Date) )
-            {
-                created = (created
-                            ? new Date(created)
-                            : new Date());
-
-                this.set({'created': created});
-            }
-        }
-    });
-
-    app.Model.Comments  = Backbone.Collection.extend({
-        model:  app.Model.Comment,
-
-        initialize: function() {
-        }
-    });
-
- }).call(this);
-/** @file
- *
- *  Backbone Model for a note or collection of notes.
- *
- *  Requires:
- *      backbone.js
- */
-/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
-/*global Backbone:false */
-(function() {
-    var app         = this.app = (this.app || {Model:{}, View:{}});
-    var _           = this._;
-    var Backbone    = this.Backbone;
-    if (typeof require !== 'undefined')
-    {
-        if (!_)        { _        = require('../underscore.js'); }
-        if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!app.Model.Comments)
-        {
-            var tModule = require('./comment.js');
-            _.extend(app, tModule.app);
-        }
-
-        if (!app.Model.Position)
-        {
-            var tModule = require('./position.js');
-            _.extend(app, tModule.app);
-        }
-    }
-
-    app.Model.Note  = Backbone.Model.extend({
-        defaults: {
-            id:         null,
-
-            /* Position within the document of the content highlight associated
-             * with this note.
-             */
-            position:   {
-                start:  {
-                    sentence:   null,   /* The app.Model.Sentence instance or
-                                         * identifier.
-                                         */
-                    relativePos:null    /* Serialized position rooted in the
-                                         * identified sentence.
-                                         */
-                },
-                end:    {
-                    sentence:   null,   /* The app.Model.Sentence instance or
-                                         * identifier.
-                                         */
-                    relativePos:null    /* Serialized position rooted in the
-                                         * identified sentence.
-                                         */
-                }
-            },
-
-            // Comments associated with this note
-            comments:   null
-        },
-
-        initialize: function(spec) {
-            var comments    = this.get('comments');
-            var position    = this.get('position');
-            if ((! comments) || ! (comments instanceof app.Model.Comments) )
-            {
-                this.set({comments: new app.Model.Comments(comments)});
-            }
-
-            if ((! position) || ! (position instanceof app.Model.Position) )
-            {
-                this.set({position: new app.Model.Position(position)});
-            }
-        }
-    });
-
-    app.Model.Notes = Backbone.Collection.extend({
-        model:  app.Model.Note,
-
-        initialize: function() {
-        }
-    });
-
- }).call(this);
-/** @file
- *
- *  Backbone Model for a sentence or collection of sentences.
- *
- *  Requires:
- *      backbone.js
- */
-/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
-/*global Backbone:false */
-(function() {
-    var app         = this.app = (this.app || {Model:{}, View:{}});
-    var _           = this._;
-    var Backbone    = this.Backbone;
-    if (typeof require !== 'undefined')
-    {
-        if (!_)        { _        = require('../underscore.js'); }
-        if (!Backbone) { Backbone = require('../backbone.js'); }
-    }
-
-    app.Model.Sentence  = Backbone.Model.extend({
-        defaults: {
-            id:         null,
-            rank:       0.0,
-            content:    null
-        },
-
-        initialize: function(spec) {
-        }
-    });
-
-    app.Model.Sentences = Backbone.Collection.extend({
-        model:  app.Model.Sentence,
-
-        initialize: function() {
-        }
-    });
-
- }).call(this);
-/** @file
- *
- *  Backbone Model for a paragraph or collection of paragraphs.
- *
- *  Requires:
- *      backbone.js
- *      model/sentence.js
- */
-/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
-/*global Backbone:false */
-(function() {
-    var app         = this.app = (this.app || {Model:{}, View:{}});
-    var _           = this._;
-    var Backbone    = this.Backbone;
-    if (typeof require !== 'undefined')
-    {
-        if (!_)        { _        = require('../underscore.js'); }
-        if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!app.Model.Sentences)
-        {
-            var tModule = require('./sentence.js');
-            _.extend(app, tModule.app);
-        }
-    }
-
-    app.Model.Paragraph = Backbone.Model.extend({
-        defaults: {
-            id:         null,
-            rank:       0.0,
-            sentences:  null
-        },
-
-        initialize: function(spec) {
-            var sentences   = this.get('sentences');
-            if (! (sentences instanceof app.Model.Sentences))
-            {
-                this.set({'sentences': new app.Model.Sentences(sentences)});
-            }
-        }
-    });
-
-    app.Model.Paragraphs    = Backbone.Collection.extend({
-        model:  app.Model.Paragraph,
-
-        initialize: function() {
-        }
-    });
-
- }).call(this);
-/** @file
- *
- *  Backbone Model for a section or collection of sections.
- *
- *  Requires:
- *      backbone.js
- *      model/paragraph.js
- */
-/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
-/*global Backbone:false */
-(function() {
-    var app         = this.app = (this.app || {Model:{}, View:{}});
-    var _           = this._;
-    var Backbone    = this.Backbone;
-    if (typeof require !== 'undefined')
-    {
-        if (!_)        { _        = require('../underscore.js'); }
-        if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!app.Model.Paragraphs)
-        {
-            var tModule = require('./paragraph.js');
-            _.extend(app, tModule.app);
-        }
-    }
-
-    app.Model.Section   = Backbone.Model.extend({
-        defaults: {
-            id:         null,
-            rank:       0.0,
-            paragraphs: null
-        },
-
-        initialize: function(spec) {
-            var paragraphs  = this.get('paragraphs');
-            if (! (paragraphs instanceof app.Model.Paragraphs))
-            {
-                this.set({'paragraphs': new app.Model.Paragraphs(paragraphs)});
-            }
-        }
-    });
-
-    app.Model.Sections  = Backbone.Collection.extend({
-        model:  app.Model.Section,
-
-        initialize: function() {
-        }
-    });
-
- }).call(this);
-/** @file
- *
- *  Backbone Model for a document or collection of documents.
- *
- *  Requires:
- *      backbone.js
- *      model/section.js
- */
-/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
-/*global Backbone:false */
-(function() {
-    var app         = this.app = (this.app || {Model:{}, View:{}});
-    var _           = this._;
-    var Backbone    = this.Backbone;
-    if (typeof require !== 'undefined')
-    {
-        if (!_)        { _        = require('../underscore.js'); }
-        if (!Backbone) { Backbone = require('../backbone.js'); }
-        if (!app.Model.Sections)
-        {
-            var tModule = require('./section.js');
-            _.extend(app, tModule.app);
-        }
-        if (!app.Model.Notes)
-        {
-            var tModule = require('./note.js');
-            _.extend(app, tModule.app);
-        }
-    }
-
-    app.Model.Doc   = Backbone.Model.extend({
-        defaults: {
-            id:         null,
-            type:       'text/html',
-            url:        null,
-            title:      null,
-            author:     null,
-            published:  null,
-            rank:       0.0,
-            keywords:   null,
-            sections:   null,
-            notes:      null
-        },
-
-        initialize: function(spec) {
-            var published   = this.get('published');
-            var sections    = this.get('sections');
-            var notes       = this.get('notes');
-            if ((! published) || ! (published instanceof Date) )
-            {
-                published = (published
-                            ? new Date(published)
-                            : new Date());
-
-                this.set({published: published});
-            }
-
-            if ((! sections) || ! (sections instanceof app.Model.Sections))
-            {
-                this.set({sections: new app.Model.Sections(sections)});
-            }
-
-            if ((! notes) || ! (notes instanceof app.Model.Notes))
-            {
-                this.set({notes: new app.Model.Notes(notes)});
-            }
-        },
-
-        /** @brief  Add a new note to this document.
-         *  @param  position    An app.Model.Position instance representing the
-         *                      position within the document to associate this
-         *                      note with;
-         */
-        addNote: function(position) {
-            var notes   = this.get('notes');
-            notes.add( {position:position} );
-        }
-    });
-
-    app.Model.Docs  = Backbone.Collection.extend({
-        model:  app.Model.Document,
-
-        initialize: function() {
-        }
-    });
-
- }).call(this);
 /*!
  * jQuery JavaScript Library v1.6.2
  * http://jquery.com/
@@ -15794,6 +14127,4872 @@ rangy.createModule("CssClassApplier", function(api, module) {
     };
 
 }(jQuery));
+//     Backbone.js 0.5.3
+//     (c) 2010 Jeremy Ashkenas, DocumentCloud Inc.
+//     Backbone may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://documentcloud.github.com/backbone
+
+(function(){
+
+  // Initial Setup
+  // -------------
+
+  // Save a reference to the global object.
+  var root = this;
+
+  // Save the previous value of the `Backbone` variable.
+  var previousBackbone = root.Backbone;
+
+  // The top-level namespace. All public Backbone classes and modules will
+  // be attached to this. Exported for both CommonJS and the browser.
+  var Backbone;
+  if (typeof exports !== 'undefined') {
+    Backbone = exports;
+  } else {
+    Backbone = root.Backbone = {};
+  }
+
+  // Current version of the library. Keep in sync with `package.json`.
+  Backbone.VERSION = '0.5.3';
+
+  // Require Underscore, if we're on the server, and it's not already present.
+  var _ = root._;
+  if (!_ && (typeof require !== 'undefined')) _ = require('./underscore')._;
+
+  // For Backbone's purposes, jQuery, Zepto, or Ender owns the `$` variable.
+  var $ = root.jQuery || root.Zepto || root.ender;
+
+  // Runs Backbone.js in *noConflict* mode, returning the `Backbone` variable
+  // to its previous owner. Returns a reference to this Backbone object.
+  Backbone.noConflict = function() {
+    root.Backbone = previousBackbone;
+    return this;
+  };
+
+  // Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option will
+  // fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and set a
+  // `X-Http-Method-Override` header.
+  Backbone.emulateHTTP = false;
+
+  // Turn on `emulateJSON` to support legacy servers that can't deal with direct
+  // `application/json` requests ... will encode the body as
+  // `application/x-www-form-urlencoded` instead and will send the model in a
+  // form param named `model`.
+  Backbone.emulateJSON = false;
+
+  // Backbone.Events
+  // -----------------
+
+  // A module that can be mixed in to *any object* in order to provide it with
+  // custom events. You may `bind` or `unbind` a callback function to an event;
+  // `trigger`-ing an event fires all callbacks in succession.
+  //
+  //     var object = {};
+  //     _.extend(object, Backbone.Events);
+  //     object.bind('expand', function(){ alert('expanded'); });
+  //     object.trigger('expand');
+  //
+  Backbone.Events = {
+
+    // Bind an event, specified by a string name, `ev`, to a `callback` function.
+    // Passing `"all"` will bind the callback to all events fired.
+    bind : function(ev, callback, context) {
+      var calls = this._callbacks || (this._callbacks = {});
+      var list  = calls[ev] || (calls[ev] = []);
+      list.push([callback, context]);
+      return this;
+    },
+
+    // Remove one or many callbacks. If `callback` is null, removes all
+    // callbacks for the event. If `ev` is null, removes all bound callbacks
+    // for all events.
+    unbind : function(ev, callback) {
+      var calls;
+      if (!ev) {
+        this._callbacks = {};
+      } else if (calls = this._callbacks) {
+        if (!callback) {
+          calls[ev] = [];
+        } else {
+          var list = calls[ev];
+          if (!list) return this;
+          for (var i = 0, l = list.length; i < l; i++) {
+            if (list[i] && callback === list[i][0]) {
+              list[i] = null;
+              break;
+            }
+          }
+        }
+      }
+      return this;
+    },
+
+    // Trigger an event, firing all bound callbacks. Callbacks are passed the
+    // same arguments as `trigger` is, apart from the event name.
+    // Listening for `"all"` passes the true event name as the first argument.
+    trigger : function(eventName) {
+      var list, calls, ev, callback, args;
+      var both = 2;
+      if (!(calls = this._callbacks)) return this;
+      while (both--) {
+        ev = both ? eventName : 'all';
+        if (list = calls[ev]) {
+          for (var i = 0, l = list.length; i < l; i++) {
+            if (!(callback = list[i])) {
+              list.splice(i, 1); i--; l--;
+            } else {
+              args = both ? Array.prototype.slice.call(arguments, 1) : arguments;
+              callback[0].apply(callback[1] || this, args);
+            }
+          }
+        }
+      }
+      return this;
+    }
+
+  };
+
+  // Backbone.Model
+  // --------------
+
+  // Create a new model, with defined attributes. A client id (`cid`)
+  // is automatically generated and assigned for you.
+  Backbone.Model = function(attributes, options) {
+    var defaults;
+    attributes || (attributes = {});
+    if (defaults = this.defaults) {
+      if (_.isFunction(defaults)) defaults = defaults.call(this);
+      attributes = _.extend({}, defaults, attributes);
+    }
+    this.attributes = {};
+    this._escapedAttributes = {};
+    this.cid = _.uniqueId('c');
+    this.set(attributes, {silent : true});
+    this._changed = false;
+    this._previousAttributes = _.clone(this.attributes);
+    if (options && options.collection) this.collection = options.collection;
+    this.initialize(attributes, options);
+  };
+
+  // Attach all inheritable methods to the Model prototype.
+  _.extend(Backbone.Model.prototype, Backbone.Events, {
+
+    // A snapshot of the model's previous attributes, taken immediately
+    // after the last `"change"` event was fired.
+    _previousAttributes : null,
+
+    // Has the item been changed since the last `"change"` event?
+    _changed : false,
+
+    // The default name for the JSON `id` attribute is `"id"`. MongoDB and
+    // CouchDB users may want to set this to `"_id"`.
+    idAttribute : 'id',
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize : function(){},
+
+    // Return a copy of the model's `attributes` object.
+    toJSON : function() {
+      return _.clone(this.attributes);
+    },
+
+    // Get the value of an attribute.
+    get : function(attr) {
+      return this.attributes[attr];
+    },
+
+    // Get the HTML-escaped value of an attribute.
+    escape : function(attr) {
+      var html;
+      if (html = this._escapedAttributes[attr]) return html;
+      var val = this.attributes[attr];
+      return this._escapedAttributes[attr] = escapeHTML(val == null ? '' : '' + val);
+    },
+
+    // Returns `true` if the attribute contains a value that is not null
+    // or undefined.
+    has : function(attr) {
+      return this.attributes[attr] != null;
+    },
+
+    // Set a hash of model attributes on the object, firing `"change"` unless you
+    // choose to silence it.
+    set : function(attrs, options) {
+
+      // Extract attributes and options.
+      options || (options = {});
+      if (!attrs) return this;
+      if (attrs.attributes) attrs = attrs.attributes;
+      var now = this.attributes, escaped = this._escapedAttributes;
+
+      // Run validation.
+      if (!options.silent && this.validate && !this._performValidation(attrs, options)) return false;
+
+      // Check for changes of `id`.
+      if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
+
+      // We're about to start triggering change events.
+      var alreadyChanging = this._changing;
+      this._changing = true;
+
+      // Update attributes.
+      for (var attr in attrs) {
+        var val = attrs[attr];
+        if (!_.isEqual(now[attr], val)) {
+          now[attr] = val;
+          delete escaped[attr];
+          this._changed = true;
+          if (!options.silent) this.trigger('change:' + attr, this, val, options);
+        }
+      }
+
+      // Fire the `"change"` event, if the model has been changed.
+      if (!alreadyChanging && !options.silent && this._changed) this.change(options);
+      this._changing = false;
+      return this;
+    },
+
+    // Remove an attribute from the model, firing `"change"` unless you choose
+    // to silence it. `unset` is a noop if the attribute doesn't exist.
+    unset : function(attr, options) {
+      if (!(attr in this.attributes)) return this;
+      options || (options = {});
+      var value = this.attributes[attr];
+
+      // Run validation.
+      var validObj = {};
+      validObj[attr] = void 0;
+      if (!options.silent && this.validate && !this._performValidation(validObj, options)) return false;
+
+      // Remove the attribute.
+      delete this.attributes[attr];
+      delete this._escapedAttributes[attr];
+      if (attr == this.idAttribute) delete this.id;
+      this._changed = true;
+      if (!options.silent) {
+        this.trigger('change:' + attr, this, void 0, options);
+        this.change(options);
+      }
+      return this;
+    },
+
+    // Clear all attributes on the model, firing `"change"` unless you choose
+    // to silence it.
+    clear : function(options) {
+      options || (options = {});
+      var attr;
+      var old = this.attributes;
+
+      // Run validation.
+      var validObj = {};
+      for (attr in old) validObj[attr] = void 0;
+      if (!options.silent && this.validate && !this._performValidation(validObj, options)) return false;
+
+      this.attributes = {};
+      this._escapedAttributes = {};
+      this._changed = true;
+      if (!options.silent) {
+        for (attr in old) {
+          this.trigger('change:' + attr, this, void 0, options);
+        }
+        this.change(options);
+      }
+      return this;
+    },
+
+    // Fetch the model from the server. If the server's representation of the
+    // model differs from its current attributes, they will be overriden,
+    // triggering a `"change"` event.
+    fetch : function(options) {
+      options || (options = {});
+      var model = this;
+      var success = options.success;
+      options.success = function(resp, status, xhr) {
+        if (!model.set(model.parse(resp, xhr), options)) return false;
+        if (success) success(model, resp);
+      };
+      options.error = wrapError(options.error, model, options);
+      return (this.sync || Backbone.sync).call(this, 'read', this, options);
+    },
+
+    // Set a hash of model attributes, and sync the model to the server.
+    // If the server returns an attributes hash that differs, the model's
+    // state will be `set` again.
+    save : function(attrs, options) {
+      options || (options = {});
+      if (attrs && !this.set(attrs, options)) return false;
+      var model = this;
+      var success = options.success;
+      options.success = function(resp, status, xhr) {
+        if (!model.set(model.parse(resp, xhr), options)) return false;
+        if (success) success(model, resp, xhr);
+      };
+      options.error = wrapError(options.error, model, options);
+      var method = this.isNew() ? 'create' : 'update';
+      return (this.sync || Backbone.sync).call(this, method, this, options);
+    },
+
+    // Destroy this model on the server if it was already persisted. Upon success, the model is removed
+    // from its collection, if it has one.
+    destroy : function(options) {
+      options || (options = {});
+      if (this.isNew()) return this.trigger('destroy', this, this.collection, options);
+      var model = this;
+      var success = options.success;
+      options.success = function(resp) {
+        model.trigger('destroy', model, model.collection, options);
+        if (success) success(model, resp);
+      };
+      options.error = wrapError(options.error, model, options);
+      return (this.sync || Backbone.sync).call(this, 'delete', this, options);
+    },
+
+    // Default URL for the model's representation on the server -- if you're
+    // using Backbone's restful methods, override this to change the endpoint
+    // that will be called.
+    url : function() {
+      var base = getUrl(this.collection) || this.urlRoot || urlError();
+      if (this.isNew()) return base;
+      return base + (base.charAt(base.length - 1) == '/' ? '' : '/') + encodeURIComponent(this.id);
+    },
+
+    // **parse** converts a response into the hash of attributes to be `set` on
+    // the model. The default implementation is just to pass the response along.
+    parse : function(resp, xhr) {
+      return resp;
+    },
+
+    // Create a new model with identical attributes to this one.
+    clone : function() {
+      return new this.constructor(this);
+    },
+
+    // A model is new if it has never been saved to the server, and lacks an id.
+    isNew : function() {
+      return this.id == null;
+    },
+
+    // Call this method to manually fire a `change` event for this model.
+    // Calling this will cause all objects observing the model to update.
+    change : function(options) {
+      this.trigger('change', this, options);
+      this._previousAttributes = _.clone(this.attributes);
+      this._changed = false;
+    },
+
+    // Determine if the model has changed since the last `"change"` event.
+    // If you specify an attribute name, determine if that attribute has changed.
+    hasChanged : function(attr) {
+      if (attr) return this._previousAttributes[attr] != this.attributes[attr];
+      return this._changed;
+    },
+
+    // Return an object containing all the attributes that have changed, or false
+    // if there are no changed attributes. Useful for determining what parts of a
+    // view need to be updated and/or what attributes need to be persisted to
+    // the server.
+    changedAttributes : function(now) {
+      now || (now = this.attributes);
+      var old = this._previousAttributes;
+      var changed = false;
+      for (var attr in now) {
+        if (!_.isEqual(old[attr], now[attr])) {
+          changed = changed || {};
+          changed[attr] = now[attr];
+        }
+      }
+      return changed;
+    },
+
+    // Get the previous value of an attribute, recorded at the time the last
+    // `"change"` event was fired.
+    previous : function(attr) {
+      if (!attr || !this._previousAttributes) return null;
+      return this._previousAttributes[attr];
+    },
+
+    // Get all of the attributes of the model at the time of the previous
+    // `"change"` event.
+    previousAttributes : function() {
+      return _.clone(this._previousAttributes);
+    },
+
+    // Run validation against a set of incoming attributes, returning `true`
+    // if all is well. If a specific `error` callback has been passed,
+    // call that instead of firing the general `"error"` event.
+    _performValidation : function(attrs, options) {
+      var error = this.validate(attrs);
+      if (error) {
+        if (options.error) {
+          options.error(this, error, options);
+        } else {
+          this.trigger('error', this, error, options);
+        }
+        return false;
+      }
+      return true;
+    }
+
+  });
+
+  // Backbone.Collection
+  // -------------------
+
+  // Provides a standard collection class for our sets of models, ordered
+  // or unordered. If a `comparator` is specified, the Collection will maintain
+  // its models in sort order, as they're added and removed.
+  Backbone.Collection = function(models, options) {
+    options || (options = {});
+    if (options.comparator) this.comparator = options.comparator;
+    _.bindAll(this, '_onModelEvent', '_removeReference');
+    this._reset();
+    if (models) this.reset(models, {silent: true});
+    this.initialize.apply(this, arguments);
+  };
+
+  // Define the Collection's inheritable methods.
+  _.extend(Backbone.Collection.prototype, Backbone.Events, {
+
+    // The default model for a collection is just a **Backbone.Model**.
+    // This should be overridden in most cases.
+    model : Backbone.Model,
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize : function(){},
+
+    // The JSON representation of a Collection is an array of the
+    // models' attributes.
+    toJSON : function() {
+      return this.map(function(model){ return model.toJSON(); });
+    },
+
+    // Add a model, or list of models to the set. Pass **silent** to avoid
+    // firing the `added` event for every new model.
+    add : function(models, options) {
+      if (_.isArray(models)) {
+        for (var i = 0, l = models.length; i < l; i++) {
+          this._add(models[i], options);
+        }
+      } else {
+        this._add(models, options);
+      }
+      return this;
+    },
+
+    // Remove a model, or a list of models from the set. Pass silent to avoid
+    // firing the `removed` event for every model removed.
+    remove : function(models, options) {
+      if (_.isArray(models)) {
+        for (var i = 0, l = models.length; i < l; i++) {
+          this._remove(models[i], options);
+        }
+      } else {
+        this._remove(models, options);
+      }
+      return this;
+    },
+
+    // Get a model from the set by id.
+    get : function(id) {
+      if (id == null) return null;
+      return this._byId[id.id != null ? id.id : id];
+    },
+
+    // Get a model from the set by client id.
+    getByCid : function(cid) {
+      return cid && this._byCid[cid.cid || cid];
+    },
+
+    // Get the model at the given index.
+    at: function(index) {
+      return this.models[index];
+    },
+
+    // Force the collection to re-sort itself. You don't need to call this under normal
+    // circumstances, as the set will maintain sort order as each item is added.
+    sort : function(options) {
+      options || (options = {});
+      if (!this.comparator) throw new Error('Cannot sort a set without a comparator');
+      this.models = this.sortBy(this.comparator);
+      if (!options.silent) this.trigger('reset', this, options);
+      return this;
+    },
+
+    // Pluck an attribute from each model in the collection.
+    pluck : function(attr) {
+      return _.map(this.models, function(model){ return model.get(attr); });
+    },
+
+    // When you have more items than you want to add or remove individually,
+    // you can reset the entire set with a new list of models, without firing
+    // any `added` or `removed` events. Fires `reset` when finished.
+    reset : function(models, options) {
+      models  || (models = []);
+      options || (options = {});
+      this.each(this._removeReference);
+      this._reset();
+      this.add(models, {silent: true});
+      if (!options.silent) this.trigger('reset', this, options);
+      return this;
+    },
+
+    // Fetch the default set of models for this collection, resetting the
+    // collection when they arrive. If `add: true` is passed, appends the
+    // models to the collection instead of resetting.
+    fetch : function(options) {
+      options || (options = {});
+      var collection = this;
+      var success = options.success;
+      options.success = function(resp, status, xhr) {
+        collection[options.add ? 'add' : 'reset'](collection.parse(resp, xhr), options);
+        if (success) success(collection, resp);
+      };
+      options.error = wrapError(options.error, collection, options);
+      return (this.sync || Backbone.sync).call(this, 'read', this, options);
+    },
+
+    // Create a new instance of a model in this collection. After the model
+    // has been created on the server, it will be added to the collection.
+    // Returns the model, or 'false' if validation on a new model fails.
+    create : function(model, options) {
+      var coll = this;
+      options || (options = {});
+      model = this._prepareModel(model, options);
+      if (!model) return false;
+      var success = options.success;
+      options.success = function(nextModel, resp, xhr) {
+        coll.add(nextModel, options);
+        if (success) success(nextModel, resp, xhr);
+      };
+      model.save(null, options);
+      return model;
+    },
+
+    // **parse** converts a response into a list of models to be added to the
+    // collection. The default implementation is just to pass it through.
+    parse : function(resp, xhr) {
+      return resp;
+    },
+
+    // Proxy to _'s chain. Can't be proxied the same way the rest of the
+    // underscore methods are proxied because it relies on the underscore
+    // constructor.
+    chain: function () {
+      return _(this.models).chain();
+    },
+
+    // Reset all internal state. Called when the collection is reset.
+    _reset : function(options) {
+      this.length = 0;
+      this.models = [];
+      this._byId  = {};
+      this._byCid = {};
+    },
+
+    // Prepare a model to be added to this collection
+    _prepareModel: function(model, options) {
+      if (!(model instanceof Backbone.Model)) {
+        var attrs = model;
+        model = new this.model(attrs, {collection: this});
+        if (model.validate && !model._performValidation(attrs, options)) model = false;
+      } else if (!model.collection) {
+        model.collection = this;
+      }
+      return model;
+    },
+
+    // Internal implementation of adding a single model to the set, updating
+    // hash indexes for `id` and `cid` lookups.
+    // Returns the model, or 'false' if validation on a new model fails.
+    _add : function(model, options) {
+      options || (options = {});
+      model = this._prepareModel(model, options);
+      if (!model) return false;
+      var already = this.getByCid(model);
+      if (already) throw new Error(["Can't add the same model to a set twice", already.id]);
+      this._byId[model.id] = model;
+      this._byCid[model.cid] = model;
+      var index = options.at != null ? options.at :
+                  this.comparator ? this.sortedIndex(model, this.comparator) :
+                  this.length;
+      this.models.splice(index, 0, model);
+      model.bind('all', this._onModelEvent);
+      this.length++;
+      if (!options.silent) model.trigger('add', model, this, options);
+      return model;
+    },
+
+    // Internal implementation of removing a single model from the set, updating
+    // hash indexes for `id` and `cid` lookups.
+    _remove : function(model, options) {
+      options || (options = {});
+      model = this.getByCid(model) || this.get(model);
+      if (!model) return null;
+      delete this._byId[model.id];
+      delete this._byCid[model.cid];
+      this.models.splice(this.indexOf(model), 1);
+      this.length--;
+      if (!options.silent) model.trigger('remove', model, this, options);
+      this._removeReference(model);
+      return model;
+    },
+
+    // Internal method to remove a model's ties to a collection.
+    _removeReference : function(model) {
+      if (this == model.collection) {
+        delete model.collection;
+      }
+      model.unbind('all', this._onModelEvent);
+    },
+
+    // Internal method called every time a model in the set fires an event.
+    // Sets need to update their indexes when models change ids. All other
+    // events simply proxy through. "add" and "remove" events that originate
+    // in other collections are ignored.
+    _onModelEvent : function(ev, model, collection, options) {
+      if ((ev == 'add' || ev == 'remove') && collection != this) return;
+      if (ev == 'destroy') {
+        this._remove(model, options);
+      }
+      if (model && ev === 'change:' + model.idAttribute) {
+        delete this._byId[model.previous(model.idAttribute)];
+        this._byId[model.id] = model;
+      }
+      this.trigger.apply(this, arguments);
+    }
+
+  });
+
+  // Underscore methods that we want to implement on the Collection.
+  var methods = ['forEach', 'each', 'map', 'reduce', 'reduceRight', 'find', 'detect',
+    'filter', 'select', 'reject', 'every', 'all', 'some', 'any', 'include',
+    'contains', 'invoke', 'max', 'min', 'sortBy', 'sortedIndex', 'toArray', 'size',
+    'first', 'rest', 'last', 'without', 'indexOf', 'lastIndexOf', 'isEmpty', 'groupBy'];
+
+  // Mix in each Underscore method as a proxy to `Collection#models`.
+  _.each(methods, function(method) {
+    Backbone.Collection.prototype[method] = function() {
+      return _[method].apply(_, [this.models].concat(_.toArray(arguments)));
+    };
+  });
+
+  // Backbone.Router
+  // -------------------
+
+  // Routers map faux-URLs to actions, and fire events when routes are
+  // matched. Creating a new one sets its `routes` hash, if not set statically.
+  Backbone.Router = function(options) {
+    options || (options = {});
+    if (options.routes) this.routes = options.routes;
+    this._bindRoutes();
+    this.initialize.apply(this, arguments);
+  };
+
+  // Cached regular expressions for matching named param parts and splatted
+  // parts of route strings.
+  var namedParam    = /:([\w\d]+)/g;
+  var splatParam    = /\*([\w\d]+)/g;
+  var escapeRegExp  = /[-[\]{}()+?.,\\^$|#\s]/g;
+
+  // Set up all inheritable **Backbone.Router** properties and methods.
+  _.extend(Backbone.Router.prototype, Backbone.Events, {
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize : function(){},
+
+    // Manually bind a single named route to a callback. For example:
+    //
+    //     this.route('search/:query/p:num', 'search', function(query, num) {
+    //       ...
+    //     });
+    //
+    route : function(route, name, callback) {
+      Backbone.history || (Backbone.history = new Backbone.History);
+      if (!_.isRegExp(route)) route = this._routeToRegExp(route);
+      Backbone.history.route(route, _.bind(function(fragment) {
+        var args = this._extractParameters(route, fragment);
+        callback.apply(this, args);
+        this.trigger.apply(this, ['route:' + name].concat(args));
+      }, this));
+    },
+
+    // Simple proxy to `Backbone.history` to save a fragment into the history.
+    navigate : function(fragment, triggerRoute) {
+      Backbone.history.navigate(fragment, triggerRoute);
+    },
+
+    // Bind all defined routes to `Backbone.history`. We have to reverse the
+    // order of the routes here to support behavior where the most general
+    // routes can be defined at the bottom of the route map.
+    _bindRoutes : function() {
+      if (!this.routes) return;
+      var routes = [];
+      for (var route in this.routes) {
+        routes.unshift([route, this.routes[route]]);
+      }
+      for (var i = 0, l = routes.length; i < l; i++) {
+        this.route(routes[i][0], routes[i][1], this[routes[i][1]]);
+      }
+    },
+
+    // Convert a route string into a regular expression, suitable for matching
+    // against the current location hash.
+    _routeToRegExp : function(route) {
+      route = route.replace(escapeRegExp, "\\$&")
+                   .replace(namedParam, "([^\/]*)")
+                   .replace(splatParam, "(.*?)");
+      return new RegExp('^' + route + '$');
+    },
+
+    // Given a route, and a URL fragment that it matches, return the array of
+    // extracted parameters.
+    _extractParameters : function(route, fragment) {
+      return route.exec(fragment).slice(1);
+    }
+
+  });
+
+  // Backbone.History
+  // ----------------
+
+  // Handles cross-browser history management, based on URL fragments. If the
+  // browser does not support `onhashchange`, falls back to polling.
+  Backbone.History = function() {
+    this.handlers = [];
+    _.bindAll(this, 'checkUrl');
+  };
+
+  // Cached regex for cleaning hashes.
+  var hashStrip = /^#*/;
+
+  // Cached regex for detecting MSIE.
+  var isExplorer = /msie [\w.]+/;
+
+  // Has the history handling already been started?
+  var historyStarted = false;
+
+  // Set up all inheritable **Backbone.History** properties and methods.
+  _.extend(Backbone.History.prototype, {
+
+    // The default interval to poll for hash changes, if necessary, is
+    // twenty times a second.
+    interval: 50,
+
+    // Get the cross-browser normalized URL fragment, either from the URL,
+    // the hash, or the override.
+    getFragment : function(fragment, forcePushState) {
+      if (fragment == null) {
+        if (this._hasPushState || forcePushState) {
+          fragment = window.location.pathname;
+          var search = window.location.search;
+          if (search) fragment += search;
+        } else {
+          fragment = window.location.hash;
+        }
+      }
+      fragment = decodeURIComponent(fragment.replace(hashStrip, ''));
+      if (!fragment.indexOf(this.options.root)) fragment = fragment.substr(this.options.root.length);
+      return fragment;
+    },
+
+    // Start the hash change handling, returning `true` if the current URL matches
+    // an existing route, and `false` otherwise.
+    start : function(options) {
+
+      // Figure out the initial configuration. Do we need an iframe?
+      // Is pushState desired ... is it available?
+      if (historyStarted) throw new Error("Backbone.history has already been started");
+      this.options          = _.extend({}, {root: '/'}, this.options, options);
+      this._wantsPushState  = !!this.options.pushState;
+      this._hasPushState    = !!(this.options.pushState && window.history && window.history.pushState);
+      var fragment          = this.getFragment();
+      var docMode           = document.documentMode;
+      var oldIE             = (isExplorer.exec(navigator.userAgent.toLowerCase()) && (!docMode || docMode <= 7));
+      if (oldIE) {
+        this.iframe = $('<iframe src="javascript:0" tabindex="-1" />').hide().appendTo('body')[0].contentWindow;
+        this.navigate(fragment);
+      }
+
+      // Depending on whether we're using pushState or hashes, and whether
+      // 'onhashchange' is supported, determine how we check the URL state.
+      if (this._hasPushState) {
+        $(window).bind('popstate', this.checkUrl);
+      } else if ('onhashchange' in window && !oldIE) {
+        $(window).bind('hashchange', this.checkUrl);
+      } else {
+        setInterval(this.checkUrl, this.interval);
+      }
+
+      // Determine if we need to change the base url, for a pushState link
+      // opened by a non-pushState browser.
+      this.fragment = fragment;
+      historyStarted = true;
+      var loc = window.location;
+      var atRoot  = loc.pathname == this.options.root;
+      if (this._wantsPushState && !this._hasPushState && !atRoot) {
+        this.fragment = this.getFragment(null, true);
+        window.location.replace(this.options.root + '#' + this.fragment);
+        // Return immediately as browser will do redirect to new url
+        return true;
+      } else if (this._wantsPushState && this._hasPushState && atRoot && loc.hash) {
+        this.fragment = loc.hash.replace(hashStrip, '');
+        window.history.replaceState({}, document.title, loc.protocol + '//' + loc.host + this.options.root + this.fragment);
+      }
+
+      if (!this.options.silent) {
+        return this.loadUrl();
+      }
+    },
+
+    // Add a route to be tested when the fragment changes. Routes added later may
+    // override previous routes.
+    route : function(route, callback) {
+      this.handlers.unshift({route : route, callback : callback});
+    },
+
+    // Checks the current URL to see if it has changed, and if it has,
+    // calls `loadUrl`, normalizing across the hidden iframe.
+    checkUrl : function(e) {
+      var current = this.getFragment();
+      if (current == this.fragment && this.iframe) current = this.getFragment(this.iframe.location.hash);
+      if (current == this.fragment || current == decodeURIComponent(this.fragment)) return false;
+      if (this.iframe) this.navigate(current);
+      this.loadUrl() || this.loadUrl(window.location.hash);
+    },
+
+    // Attempt to load the current URL fragment. If a route succeeds with a
+    // match, returns `true`. If no defined routes matches the fragment,
+    // returns `false`.
+    loadUrl : function(fragmentOverride) {
+      var fragment = this.fragment = this.getFragment(fragmentOverride);
+      var matched = _.any(this.handlers, function(handler) {
+        if (handler.route.test(fragment)) {
+          handler.callback(fragment);
+          return true;
+        }
+      });
+      return matched;
+    },
+
+    // Save a fragment into the hash history. You are responsible for properly
+    // URL-encoding the fragment in advance. This does not trigger
+    // a `hashchange` event.
+    navigate : function(fragment, triggerRoute) {
+      var frag = (fragment || '').replace(hashStrip, '');
+      if (this.fragment == frag || this.fragment == decodeURIComponent(frag)) return;
+      if (this._hasPushState) {
+        var loc = window.location;
+        if (frag.indexOf(this.options.root) != 0) frag = this.options.root + frag;
+        this.fragment = frag;
+        window.history.pushState({}, document.title, loc.protocol + '//' + loc.host + frag);
+      } else {
+        window.location.hash = this.fragment = frag;
+        if (this.iframe && (frag != this.getFragment(this.iframe.location.hash))) {
+          this.iframe.document.open().close();
+          this.iframe.location.hash = frag;
+        }
+      }
+      if (triggerRoute) this.loadUrl(fragment);
+    }
+
+  });
+
+  // Backbone.View
+  // -------------
+
+  // Creating a Backbone.View creates its initial element outside of the DOM,
+  // if an existing element is not provided...
+  Backbone.View = function(options) {
+    this.cid = _.uniqueId('view');
+    this._configure(options || {});
+    this._ensureElement();
+    this.delegateEvents();
+    this.initialize.apply(this, arguments);
+  };
+
+  // Element lookup, scoped to DOM elements within the current view.
+  // This should be prefered to global lookups, if you're dealing with
+  // a specific view.
+  var selectorDelegate = function(selector) {
+    return $(selector, this.el);
+  };
+
+  // Cached regex to split keys for `delegate`.
+  var eventSplitter = /^(\S+)\s*(.*)$/;
+
+  // List of view options to be merged as properties.
+  var viewOptions = ['model', 'collection', 'el', 'id', 'attributes', 'className', 'tagName'];
+
+  // Set up all inheritable **Backbone.View** properties and methods.
+  _.extend(Backbone.View.prototype, Backbone.Events, {
+
+    // The default `tagName` of a View's element is `"div"`.
+    tagName : 'div',
+
+    // Attach the `selectorDelegate` function as the `$` property.
+    $       : selectorDelegate,
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize : function(){},
+
+    // **render** is the core function that your view should override, in order
+    // to populate its element (`this.el`), with the appropriate HTML. The
+    // convention is for **render** to always return `this`.
+    render : function() {
+      return this;
+    },
+
+    // Remove this view from the DOM. Note that the view isn't present in the
+    // DOM by default, so calling this method may be a no-op.
+    remove : function() {
+      $(this.el).remove();
+      return this;
+    },
+
+    // For small amounts of DOM Elements, where a full-blown template isn't
+    // needed, use **make** to manufacture elements, one at a time.
+    //
+    //     var el = this.make('li', {'class': 'row'}, this.model.escape('title'));
+    //
+    make : function(tagName, attributes, content) {
+      var el = document.createElement(tagName);
+      if (attributes) $(el).attr(attributes);
+      if (content) $(el).html(content);
+      return el;
+    },
+
+    // Set callbacks, where `this.events` is a hash of
+    //
+    // *{"event selector": "callback"}*
+    //
+    //     {
+    //       'mousedown .title':  'edit',
+    //       'click .button':     'save'
+    //     }
+    //
+    // pairs. Callbacks will be bound to the view, with `this` set properly.
+    // Uses event delegation for efficiency.
+    // Omitting the selector binds the event to `this.el`.
+    // This only works for delegate-able events: not `focus`, `blur`, and
+    // not `change`, `submit`, and `reset` in Internet Explorer.
+    delegateEvents : function(events) {
+      if (!(events || (events = this.events))) return;
+      if (_.isFunction(events)) events = events.call(this);
+      this.undelegateEvents();
+      for (var key in events) {
+        var method = this[events[key]];
+        if (!method) throw new Error('Event "' + events[key] + '" does not exist');
+        var match = key.match(eventSplitter);
+        var eventName = match[1], selector = match[2];
+        method = _.bind(method, this);
+        eventName += '.delegateEvents' + this.cid;
+        if (selector === '') {
+          $(this.el).bind(eventName, method);
+        } else {
+          $(this.el).delegate(selector, eventName, method);
+        }
+      }
+    },
+
+    // Clears all callbacks previously bound to the view with `delegateEvents`.
+    undelegateEvents: function() {
+      $(this.el).unbind('.delegateEvents' + this.cid);
+    },
+
+    // Performs the initial configuration of a View with a set of options.
+    // Keys with special meaning *(model, collection, id, className)*, are
+    // attached directly to the view.
+    _configure : function(options) {
+      if (this.options) options = _.extend({}, this.options, options);
+      for (var i = 0, l = viewOptions.length; i < l; i++) {
+        var attr = viewOptions[i];
+        if (options[attr]) this[attr] = options[attr];
+      }
+      this.options = options;
+    },
+
+    // Ensure that the View has a DOM element to render into.
+    // If `this.el` is a string, pass it through `$()`, take the first
+    // matching element, and re-assign it to `el`. Otherwise, create
+    // an element from the `id`, `className` and `tagName` properties.
+    _ensureElement : function() {
+      if (!this.el) {
+        var attrs = this.attributes || {};
+        if (this.id) attrs.id = this.id;
+        if (this.className) attrs['class'] = this.className;
+        this.el = this.make(this.tagName, attrs);
+      } else if (_.isString(this.el)) {
+        this.el = $(this.el).get(0);
+      }
+    }
+
+  });
+
+  // The self-propagating extend function that Backbone classes use.
+  var extend = function (protoProps, classProps) {
+    var child = inherits(this, protoProps, classProps);
+    child.extend = this.extend;
+    return child;
+  };
+
+  // Set up inheritance for the model, collection, and view.
+  Backbone.Model.extend = Backbone.Collection.extend =
+    Backbone.Router.extend = Backbone.View.extend = extend;
+
+  // Map from CRUD to HTTP for our default `Backbone.sync` implementation.
+  var methodMap = {
+    'create': 'POST',
+    'update': 'PUT',
+    'delete': 'DELETE',
+    'read'  : 'GET'
+  };
+
+  // Backbone.sync
+  // -------------
+
+  // Override this function to change the manner in which Backbone persists
+  // models to the server. You will be passed the type of request, and the
+  // model in question. By default, makes a RESTful Ajax request
+  // to the model's `url()`. Some possible customizations could be:
+  //
+  // * Use `setTimeout` to batch rapid-fire updates into a single request.
+  // * Send up the models as XML instead of JSON.
+  // * Persist models via WebSockets instead of Ajax.
+  //
+  // Turn on `Backbone.emulateHTTP` in order to send `PUT` and `DELETE` requests
+  // as `POST`, with a `_method` parameter containing the true HTTP method,
+  // as well as all requests with the body as `application/x-www-form-urlencoded` instead of
+  // `application/json` with the model in a param named `model`.
+  // Useful when interfacing with server-side languages like **PHP** that make
+  // it difficult to read the body of `PUT` requests.
+  Backbone.sync = function(method, model, options) {
+    var type = methodMap[method];
+
+    // Default JSON-request options.
+    var params = _.extend({
+      type:         type,
+      dataType:     'json'
+    }, options);
+
+    // Ensure that we have a URL.
+    if (!params.url) {
+      params.url = getUrl(model) || urlError();
+    }
+
+    // Ensure that we have the appropriate request data.
+    if (!params.data && model && (method == 'create' || method == 'update')) {
+      params.contentType = 'application/json';
+      params.data = JSON.stringify(model.toJSON());
+    }
+
+    // For older servers, emulate JSON by encoding the request into an HTML-form.
+    if (Backbone.emulateJSON) {
+      params.contentType = 'application/x-www-form-urlencoded';
+      params.data        = params.data ? {model : params.data} : {};
+    }
+
+    // For older servers, emulate HTTP by mimicking the HTTP method with `_method`
+    // And an `X-HTTP-Method-Override` header.
+    if (Backbone.emulateHTTP) {
+      if (type === 'PUT' || type === 'DELETE') {
+        if (Backbone.emulateJSON) params.data._method = type;
+        params.type = 'POST';
+        params.beforeSend = function(xhr) {
+          xhr.setRequestHeader('X-HTTP-Method-Override', type);
+        };
+      }
+    }
+
+    // Don't process data on a non-GET request.
+    if (params.type !== 'GET' && !Backbone.emulateJSON) {
+      params.processData = false;
+    }
+
+    // Make the request.
+    return $.ajax(params);
+  };
+
+  // Helpers
+  // -------
+
+  // Shared empty constructor function to aid in prototype-chain creation.
+  var ctor = function(){};
+
+  // Helper function to correctly set up the prototype chain, for subclasses.
+  // Similar to `goog.inherits`, but uses a hash of prototype properties and
+  // class properties to be extended.
+  var inherits = function(parent, protoProps, staticProps) {
+    var child;
+
+    // The constructor function for the new subclass is either defined by you
+    // (the "constructor" property in your `extend` definition), or defaulted
+    // by us to simply call `super()`.
+    if (protoProps && protoProps.hasOwnProperty('constructor')) {
+      child = protoProps.constructor;
+    } else {
+      child = function(){ return parent.apply(this, arguments); };
+    }
+
+    // Inherit class (static) properties from parent.
+    _.extend(child, parent);
+
+    // Set the prototype chain to inherit from `parent`, without calling
+    // `parent`'s constructor function.
+    ctor.prototype = parent.prototype;
+    child.prototype = new ctor();
+
+    // Add prototype properties (instance properties) to the subclass,
+    // if supplied.
+    if (protoProps) _.extend(child.prototype, protoProps);
+
+    // Add static properties to the constructor function, if supplied.
+    if (staticProps) _.extend(child, staticProps);
+
+    // Correctly set child's `prototype.constructor`.
+    child.prototype.constructor = child;
+
+    // Set a convenience property in case the parent's prototype is needed later.
+    child.__super__ = parent.prototype;
+
+    return child;
+  };
+
+  // Helper function to get a URL from a Model or Collection as a property
+  // or as a function.
+  var getUrl = function(object) {
+    if (!(object && object.url)) return null;
+    return _.isFunction(object.url) ? object.url() : object.url;
+  };
+
+  // Throw an error when a URL is needed, and none is supplied.
+  var urlError = function() {
+    throw new Error('A "url" property or function must be specified');
+  };
+
+  // Wrap an optional error callback with a fallback error event.
+  var wrapError = function(onError, model, options) {
+    return function(resp) {
+      if (onError) {
+        onError(model, resp, options);
+      } else {
+        model.trigger('error', model, resp, options);
+      }
+    };
+  };
+
+  // Helper function to escape a string for HTML rendering.
+  var escapeHTML = function(string) {
+    return string.replace(/&(?!\w+;|#\d+;|#x[\da-f]+;)/gi, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g,'&#x2F;');
+  };
+
+}).call(this);
+/**
+ * Backbone localStorage Adapter v1.0
+ * https://github.com/jeromegn/Backbone.localStorage
+ *
+ * Date: Sun Aug 14 2011 09:53:55 -0400
+ */
+
+// A simple module to replace `Backbone.sync` with *localStorage*-based
+// persistence. Models are given GUIDS, and saved into a JSON object. Simple
+// as that.
+
+// Generate four random hex digits.
+function S4() {
+   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+};
+
+// Generate a pseudo-GUID by concatenating random hexadecimal.
+function guid() {
+   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+};
+
+// Our Store is represented by a single JS object in *localStorage*. Create it
+// with a meaningful name, like the name you'd give a table.
+window.Store = function(name) {
+  this.name = name;
+  var store = localStorage.getItem(this.name);
+  this.records = (store && store.split(",")) || [];
+};
+
+_.extend(Store.prototype, {
+
+  // Save the current state of the **Store** to *localStorage*.
+  save: function() {
+    localStorage.setItem(this.name, this.records.join(","));
+  },
+
+  // Add a model, giving it a (hopefully)-unique GUID, if it doesn't already
+  // have an id of it's own.
+  create: function(model) {
+    if (!model.id) model.id = model.attributes.id = guid();
+    localStorage.setItem(this.name+"-"+model.id, JSON.stringify(model));
+    this.records.push(model.id.toString());
+    this.save();
+    return model;
+  },
+
+  // Update a model by replacing its copy in `this.data`.
+  update: function(model) {
+    localStorage.setItem(this.name+"-"+model.id, JSON.stringify(model));
+    if (!_.include(this.records, model.id.toString())) this.records.push(model.id.toString()); this.save();
+    return model;
+  },
+
+  // Retrieve a model from `this.data` by id.
+  find: function(model) {
+    return JSON.parse(localStorage.getItem(this.name+"-"+model.id));
+  },
+
+  // Return the array of all models currently in storage.
+  findAll: function() {
+    return _.map(this.records, function(id){return JSON.parse(localStorage.getItem(this.name+"-"+id));}, this);
+  },
+
+  // Delete a model from `this.data`, returning it.
+  destroy: function(model) {
+    localStorage.removeItem(this.name+"-"+model.id);
+    this.records = _.reject(this.records, function(record_id){return record_id == model.id.toString();});
+    this.save();
+    return model;
+  }
+
+});
+
+// Override `Backbone.sync` to use delegate to the model or collection's
+// *localStorage* property, which should be an instance of `Store`.
+Backbone.sync = function(method, model, options, error) {
+
+  // Backwards compatibility with Backbone <= 0.3.3
+  if (typeof options == 'function') {
+    options = {
+      success: options,
+      error: error
+    };
+  }
+
+  var resp;
+  var store = model.localStorage || model.collection.localStorage;
+
+  switch (method) {
+    case "read":    resp = model.id ? store.find(model) : store.findAll(); break;
+    case "create":  resp = store.create(model);                            break;
+    case "update":  resp = store.update(model);                            break;
+    case "delete":  resp = store.destroy(model);                           break;
+  }
+
+  if (resp) {
+    options.success(resp);
+  } else {
+    options.error("Record not found");
+  }
+};/** @file
+ *
+ *  Backbone Model for a user or collection of users.
+ *
+ *  Requires:
+ *      backbone.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var Backbone    = this.Backbone;
+    if (!Backbone && (typeof require !== 'undefined'))
+    {
+        Backbone = require('../backbone.js');
+    }
+
+    app.Model.User  = Backbone.Model.extend({
+        defaults:   {
+            id:         null,
+            name:       'anonymous',
+            fullName:   'Anonymous',
+            avatarUrl:  'images/avatar.jpg'
+        },
+
+        // id, name, fullName, avatarUrl
+        initialize: function(spec) {
+        }
+    });
+
+    app.Model.Users = Backbone.Collection.extend({
+        model:  app.Model.User,
+
+        initialize: function() {
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone Model for a comment or collection of comments.
+ *
+ *  Requires:
+ *      backbone.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var _           = this._;
+    var Backbone    = this.Backbone;
+    if (typeof require !== 'undefined')
+    {
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
+        if (!app.Model.User)
+        {
+            var tModule     = require('./user.js');
+            _.extend(app, tModule.app);
+        }
+    }
+
+    app.Model.Comment   = Backbone.Model.extend({
+        defaults:   {
+            id:         null,
+            author:     null,
+            text:       '',
+            created:    null
+        },
+
+        initialize: function(spec) {
+            var author  = this.get('author');
+            var created = this.get('created');
+            if ( ! (author instanceof app.Model.User) )
+            {
+                this.set({'author': new app.Model.User(author)});
+            }
+
+            if ( ! (created instanceof Date) )
+            {
+                created = (created
+                            ? new Date(created)
+                            : new Date());
+
+                this.set({'created': created});
+            }
+        }
+    });
+
+    app.Model.Comments  = Backbone.Collection.extend({
+        model:  app.Model.Comment,
+
+        initialize: function() {
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone Model for a sentence-based ranges.
+ *
+ *  Requires:
+ *      backbone.js
+ *      model/sentence.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var _           = this._;
+    var Backbone    = this.Backbone;
+    if (typeof require !== 'undefined')
+    {
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
+    }
+
+    app.Model.Range = Backbone.Model.extend({
+        defaults: {
+            id:         null,
+            sentenceId: null,   // The id of the sentence that roots this range
+            offsetStart:null,   // The starting offset within the sentence
+            offsetEnd:  null    // The ending   offset within the sentence
+        },
+
+        initialize: function(spec) {
+        },
+
+        setStart: function(offset) {
+            this.set({offsetStart: offset});
+        },
+
+        setEnd: function(offset) {
+            this.set({offsetEnd: offset});
+        },
+
+        setOffsets: function(start, end) {
+            this.set({offsetStart: start,
+                      offsetEnd:   end});
+        },
+
+        isEmpty: function() {
+            var sid     = this.get('sentenceId');
+            var start   = this.get('offsetStart');
+            var end     = this.get('offsetEnd');
+
+            return ( sid && (start === end));
+        },
+
+        /** @brief  Retrieve a rangy range that represents this range within
+         *          the the current document.
+         */
+        rangy: function( ) {
+            var $s      = $( this.get('sentenceId') );
+            if ( (! $s) || ($s.length < 1) )
+            {
+                return null;
+            }
+
+            var $content    = $s.find('.content');
+            var start       = this.get('offsetStart');
+            var end         = this.get('offsetEnd');
+
+            var range   = new rangy.WrappedRange();
+            range.setStart($content[0].childNodes[0], start);
+            range.setEnd(  $content[0].childNodes[0], end);
+
+            return range;
+        }
+    });
+
+    app.Model.Ranges    = Backbone.Collection.extend({
+        model:  app.Model.Range,
+
+        initialize: function() {
+        },
+
+        /** @brief  Retrieve all sentences represented by these ranges.
+         */
+        getSentences: function() {
+            var $s  = $();  // Create an empty set
+
+            this.map(function( range ) {
+                $s.push( $( range.get('sentenceId') ) );
+            });
+
+            return $s;
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone Model for a note or collection of notes.
+ *
+ *  Requires:
+ *      backbone.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var _           = this._;
+    var Backbone    = this.Backbone;
+    if (typeof require !== 'undefined')
+    {
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
+        if (!app.Model.Comments)
+        {
+            var tModule = require('./comment.js');
+            _.extend(app, tModule.app);
+        }
+
+        if (!app.Model.Position)
+        {
+            var tModule = require('./position.js');
+            _.extend(app, tModule.app);
+        }
+    }
+
+    app.Model.Note  = Backbone.Model.extend({
+        defaults: {
+            id:         null,
+
+            /* Position within the document of the content highlight associated
+             * with this note.
+             */
+            position:   {
+                start:  {
+                    sentence:   null,   /* The app.Model.Sentence instance or
+                                         * identifier.
+                                         */
+                    relativePos:null    /* Serialized position rooted in the
+                                         * identified sentence.
+                                         */
+                },
+                end:    {
+                    sentence:   null,   /* The app.Model.Sentence instance or
+                                         * identifier.
+                                         */
+                    relativePos:null    /* Serialized position rooted in the
+                                         * identified sentence.
+                                         */
+                }
+            },
+
+            // Comments associated with this note
+            comments:   null
+        },
+
+        initialize: function(spec) {
+            var comments    = this.get('comments');
+            var position    = this.get('position');
+            if ((! comments) || ! (comments instanceof app.Model.Comments) )
+            {
+                this.set({comments: new app.Model.Comments(comments)});
+            }
+
+            if ((! position) || ! (position instanceof app.Model.Position) )
+            {
+                this.set({position: new app.Model.Position(position)});
+            }
+        }
+    });
+
+    app.Model.Notes = Backbone.Collection.extend({
+        model:  app.Model.Note,
+
+        initialize: function() {
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone Model for a sentence or collection of sentences.
+ *
+ *  Requires:
+ *      backbone.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var _           = this._;
+    var Backbone    = this.Backbone;
+    if (typeof require !== 'undefined')
+    {
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
+    }
+
+    app.Model.Sentence  = Backbone.Model.extend({
+        defaults: {
+            id:         null,
+            rank:       0.0,
+            content:    null
+        },
+
+        initialize: function(spec) {
+        }
+    });
+
+    app.Model.Sentences = Backbone.Collection.extend({
+        model:  app.Model.Sentence,
+
+        initialize: function() {
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone Model for a paragraph or collection of paragraphs.
+ *
+ *  Requires:
+ *      backbone.js
+ *      model/sentence.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var _           = this._;
+    var Backbone    = this.Backbone;
+    if (typeof require !== 'undefined')
+    {
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
+        if (!app.Model.Sentences)
+        {
+            var tModule = require('./sentence.js');
+            _.extend(app, tModule.app);
+        }
+    }
+
+    app.Model.Paragraph = Backbone.Model.extend({
+        defaults: {
+            id:         null,
+            rank:       0.0,
+            sentences:  null
+        },
+
+        initialize: function(spec) {
+            var sentences   = this.get('sentences');
+            if (! (sentences instanceof app.Model.Sentences))
+            {
+                this.set({'sentences': new app.Model.Sentences(sentences)});
+            }
+        }
+    });
+
+    app.Model.Paragraphs    = Backbone.Collection.extend({
+        model:  app.Model.Paragraph,
+
+        initialize: function() {
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone Model for a section or collection of sections.
+ *
+ *  Requires:
+ *      backbone.js
+ *      model/paragraph.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var _           = this._;
+    var Backbone    = this.Backbone;
+    if (typeof require !== 'undefined')
+    {
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
+        if (!app.Model.Paragraphs)
+        {
+            var tModule = require('./paragraph.js');
+            _.extend(app, tModule.app);
+        }
+    }
+
+    app.Model.Section   = Backbone.Model.extend({
+        defaults: {
+            id:         null,
+            rank:       0.0,
+            paragraphs: null
+        },
+
+        initialize: function(spec) {
+            var paragraphs  = this.get('paragraphs');
+            if (! (paragraphs instanceof app.Model.Paragraphs))
+            {
+                this.set({'paragraphs': new app.Model.Paragraphs(paragraphs)});
+            }
+        }
+    });
+
+    app.Model.Sections  = Backbone.Collection.extend({
+        model:  app.Model.Section,
+
+        initialize: function() {
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone Model for a document or collection of documents.
+ *
+ *  Requires:
+ *      backbone.js
+ *      model/section.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var _           = this._;
+    var Backbone    = this.Backbone;
+    if (typeof require !== 'undefined')
+    {
+        if (!_)        { _        = require('../underscore.js'); }
+        if (!Backbone) { Backbone = require('../backbone.js'); }
+        if (!app.Model.Sections)
+        {
+            var tModule = require('./section.js');
+            _.extend(app, tModule.app);
+        }
+        if (!app.Model.Notes)
+        {
+            var tModule = require('./note.js');
+            _.extend(app, tModule.app);
+        }
+    }
+
+    app.Model.Doc   = Backbone.Model.extend({
+        defaults: {
+            id:         null,
+            type:       'text/html',
+            url:        null,
+            title:      null,
+            author:     null,
+            published:  null,
+            rank:       0.0,
+            keywords:   null,
+            sections:   null,
+            notes:      null
+        },
+
+        initialize: function(spec) {
+            var published   = this.get('published');
+            var sections    = this.get('sections');
+            var notes       = this.get('notes');
+            if ((! published) || ! (published instanceof Date) )
+            {
+                published = (published
+                            ? new Date(published)
+                            : new Date());
+
+                this.set({published: published});
+            }
+
+            if ((! sections) || ! (sections instanceof app.Model.Sections))
+            {
+                this.set({sections: new app.Model.Sections(sections)});
+            }
+
+            if ((! notes) || ! (notes instanceof app.Model.Notes))
+            {
+                this.set({notes: new app.Model.Notes(notes)});
+            }
+        },
+
+        /** @brief  Add a new note to this document.
+         *  @param  position    An app.Model.Position instance representing the
+         *                      position within the document to associate this
+         *                      note with;
+         */
+        addNote: function(position) {
+            var notes   = this.get('notes');
+            notes.add( {position:position} );
+        }
+    });
+
+    app.Model.Docs  = Backbone.Collection.extend({
+        model:  app.Model.Document,
+
+        initialize: function() {
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone Helper to properly handle click events.
+ *
+ *  Requires:
+ *      backbone.js
+ *      jquery.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app             = this.app = (this.app || {Model:{},      View:{},
+                                                   Controller:{}, Helper:{}});
+    var $               = jQuery.noConflict();
+    app.Helper.click    = {
+        clickEvent:         'element:click',
+        dblClickTimeout:    150,
+        events:             {
+            /* Track mouse events to fuse a single click event iff the mouse
+             * was IN this paragraph on mousedown AND mouseup/click.
+             */
+            'mousedown':    '_trackClick',
+            'click':        '_trackClick',
+            'mouseenter':   '_trackClick',
+            'mouseleave':   '_trackClick',
+            'dblclick':     '_trackClick'
+        },
+
+        /** @brief  Monitor mouseDown/Up for clicks WITHIN this element. */
+        _trackClick: function(e) {
+            var self    = this;
+
+            //console.log('Helper::_trackClick: type[ '+ e.type +' ]');
+
+            /* To ensure that nested elements perform properly, invoking a
+             * click event ONLY on the lowest level element, stop
+             * propagation of this mouse event.
+             */
+            e.stopPropagation();
+
+            switch (e.type)
+            {
+            case 'mousedown':
+                self._clickDown = e;
+                break;
+
+            case 'click':
+                if (self._clickDown !== null)
+                {
+                    /* We've seen a mousedown WITHIN this paragraph.  If this
+                     * 'up' event is NEAR the 'down' event, it is a potential
+                     * click.
+                     */
+                    var delta   = {
+                        x:  Math.abs( self._clickDown.pageX - e.pageX ),
+                        y:  Math.abs( self._clickDown.pageY - e.pageY )
+                    };
+
+                    if ((delta.x < 10) && (delta.y < 10))
+                    {
+                        /* In order to avoid squelching double-clicks, wait a
+                         * short time to see if there is an additional 'down'
+                         * event.
+                         */
+                        var orig    = self._clickDown;
+                        setTimeout(function() {
+                            if (orig === self._clickDown)
+                            {
+                                /*
+                                console.log('Helper::_trackClick: trigger[ '
+                                             + self.clickEvent +' ]');
+                                // */
+                                self.$el.trigger( self.clickEvent );
+                            }
+
+                            self._clickDown = null;
+                        }, self.dblClickTimeout);
+                        return;
+                    }
+                }
+
+                // Fallthrough to reset the click state
+
+            case 'dblclick':
+            case 'mouseenter':
+            case 'mouseleave':
+                self._clickDown = null;
+                break;
+            }
+        }
+    };
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone View for a paragraph.
+ *
+ *  Requires:
+ *      backbone.js
+ *      model/paragraph.js
+ *      view/paragraph.js
+ *      jquery.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app             = this.app = (this.app || {Model:{},      View:{},
+                                                   Controller:{}, Helper:{}});
+    var $               = jQuery.noConflict();
+
+    // Mix the click helper into this view
+    var viewPrototype   = $.extend(true, {}, app.Helper.click, {
+        tagName:    'span',
+        className:  'sentence',
+        template:   _.template($('#template-sentence').html()),
+
+        /* Set the name of the click event that will be fired by
+         * app.Helper.click
+         */
+        clickEvent: 'sentence:click',
+
+        events: {
+            'sentence:expand':              'expand',
+            'sentence:collapse':            'collapse',
+            'sentence:toggle':              'toggle',
+
+            'sentence:expansionExpand':     'expansionExpand',
+            'sentence:expansionCollapse':   'expansionCollapse',
+            'sentence:expansionToggle':     'expansionToggle',
+            'sentence:click':               'expansionToggle'
+        },
+
+        initialize: function() {
+            this.$el = $(this.el);
+
+            /*
+            this.$el.bind('sentence:expand',   _.bind(this.expand, this));
+            this.$el.bind('sentence:collapse', _.bind(this.collapse, this));
+            this.$el.bind('sentence:toggle',   _.bind(this.toggle, this));
+            this.$el.bind('click',             _.bind(this.expansionToggle,
+                                                      this));
+            // */
+        },
+
+        /** @brief  (Re)render the contents of the paragraph item. */
+        render:     function() {
+            var self    = this;
+            var rank    = Math.floor( self.model.get('rank') * 100 );
+
+            self.$el.attr('id',   self.model.cid);
+            self.$el.attr('rank', rank);
+            self.$el.html( self.template( self.model.toJSON() ) );
+
+            return self;
+        },
+
+        /*****************************************************
+         * Theshold-based visibility expansions.
+         *
+         */
+
+        /** @brief  Expand this sentence. */
+        expand: function(e) {
+            var self    = this;
+            if (! this.$el.hasClass('expanded'))
+            {
+                this.$el.addClass('expanded', app.animSpeed, function() {
+                    self.$el.trigger('sentence:expanded');
+                });
+            }
+        },
+
+        /** @brief  Collapse this sentence. */
+        collapse: function(e) {
+            var self    = this;
+            if (this.$el.hasClass('expanded'))
+            {
+                this.$el.removeClass('expanded', app.animSpeed, function() {
+                    self.$el.trigger('sentence:collapsed');
+                });
+            }
+        },
+
+        /** @brief  Toggle this sentence expand/collapse. */
+        toggle: function(e) {
+            if (this.$el.hasClass('expanded'))  { this.collapse(e); }
+            else                                { this.expand(e); }
+        },
+
+        /*****************************************************
+         * Temporary expansions due to user interaction.
+         *
+         */
+
+        /** @brief  Expand this sentence as an expansion. */
+        expansionExpand: function(e) {
+            var self    = this;
+            if (! this.$el.hasClass('expansion'))
+            {
+                this.$el.addClass('expansion', app.animSpeed, function() {
+                    self.$el.trigger('sentence:expansionExpanded');
+                });
+
+                // Mark this event as "handled" by stopping its propagation
+                if (e)  { e.stopPropagation(); }
+            }
+        },
+
+        /** @brief  Collapse this sentence expansion. */
+        expansionCollapse: function(e) {
+            var self    = this;
+            if (this.$el.hasClass('expansion'))
+            {
+                this.$el.removeClass('expansion', app.animSpeed, function() {
+                    self.$el.trigger('sentence:expansionCollapsed');
+                });
+
+                // Mark this event as "handled" by stopping its propagation
+                if (e)  { e.stopPropagation(); }
+            }
+        },
+
+        /** @brief  Toggle this sentence iff collapsed to use 'expansion'. */
+        expansionToggle: function(e) {
+            if (this.$el.hasClass('expanded'))
+            {
+                // Mark this event as "handled" by stopping its propagation
+                if (e)  { e.stopPropagation(); }
+                return;
+            }
+
+            if (this.$el.hasClass('expansion')) { this.expansionCollapse(e); }
+            else                                { this.expansionExpand(e); }
+        }
+    });
+
+    app.View.Sentence   = Backbone.View.extend( viewPrototype );
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone View for a paragraph.
+ *
+ *  Requires:
+ *      backbone.js
+ *      model/paragraph.js
+ *      view/paragraph.js
+ *      jquery.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app             = this.app = (this.app || {Model:{},      View:{},
+                                                   Controller:{}, Helper:{}});
+    var $               = jQuery.noConflict();
+
+    // Mix the click helper into this view
+    var viewPrototype   = $.extend(true, {}, app.Helper.click, {
+        tagName:    'p',
+        template:   _.template($('#template-paragraph').html()),
+
+        /* Set the name of the click event that will be fired by
+         * app.Helper.click
+         */
+        clickEvent: 'paragraph:click',
+
+        events: {
+            'paragraph:collapseCheck':              'collapseCheck',
+            'sentence:expanded .sentence':          'collapseCheck',
+            'sentence:collapsed .sentence':         'collapseCheck',
+            'sentence:expansionExpanded .sentence': 'collapseCheck',
+            'sentence:expansionCollapsed .sentence':'collapseCheck',
+
+            'paragraph:click':                      'toggle'
+        },
+
+        initialize: function() {
+            this.$el        = $(this.el);
+        },
+
+        /** @brief  (Re)render the contents of the paragraph item. */
+        render:     function() {
+            var self    = this;
+            var rank    = Math.floor( self.model.get('rank') * 100 );
+
+            self.$el.attr('id',   self.model.cid);
+            self.$el.attr('rank', rank);
+            self.$el.html( self.template( self.model.toJSON() ) );
+
+            self.$sentences = self.$el.find('.sentences:first');
+
+            // Append a view of each paragraph
+            self.model.get('sentences').each(function(model) {
+                var view = new app.View.Sentence({model:model});
+
+                self.$sentences.append( view.render().el );
+            });
+
+            return self;
+        },
+
+        /** @brief  Toggle un-expanded sentences as expansions. */
+        toggle: function() {
+            var self    = this;
+            var $s      = self.$el.find('.sentence:not(.expanded)');
+            if ($s.filter('.expansion').length > 0)
+            {
+                // Some are expansions, collapse all
+                $s.trigger('sentence:expansionCollapse');
+            }
+            else
+            {
+                // There are no expansions, expand all
+                $s.trigger('sentence:expansionExpand');
+            }
+
+            self.collapseCheck();
+        },
+
+        /** @brief  Check to see whether we have any expanded sentences. */
+        collapseCheck: function() {
+            var $s  = this.$el.find('.sentence.expanded,.sentence.expansion');
+            if ($s.length > 0)
+            {
+                // Yes - there is at least one
+                this.$el.removeClass('collapsed');
+            }
+            else
+            {
+                // No - collapse this paragraph
+                this.$el.addClass('collapsed');
+            }
+        }
+    });
+
+    app.View.Paragraph  = Backbone.View.extend( viewPrototype );
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone View for a section.
+ *
+ *  Requires:
+ *      backbone.js
+ *      view/paragraph.js
+ *      jquery.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app             = this.app = (this.app || {Model:{},      View:{},
+                                                   Controller:{}, Helper:{}});
+    var $               = jQuery.noConflict();
+    app.View.Section    = Backbone.View.extend({
+        tagName:    'section',
+        template:   _.template($('#template-section').html()),
+
+        initialize: function() {
+            this.$el = $(this.el);
+        },
+
+        /** @brief  (Re)render the contents of the section item. */
+        render:     function() {
+            var self    = this;
+            var rank    = Math.floor( self.model.get('rank') * 100 );
+
+            self.$el.attr('id',   self.model.cid);
+            self.$el.attr('rank', rank);
+            self.$el.html( self.template( self.model.toJSON() ) );
+
+            self.$paragraphs = self.$el.find('.paragraphs:first');
+
+            // Append a view of each paragraph
+            self.model.get('paragraphs').each(function(model) {
+                var view = new app.View.Paragraph({model:model});
+
+                self.$paragraphs.append( view.render().el );
+            });
+
+            return self;
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone View for a document.
+ *
+ *  Requires:
+ *      backbone.js
+ *      view/section.js
+ *      jquery.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app = (this.app || {Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+    var $           = jQuery.noConflict();
+    app.View.Doc    = Backbone.View.extend({
+        tagName:    'article',
+        template:   _.template($('#template-doc').html()),
+
+        initialize: function() {
+            this.$el = $(this.el);
+
+            rangy.init();
+
+            $(document).bind('mouseup.doc', _.bind(this.setSelection, this));
+        },
+
+        /** @brief  Override so we can unbind events bound in initialize().
+         */
+        remove: function() {
+            $(document).unbind('.doc');
+
+            return Backbone.View.prototype.remove.call(this);
+        },
+
+        /** @brief  (Re)render the contents of the document item. */
+        render:     function() {
+            var self    = this;
+
+            self.$el.attr('id', self.model.cid);
+            self.$el.html( self.template( self.model.toJSON() ) );
+
+            self.$sections = self.$el.find('.sections:first');
+
+            // Append a view of each section
+            self.model.get('sections').each(function(model) {
+                var view    = new app.View.Section({model:model});
+
+                self.$sections.append( view.render().el );
+            });
+
+            self.$s = self.$el.find('.sentence');
+
+            // Give each sentence an indexed-based id
+            self.$s.each(function(idex) {
+                var $s  = $(this);
+                $s.attr('id', 'sentence-'+ idex);
+            });
+
+            self.model.get('notes').each(function(model) {
+                // :TODO: Render this note
+            });
+
+            return self;
+        },
+
+        /** @brief  On mouseup, check to see if we have a rangy selection.
+         */
+        setSelection: function() {
+            var self        = this;
+            var sel         = rangy.getSelection();
+            var range       = sel.getRangeAt(0);
+            var $start      = $(range.startContainer);
+            var $end        = $(range.endContainer);
+            var $startS     = $start.parents('.sentence');
+            var $endS       = $end.parents('.sentence');
+            var ranges      = new app.Model.Ranges();
+
+            if (($startS.length > 0) || ($endS.length > 0))
+            {
+                /* Since start OR end is within a sentence, ensure both ends
+                 * are within sentences.
+                 */
+                if ($startS.length < 1)
+                {
+                    /* The starting container is NOT within a sentence.  Adjust
+                     * to start with the first sentence.
+                     */
+                    $startS = self.$s.first();
+                }
+
+                if ($endS.length < 1)
+                {
+                    /* The ending container is NOT within a sentence.  Adjust
+                     * to end with the last sentence.
+                     */
+                    $endS = self.$s.last();
+                }
+            }
+
+            if ($startS[0] !== $endS[0])
+            {
+                /* This range crosses sentence boundaries.
+                 *
+                 * Determine the contiguous sentences involved ending the range
+                 * at the first un-expanded sentence.
+                 */
+                var end         = self.$s.index( $endS ),
+                    $selectable = [],
+                    $s;
+                for ( var idex = self.$s.index( $startS );
+                        (idex <= end) && ($s = self.$s.eq(idex) );
+                            idex++)
+                {
+                    if ($s.hasClass('expanded') || $s.hasClass('expansion'))
+                    {
+                        $selectable.push( $s );
+                    }
+                    else if ($selectable.length > 0)
+                    {
+                        break;
+                    }
+                }
+
+                if ($selectable.length > 0)
+                {
+                    /* We have one or more selectable sentences.  See if we
+                     * need to contract the start or end of the range.
+                     */
+
+                    var $newStart   = _.first($selectable);
+                    var $newEnd     = _.last($selectable);
+                    var $content;
+
+                    /* If we have a new start, contract the beginning of the
+                     * range to the first character of the first selectable
+                     * sentence.
+                     */
+                    if ($newStart[0] !== $startS[0])
+                    {
+                        $content = $newStart.find('.content');
+                        range.setStart($content.get(0).childNodes[0], 0);
+                    }
+
+                    /* If we have a new end, contract the end of the range to
+                     * the last character of the last selectable sentence.
+                     */
+                    if ($newEnd[0] !== $endS[0])
+                    {
+                        $content = $newEnd.find('.content');
+                        range.setEnd($content[0].childNodes[0],
+                                     $content.text().length);
+                    }
+
+                    // Establish the new range.
+                    sel.setSingleRange( range );
+
+                    /* Finally, create an independent range for each involved
+                     * sentence.
+                     */
+                    var last    = $selectable.length;
+                    $.each($selectable, function(idex, s) {
+                        var $s          = $(s);
+                        var $content    = $s.find('.content');
+                        var sRange      = new app.Model.Range({
+                                            sentenceId: $s.attr('id')
+                                          });
+
+                        if (idex === 0)
+                        {
+                            sRange.setStart(range.startOffset);
+
+                            /* Careful!  If there is only one sentence, don't
+                             * loose the ending offset.
+                             */
+                            sRange.setEnd((idex >= (last - 1)
+                                            ? range.endOffset
+                                            : $content.text().length) );
+                        }
+                        else if (idex >= (last - 1))
+                        {
+                            sRange.setOffsets(0, range.endOffset);
+                        }
+                        else
+                        {
+                            sRange.setOffsets(0, $content.text().length);
+                        }
+
+                        ranges.add(sRange);
+                    });
+                }
+                else
+                {
+                    /* There are no selectable sentences in the range.
+                     * De-select all
+                     */
+                    sel.removeAllRanges();
+                }
+            }
+            // IFF we have start and end sentences...
+            else if (($startS.length > 0) && ($endS.length > 0))
+            {
+                // Use the simple range for this single sentence.
+                ranges.add({
+                    sentenceId: $startS.attr('id'),
+                    offsetStart:range.startOffset,
+                    offsetEnd:  range.endOffset
+                });
+            }
+
+            if ( (ranges.length === 1) && ranges.at(0).isEmpty() )
+            {
+                // There is no sentence selection
+                ranges.remove( ranges.at(0) );
+            }
+
+            // Remember the selection information
+            if (self.ranges)    { delete self.ranges; }
+            self.ranges = ranges;
+
+            /*
+            console.log('view.doc::setSelection(): '
+                        + ranges.length +' ranges');
+            // */
+        },
+
+        /** @brief  Add a new note to this document.
+         *
+         *  This makes use of the current (rangy) selection to generate a new
+         *  note.
+         */
+        addNote: function() {
+            var notes       = this.get('notes');
+            var position    = new app.Model.Position();
+            notes.add( {position:position} );
+        }
+    });
+
+ }).call(this);
+/*!
+ * jQuery UI 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI
+ */
+(function( $, undefined ) {
+
+// prevent duplicate loading
+// this is only a problem because we proxy existing functions
+// and we don't want to double proxy them
+$.ui = $.ui || {};
+if ( $.ui.version ) {
+	return;
+}
+
+$.extend( $.ui, {
+	version: "1.8.16",
+
+	keyCode: {
+		ALT: 18,
+		BACKSPACE: 8,
+		CAPS_LOCK: 20,
+		COMMA: 188,
+		COMMAND: 91,
+		COMMAND_LEFT: 91, // COMMAND
+		COMMAND_RIGHT: 93,
+		CONTROL: 17,
+		DELETE: 46,
+		DOWN: 40,
+		END: 35,
+		ENTER: 13,
+		ESCAPE: 27,
+		HOME: 36,
+		INSERT: 45,
+		LEFT: 37,
+		MENU: 93, // COMMAND_RIGHT
+		NUMPAD_ADD: 107,
+		NUMPAD_DECIMAL: 110,
+		NUMPAD_DIVIDE: 111,
+		NUMPAD_ENTER: 108,
+		NUMPAD_MULTIPLY: 106,
+		NUMPAD_SUBTRACT: 109,
+		PAGE_DOWN: 34,
+		PAGE_UP: 33,
+		PERIOD: 190,
+		RIGHT: 39,
+		SHIFT: 16,
+		SPACE: 32,
+		TAB: 9,
+		UP: 38,
+		WINDOWS: 91 // COMMAND
+	}
+});
+
+// plugins
+$.fn.extend({
+	propAttr: $.fn.prop || $.fn.attr,
+
+	_focus: $.fn.focus,
+	focus: function( delay, fn ) {
+		return typeof delay === "number" ?
+			this.each(function() {
+				var elem = this;
+				setTimeout(function() {
+					$( elem ).focus();
+					if ( fn ) {
+						fn.call( elem );
+					}
+				}, delay );
+			}) :
+			this._focus.apply( this, arguments );
+	},
+
+	scrollParent: function() {
+		var scrollParent;
+		if (($.browser.msie && (/(static|relative)/).test(this.css('position'))) || (/absolute/).test(this.css('position'))) {
+			scrollParent = this.parents().filter(function() {
+				return (/(relative|absolute|fixed)/).test($.curCSS(this,'position',1)) && (/(auto|scroll)/).test($.curCSS(this,'overflow',1)+$.curCSS(this,'overflow-y',1)+$.curCSS(this,'overflow-x',1));
+			}).eq(0);
+		} else {
+			scrollParent = this.parents().filter(function() {
+				return (/(auto|scroll)/).test($.curCSS(this,'overflow',1)+$.curCSS(this,'overflow-y',1)+$.curCSS(this,'overflow-x',1));
+			}).eq(0);
+		}
+
+		return (/fixed/).test(this.css('position')) || !scrollParent.length ? $(document) : scrollParent;
+	},
+
+	zIndex: function( zIndex ) {
+		if ( zIndex !== undefined ) {
+			return this.css( "zIndex", zIndex );
+		}
+
+		if ( this.length ) {
+			var elem = $( this[ 0 ] ), position, value;
+			while ( elem.length && elem[ 0 ] !== document ) {
+				// Ignore z-index if position is set to a value where z-index is ignored by the browser
+				// This makes behavior of this function consistent across browsers
+				// WebKit always returns auto if the element is positioned
+				position = elem.css( "position" );
+				if ( position === "absolute" || position === "relative" || position === "fixed" ) {
+					// IE returns 0 when zIndex is not specified
+					// other browsers return a string
+					// we ignore the case of nested elements with an explicit value of 0
+					// <div style="z-index: -10;"><div style="z-index: 0;"></div></div>
+					value = parseInt( elem.css( "zIndex" ), 10 );
+					if ( !isNaN( value ) && value !== 0 ) {
+						return value;
+					}
+				}
+				elem = elem.parent();
+			}
+		}
+
+		return 0;
+	},
+
+	disableSelection: function() {
+		return this.bind( ( $.support.selectstart ? "selectstart" : "mousedown" ) +
+			".ui-disableSelection", function( event ) {
+				event.preventDefault();
+			});
+	},
+
+	enableSelection: function() {
+		return this.unbind( ".ui-disableSelection" );
+	}
+});
+
+$.each( [ "Width", "Height" ], function( i, name ) {
+	var side = name === "Width" ? [ "Left", "Right" ] : [ "Top", "Bottom" ],
+		type = name.toLowerCase(),
+		orig = {
+			innerWidth: $.fn.innerWidth,
+			innerHeight: $.fn.innerHeight,
+			outerWidth: $.fn.outerWidth,
+			outerHeight: $.fn.outerHeight
+		};
+
+	function reduce( elem, size, border, margin ) {
+		$.each( side, function() {
+			size -= parseFloat( $.curCSS( elem, "padding" + this, true) ) || 0;
+			if ( border ) {
+				size -= parseFloat( $.curCSS( elem, "border" + this + "Width", true) ) || 0;
+			}
+			if ( margin ) {
+				size -= parseFloat( $.curCSS( elem, "margin" + this, true) ) || 0;
+			}
+		});
+		return size;
+	}
+
+	$.fn[ "inner" + name ] = function( size ) {
+		if ( size === undefined ) {
+			return orig[ "inner" + name ].call( this );
+		}
+
+		return this.each(function() {
+			$( this ).css( type, reduce( this, size ) + "px" );
+		});
+	};
+
+	$.fn[ "outer" + name] = function( size, margin ) {
+		if ( typeof size !== "number" ) {
+			return orig[ "outer" + name ].call( this, size );
+		}
+
+		return this.each(function() {
+			$( this).css( type, reduce( this, size, true, margin ) + "px" );
+		});
+	};
+});
+
+// selectors
+function focusable( element, isTabIndexNotNaN ) {
+	var nodeName = element.nodeName.toLowerCase();
+	if ( "area" === nodeName ) {
+		var map = element.parentNode,
+			mapName = map.name,
+			img;
+		if ( !element.href || !mapName || map.nodeName.toLowerCase() !== "map" ) {
+			return false;
+		}
+		img = $( "img[usemap=#" + mapName + "]" )[0];
+		return !!img && visible( img );
+	}
+	return ( /input|select|textarea|button|object/.test( nodeName )
+		? !element.disabled
+		: "a" == nodeName
+			? element.href || isTabIndexNotNaN
+			: isTabIndexNotNaN)
+		// the element and all of its ancestors must be visible
+		&& visible( element );
+}
+
+function visible( element ) {
+	return !$( element ).parents().andSelf().filter(function() {
+		return $.curCSS( this, "visibility" ) === "hidden" ||
+			$.expr.filters.hidden( this );
+	}).length;
+}
+
+$.extend( $.expr[ ":" ], {
+	data: function( elem, i, match ) {
+		return !!$.data( elem, match[ 3 ] );
+	},
+
+	focusable: function( element ) {
+		return focusable( element, !isNaN( $.attr( element, "tabindex" ) ) );
+	},
+
+	tabbable: function( element ) {
+		var tabIndex = $.attr( element, "tabindex" ),
+			isTabIndexNaN = isNaN( tabIndex );
+		return ( isTabIndexNaN || tabIndex >= 0 ) && focusable( element, !isTabIndexNaN );
+	}
+});
+
+// support
+$(function() {
+	var body = document.body,
+		div = body.appendChild( div = document.createElement( "div" ) );
+
+	$.extend( div.style, {
+		minHeight: "100px",
+		height: "auto",
+		padding: 0,
+		borderWidth: 0
+	});
+
+	$.support.minHeight = div.offsetHeight === 100;
+	$.support.selectstart = "onselectstart" in div;
+
+	// set display to none to avoid a layout bug in IE
+	// http://dev.jquery.com/ticket/4014
+	body.removeChild( div ).style.display = "none";
+});
+
+
+
+
+
+// deprecated
+$.extend( $.ui, {
+	// $.ui.plugin is deprecated.  Use the proxy pattern instead.
+	plugin: {
+		add: function( module, option, set ) {
+			var proto = $.ui[ module ].prototype;
+			for ( var i in set ) {
+				proto.plugins[ i ] = proto.plugins[ i ] || [];
+				proto.plugins[ i ].push( [ option, set[ i ] ] );
+			}
+		},
+		call: function( instance, name, args ) {
+			var set = instance.plugins[ name ];
+			if ( !set || !instance.element[ 0 ].parentNode ) {
+				return;
+			}
+	
+			for ( var i = 0; i < set.length; i++ ) {
+				if ( instance.options[ set[ i ][ 0 ] ] ) {
+					set[ i ][ 1 ].apply( instance.element, args );
+				}
+			}
+		}
+	},
+	
+	// will be deprecated when we switch to jQuery 1.4 - use jQuery.contains()
+	contains: function( a, b ) {
+		return document.compareDocumentPosition ?
+			a.compareDocumentPosition( b ) & 16 :
+			a !== b && a.contains( b );
+	},
+	
+	// only used by resizable
+	hasScroll: function( el, a ) {
+	
+		//If overflow is hidden, the element might have extra content, but the user wants to hide it
+		if ( $( el ).css( "overflow" ) === "hidden") {
+			return false;
+		}
+	
+		var scroll = ( a && a === "left" ) ? "scrollLeft" : "scrollTop",
+			has = false;
+	
+		if ( el[ scroll ] > 0 ) {
+			return true;
+		}
+	
+		// TODO: determine which cases actually cause this to happen
+		// if the element doesn't have the scroll set, see if it's possible to
+		// set the scroll
+		el[ scroll ] = 1;
+		has = ( el[ scroll ] > 0 );
+		el[ scroll ] = 0;
+		return has;
+	},
+	
+	// these are odd functions, fix the API or move into individual plugins
+	isOverAxis: function( x, reference, size ) {
+		//Determines when x coordinate is over "b" element axis
+		return ( x > reference ) && ( x < ( reference + size ) );
+	},
+	isOver: function( y, x, top, left, height, width ) {
+		//Determines when x, y coordinates is over "b" element
+		return $.ui.isOverAxis( y, top, height ) && $.ui.isOverAxis( x, left, width );
+	}
+});
+
+})( jQuery );
+/*!
+ * jQuery UI Widget 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Widget
+ */
+(function( $, undefined ) {
+
+// jQuery 1.4+
+if ( $.cleanData ) {
+	var _cleanData = $.cleanData;
+	$.cleanData = function( elems ) {
+		for ( var i = 0, elem; (elem = elems[i]) != null; i++ ) {
+			try {
+				$( elem ).triggerHandler( "remove" );
+			// http://bugs.jquery.com/ticket/8235
+			} catch( e ) {}
+		}
+		_cleanData( elems );
+	};
+} else {
+	var _remove = $.fn.remove;
+	$.fn.remove = function( selector, keepData ) {
+		return this.each(function() {
+			if ( !keepData ) {
+				if ( !selector || $.filter( selector, [ this ] ).length ) {
+					$( "*", this ).add( [ this ] ).each(function() {
+						try {
+							$( this ).triggerHandler( "remove" );
+						// http://bugs.jquery.com/ticket/8235
+						} catch( e ) {}
+					});
+				}
+			}
+			return _remove.call( $(this), selector, keepData );
+		});
+	};
+}
+
+$.widget = function( name, base, prototype ) {
+	var namespace = name.split( "." )[ 0 ],
+		fullName;
+	name = name.split( "." )[ 1 ];
+	fullName = namespace + "-" + name;
+
+	if ( !prototype ) {
+		prototype = base;
+		base = $.Widget;
+	}
+
+	// create selector for plugin
+	$.expr[ ":" ][ fullName ] = function( elem ) {
+		return !!$.data( elem, name );
+	};
+
+	$[ namespace ] = $[ namespace ] || {};
+	$[ namespace ][ name ] = function( options, element ) {
+		// allow instantiation without initializing for simple inheritance
+		if ( arguments.length ) {
+			this._createWidget( options, element );
+		}
+	};
+
+	var basePrototype = new base();
+	// we need to make the options hash a property directly on the new instance
+	// otherwise we'll modify the options hash on the prototype that we're
+	// inheriting from
+//	$.each( basePrototype, function( key, val ) {
+//		if ( $.isPlainObject(val) ) {
+//			basePrototype[ key ] = $.extend( {}, val );
+//		}
+//	});
+	basePrototype.options = $.extend( true, {}, basePrototype.options );
+	$[ namespace ][ name ].prototype = $.extend( true, basePrototype, {
+		namespace: namespace,
+		widgetName: name,
+		widgetEventPrefix: $[ namespace ][ name ].prototype.widgetEventPrefix || name,
+		widgetBaseClass: fullName
+	}, prototype );
+
+	$.widget.bridge( name, $[ namespace ][ name ] );
+};
+
+$.widget.bridge = function( name, object ) {
+	$.fn[ name ] = function( options ) {
+		var isMethodCall = typeof options === "string",
+			args = Array.prototype.slice.call( arguments, 1 ),
+			returnValue = this;
+
+		// allow multiple hashes to be passed on init
+		options = !isMethodCall && args.length ?
+			$.extend.apply( null, [ true, options ].concat(args) ) :
+			options;
+
+		// prevent calls to internal methods
+		if ( isMethodCall && options.charAt( 0 ) === "_" ) {
+			return returnValue;
+		}
+
+		if ( isMethodCall ) {
+			this.each(function() {
+				var instance = $.data( this, name ),
+					methodValue = instance && $.isFunction( instance[options] ) ?
+						instance[ options ].apply( instance, args ) :
+						instance;
+				// TODO: add this back in 1.9 and use $.error() (see #5972)
+//				if ( !instance ) {
+//					throw "cannot call methods on " + name + " prior to initialization; " +
+//						"attempted to call method '" + options + "'";
+//				}
+//				if ( !$.isFunction( instance[options] ) ) {
+//					throw "no such method '" + options + "' for " + name + " widget instance";
+//				}
+//				var methodValue = instance[ options ].apply( instance, args );
+				if ( methodValue !== instance && methodValue !== undefined ) {
+					returnValue = methodValue;
+					return false;
+				}
+			});
+		} else {
+			this.each(function() {
+				var instance = $.data( this, name );
+				if ( instance ) {
+					instance.option( options || {} )._init();
+				} else {
+					$.data( this, name, new object( options, this ) );
+				}
+			});
+		}
+
+		return returnValue;
+	};
+};
+
+$.Widget = function( options, element ) {
+	// allow instantiation without initializing for simple inheritance
+	if ( arguments.length ) {
+		this._createWidget( options, element );
+	}
+};
+
+$.Widget.prototype = {
+	widgetName: "widget",
+	widgetEventPrefix: "",
+	options: {
+		disabled: false
+	},
+	_createWidget: function( options, element ) {
+		// $.widget.bridge stores the plugin instance, but we do it anyway
+		// so that it's stored even before the _create function runs
+		$.data( element, this.widgetName, this );
+		this.element = $( element );
+		this.options = $.extend( true, {},
+			this.options,
+			this._getCreateOptions(),
+			options );
+
+		var self = this;
+		this.element.bind( "remove." + this.widgetName, function() {
+			self.destroy();
+		});
+
+		this._create();
+		this._trigger( "create" );
+		this._init();
+	},
+	_getCreateOptions: function() {
+		return $.metadata && $.metadata.get( this.element[0] )[ this.widgetName ];
+	},
+	_create: function() {},
+	_init: function() {},
+
+	destroy: function() {
+		this.element
+			.unbind( "." + this.widgetName )
+			.removeData( this.widgetName );
+		this.widget()
+			.unbind( "." + this.widgetName )
+			.removeAttr( "aria-disabled" )
+			.removeClass(
+				this.widgetBaseClass + "-disabled " +
+				"ui-state-disabled" );
+	},
+
+	widget: function() {
+		return this.element;
+	},
+
+	option: function( key, value ) {
+		var options = key;
+
+		if ( arguments.length === 0 ) {
+			// don't return a reference to the internal hash
+			return $.extend( {}, this.options );
+		}
+
+		if  (typeof key === "string" ) {
+			if ( value === undefined ) {
+				return this.options[ key ];
+			}
+			options = {};
+			options[ key ] = value;
+		}
+
+		this._setOptions( options );
+
+		return this;
+	},
+	_setOptions: function( options ) {
+		var self = this;
+		$.each( options, function( key, value ) {
+			self._setOption( key, value );
+		});
+
+		return this;
+	},
+	_setOption: function( key, value ) {
+		this.options[ key ] = value;
+
+		if ( key === "disabled" ) {
+			this.widget()
+				[ value ? "addClass" : "removeClass"](
+					this.widgetBaseClass + "-disabled" + " " +
+					"ui-state-disabled" )
+				.attr( "aria-disabled", value );
+		}
+
+		return this;
+	},
+
+	enable: function() {
+		return this._setOption( "disabled", false );
+	},
+	disable: function() {
+		return this._setOption( "disabled", true );
+	},
+
+	_trigger: function( type, event, data ) {
+		var callback = this.options[ type ];
+
+		event = $.Event( event );
+		event.type = ( type === this.widgetEventPrefix ?
+			type :
+			this.widgetEventPrefix + type ).toLowerCase();
+		data = data || {};
+
+		// copy original event properties over to the new event
+		// this would happen if we could call $.event.fix instead of $.Event
+		// but we don't have a way to force an event to be fixed multiple times
+		if ( event.originalEvent ) {
+			for ( var i = $.event.props.length, prop; i; ) {
+				prop = $.event.props[ --i ];
+				event[ prop ] = event.originalEvent[ prop ];
+			}
+		}
+
+		this.element.trigger( event, data );
+
+		return !( $.isFunction(callback) &&
+			callback.call( this.element[0], event, data ) === false ||
+			event.isDefaultPrevented() );
+	}
+};
+
+})( jQuery );
+/*
+ * jQuery UI Position 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Position
+ */
+(function( $, undefined ) {
+
+$.ui = $.ui || {};
+
+var horizontalPositions = /left|center|right/,
+	verticalPositions = /top|center|bottom/,
+	center = "center",
+	_position = $.fn.position,
+	_offset = $.fn.offset;
+
+$.fn.position = function( options ) {
+	if ( !options || !options.of ) {
+		return _position.apply( this, arguments );
+	}
+
+	// make a copy, we don't want to modify arguments
+	options = $.extend( {}, options );
+
+	var target = $( options.of ),
+		targetElem = target[0],
+		collision = ( options.collision || "flip" ).split( " " ),
+		offset = options.offset ? options.offset.split( " " ) : [ 0, 0 ],
+		targetWidth,
+		targetHeight,
+		basePosition;
+
+	if ( targetElem.nodeType === 9 ) {
+		targetWidth = target.width();
+		targetHeight = target.height();
+		basePosition = { top: 0, left: 0 };
+	// TODO: use $.isWindow() in 1.9
+	} else if ( targetElem.setTimeout ) {
+		targetWidth = target.width();
+		targetHeight = target.height();
+		basePosition = { top: target.scrollTop(), left: target.scrollLeft() };
+	} else if ( targetElem.preventDefault ) {
+		// force left top to allow flipping
+		options.at = "left top";
+		targetWidth = targetHeight = 0;
+		basePosition = { top: options.of.pageY, left: options.of.pageX };
+	} else {
+		targetWidth = target.outerWidth();
+		targetHeight = target.outerHeight();
+		basePosition = target.offset();
+	}
+
+	// force my and at to have valid horizontal and veritcal positions
+	// if a value is missing or invalid, it will be converted to center 
+	$.each( [ "my", "at" ], function() {
+		var pos = ( options[this] || "" ).split( " " );
+		if ( pos.length === 1) {
+			pos = horizontalPositions.test( pos[0] ) ?
+				pos.concat( [center] ) :
+				verticalPositions.test( pos[0] ) ?
+					[ center ].concat( pos ) :
+					[ center, center ];
+		}
+		pos[ 0 ] = horizontalPositions.test( pos[0] ) ? pos[ 0 ] : center;
+		pos[ 1 ] = verticalPositions.test( pos[1] ) ? pos[ 1 ] : center;
+		options[ this ] = pos;
+	});
+
+	// normalize collision option
+	if ( collision.length === 1 ) {
+		collision[ 1 ] = collision[ 0 ];
+	}
+
+	// normalize offset option
+	offset[ 0 ] = parseInt( offset[0], 10 ) || 0;
+	if ( offset.length === 1 ) {
+		offset[ 1 ] = offset[ 0 ];
+	}
+	offset[ 1 ] = parseInt( offset[1], 10 ) || 0;
+
+	if ( options.at[0] === "right" ) {
+		basePosition.left += targetWidth;
+	} else if ( options.at[0] === center ) {
+		basePosition.left += targetWidth / 2;
+	}
+
+	if ( options.at[1] === "bottom" ) {
+		basePosition.top += targetHeight;
+	} else if ( options.at[1] === center ) {
+		basePosition.top += targetHeight / 2;
+	}
+
+	basePosition.left += offset[ 0 ];
+	basePosition.top += offset[ 1 ];
+
+	return this.each(function() {
+		var elem = $( this ),
+			elemWidth = elem.outerWidth(),
+			elemHeight = elem.outerHeight(),
+			marginLeft = parseInt( $.curCSS( this, "marginLeft", true ) ) || 0,
+			marginTop = parseInt( $.curCSS( this, "marginTop", true ) ) || 0,
+			collisionWidth = elemWidth + marginLeft +
+				( parseInt( $.curCSS( this, "marginRight", true ) ) || 0 ),
+			collisionHeight = elemHeight + marginTop +
+				( parseInt( $.curCSS( this, "marginBottom", true ) ) || 0 ),
+			position = $.extend( {}, basePosition ),
+			collisionPosition;
+
+		if ( options.my[0] === "right" ) {
+			position.left -= elemWidth;
+		} else if ( options.my[0] === center ) {
+			position.left -= elemWidth / 2;
+		}
+
+		if ( options.my[1] === "bottom" ) {
+			position.top -= elemHeight;
+		} else if ( options.my[1] === center ) {
+			position.top -= elemHeight / 2;
+		}
+
+		// prevent fractions (see #5280)
+		position.left = Math.round( position.left );
+		position.top = Math.round( position.top );
+
+		collisionPosition = {
+			left: position.left - marginLeft,
+			top: position.top - marginTop
+		};
+
+		$.each( [ "left", "top" ], function( i, dir ) {
+			if ( $.ui.position[ collision[i] ] ) {
+				$.ui.position[ collision[i] ][ dir ]( position, {
+					targetWidth: targetWidth,
+					targetHeight: targetHeight,
+					elemWidth: elemWidth,
+					elemHeight: elemHeight,
+					collisionPosition: collisionPosition,
+					collisionWidth: collisionWidth,
+					collisionHeight: collisionHeight,
+					offset: offset,
+					my: options.my,
+					at: options.at
+				});
+			}
+		});
+
+		if ( $.fn.bgiframe ) {
+			elem.bgiframe();
+		}
+		elem.offset( $.extend( position, { using: options.using } ) );
+	});
+};
+
+$.ui.position = {
+	fit: {
+		left: function( position, data ) {
+			var win = $( window ),
+				over = data.collisionPosition.left + data.collisionWidth - win.width() - win.scrollLeft();
+			position.left = over > 0 ? position.left - over : Math.max( position.left - data.collisionPosition.left, position.left );
+		},
+		top: function( position, data ) {
+			var win = $( window ),
+				over = data.collisionPosition.top + data.collisionHeight - win.height() - win.scrollTop();
+			position.top = over > 0 ? position.top - over : Math.max( position.top - data.collisionPosition.top, position.top );
+		}
+	},
+
+	flip: {
+		left: function( position, data ) {
+			if ( data.at[0] === center ) {
+				return;
+			}
+			var win = $( window ),
+				over = data.collisionPosition.left + data.collisionWidth - win.width() - win.scrollLeft(),
+				myOffset = data.my[ 0 ] === "left" ?
+					-data.elemWidth :
+					data.my[ 0 ] === "right" ?
+						data.elemWidth :
+						0,
+				atOffset = data.at[ 0 ] === "left" ?
+					data.targetWidth :
+					-data.targetWidth,
+				offset = -2 * data.offset[ 0 ];
+			position.left += data.collisionPosition.left < 0 ?
+				myOffset + atOffset + offset :
+				over > 0 ?
+					myOffset + atOffset + offset :
+					0;
+		},
+		top: function( position, data ) {
+			if ( data.at[1] === center ) {
+				return;
+			}
+			var win = $( window ),
+				over = data.collisionPosition.top + data.collisionHeight - win.height() - win.scrollTop(),
+				myOffset = data.my[ 1 ] === "top" ?
+					-data.elemHeight :
+					data.my[ 1 ] === "bottom" ?
+						data.elemHeight :
+						0,
+				atOffset = data.at[ 1 ] === "top" ?
+					data.targetHeight :
+					-data.targetHeight,
+				offset = -2 * data.offset[ 1 ];
+			position.top += data.collisionPosition.top < 0 ?
+				myOffset + atOffset + offset :
+				over > 0 ?
+					myOffset + atOffset + offset :
+					0;
+		}
+	}
+};
+
+// offset setter from jQuery 1.4
+if ( !$.offset.setOffset ) {
+	$.offset.setOffset = function( elem, options ) {
+		// set position first, in-case top/left are set even on static elem
+		if ( /static/.test( $.curCSS( elem, "position" ) ) ) {
+			elem.style.position = "relative";
+		}
+		var curElem   = $( elem ),
+			curOffset = curElem.offset(),
+			curTop    = parseInt( $.curCSS( elem, "top",  true ), 10 ) || 0,
+			curLeft   = parseInt( $.curCSS( elem, "left", true ), 10)  || 0,
+			props     = {
+				top:  (options.top  - curOffset.top)  + curTop,
+				left: (options.left - curOffset.left) + curLeft
+			};
+		
+		if ( 'using' in options ) {
+			options.using.call( elem, props );
+		} else {
+			curElem.css( props );
+		}
+	};
+
+	$.fn.offset = function( options ) {
+		var elem = this[ 0 ];
+		if ( !elem || !elem.ownerDocument ) { return null; }
+		if ( options ) { 
+			return this.each(function() {
+				$.offset.setOffset( this, options );
+			});
+		}
+		return _offset.call( this );
+	};
+}
+
+}( jQuery ));
+/*
+ * jQuery UI Button 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Button
+ *
+ * Depends:
+ *	jquery.ui.core.js
+ *	jquery.ui.widget.js
+ */
+(function( $, undefined ) {
+
+var lastActive, startXPos, startYPos, clickDragged,
+	baseClasses = "ui-button ui-widget ui-state-default ui-corner-all",
+	stateClasses = "ui-state-hover ui-state-active ",
+	typeClasses = "ui-button-icons-only ui-button-icon-only ui-button-text-icons ui-button-text-icon-primary ui-button-text-icon-secondary ui-button-text-only",
+	formResetHandler = function() {
+		var buttons = $( this ).find( ":ui-button" );
+		setTimeout(function() {
+			buttons.button( "refresh" );
+		}, 1 );
+	},
+	radioGroup = function( radio ) {
+		var name = radio.name,
+			form = radio.form,
+			radios = $( [] );
+		if ( name ) {
+			if ( form ) {
+				radios = $( form ).find( "[name='" + name + "']" );
+			} else {
+				radios = $( "[name='" + name + "']", radio.ownerDocument )
+					.filter(function() {
+						return !this.form;
+					});
+			}
+		}
+		return radios;
+	};
+
+$.widget( "ui.button", {
+	options: {
+		disabled: null,
+		text: true,
+		label: null,
+		icons: {
+			primary: null,
+			secondary: null
+		}
+	},
+	_create: function() {
+		this.element.closest( "form" )
+			.unbind( "reset.button" )
+			.bind( "reset.button", formResetHandler );
+
+		if ( typeof this.options.disabled !== "boolean" ) {
+			this.options.disabled = this.element.propAttr( "disabled" );
+		}
+
+		this._determineButtonType();
+		this.hasTitle = !!this.buttonElement.attr( "title" );
+
+		var self = this,
+			options = this.options,
+			toggleButton = this.type === "checkbox" || this.type === "radio",
+			hoverClass = "ui-state-hover" + ( !toggleButton ? " ui-state-active" : "" ),
+			focusClass = "ui-state-focus";
+
+		if ( options.label === null ) {
+			options.label = this.buttonElement.html();
+		}
+
+		if ( this.element.is( ":disabled" ) ) {
+			options.disabled = true;
+		}
+
+		this.buttonElement
+			.addClass( baseClasses )
+			.attr( "role", "button" )
+			.bind( "mouseenter.button", function() {
+				if ( options.disabled ) {
+					return;
+				}
+				$( this ).addClass( "ui-state-hover" );
+				if ( this === lastActive ) {
+					$( this ).addClass( "ui-state-active" );
+				}
+			})
+			.bind( "mouseleave.button", function() {
+				if ( options.disabled ) {
+					return;
+				}
+				$( this ).removeClass( hoverClass );
+			})
+			.bind( "click.button", function( event ) {
+				if ( options.disabled ) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+				}
+			});
+
+		this.element
+			.bind( "focus.button", function() {
+				// no need to check disabled, focus won't be triggered anyway
+				self.buttonElement.addClass( focusClass );
+			})
+			.bind( "blur.button", function() {
+				self.buttonElement.removeClass( focusClass );
+			});
+
+		if ( toggleButton ) {
+			this.element.bind( "change.button", function() {
+				if ( clickDragged ) {
+					return;
+				}
+				self.refresh();
+			});
+			// if mouse moves between mousedown and mouseup (drag) set clickDragged flag
+			// prevents issue where button state changes but checkbox/radio checked state
+			// does not in Firefox (see ticket #6970)
+			this.buttonElement
+				.bind( "mousedown.button", function( event ) {
+					if ( options.disabled ) {
+						return;
+					}
+					clickDragged = false;
+					startXPos = event.pageX;
+					startYPos = event.pageY;
+				})
+				.bind( "mouseup.button", function( event ) {
+					if ( options.disabled ) {
+						return;
+					}
+					if ( startXPos !== event.pageX || startYPos !== event.pageY ) {
+						clickDragged = true;
+					}
+			});
+		}
+
+		if ( this.type === "checkbox" ) {
+			this.buttonElement.bind( "click.button", function() {
+				if ( options.disabled || clickDragged ) {
+					return false;
+				}
+				$( this ).toggleClass( "ui-state-active" );
+				self.buttonElement.attr( "aria-pressed", self.element[0].checked );
+			});
+		} else if ( this.type === "radio" ) {
+			this.buttonElement.bind( "click.button", function() {
+				if ( options.disabled || clickDragged ) {
+					return false;
+				}
+				$( this ).addClass( "ui-state-active" );
+				self.buttonElement.attr( "aria-pressed", "true" );
+
+				var radio = self.element[ 0 ];
+				radioGroup( radio )
+					.not( radio )
+					.map(function() {
+						return $( this ).button( "widget" )[ 0 ];
+					})
+					.removeClass( "ui-state-active" )
+					.attr( "aria-pressed", "false" );
+			});
+		} else {
+			this.buttonElement
+				.bind( "mousedown.button", function() {
+					if ( options.disabled ) {
+						return false;
+					}
+					$( this ).addClass( "ui-state-active" );
+					lastActive = this;
+					$( document ).one( "mouseup", function() {
+						lastActive = null;
+					});
+				})
+				.bind( "mouseup.button", function() {
+					if ( options.disabled ) {
+						return false;
+					}
+					$( this ).removeClass( "ui-state-active" );
+				})
+				.bind( "keydown.button", function(event) {
+					if ( options.disabled ) {
+						return false;
+					}
+					if ( event.keyCode == $.ui.keyCode.SPACE || event.keyCode == $.ui.keyCode.ENTER ) {
+						$( this ).addClass( "ui-state-active" );
+					}
+				})
+				.bind( "keyup.button", function() {
+					$( this ).removeClass( "ui-state-active" );
+				});
+
+			if ( this.buttonElement.is("a") ) {
+				this.buttonElement.keyup(function(event) {
+					if ( event.keyCode === $.ui.keyCode.SPACE ) {
+						// TODO pass through original event correctly (just as 2nd argument doesn't work)
+						$( this ).click();
+					}
+				});
+			}
+		}
+
+		// TODO: pull out $.Widget's handling for the disabled option into
+		// $.Widget.prototype._setOptionDisabled so it's easy to proxy and can
+		// be overridden by individual plugins
+		this._setOption( "disabled", options.disabled );
+		this._resetButton();
+	},
+
+	_determineButtonType: function() {
+
+		if ( this.element.is(":checkbox") ) {
+			this.type = "checkbox";
+		} else if ( this.element.is(":radio") ) {
+			this.type = "radio";
+		} else if ( this.element.is("input") ) {
+			this.type = "input";
+		} else {
+			this.type = "button";
+		}
+
+		if ( this.type === "checkbox" || this.type === "radio" ) {
+			// we don't search against the document in case the element
+			// is disconnected from the DOM
+			var ancestor = this.element.parents().filter(":last"),
+				labelSelector = "label[for='" + this.element.attr("id") + "']";
+			this.buttonElement = ancestor.find( labelSelector );
+			if ( !this.buttonElement.length ) {
+				ancestor = ancestor.length ? ancestor.siblings() : this.element.siblings();
+				this.buttonElement = ancestor.filter( labelSelector );
+				if ( !this.buttonElement.length ) {
+					this.buttonElement = ancestor.find( labelSelector );
+				}
+			}
+			this.element.addClass( "ui-helper-hidden-accessible" );
+
+			var checked = this.element.is( ":checked" );
+			if ( checked ) {
+				this.buttonElement.addClass( "ui-state-active" );
+			}
+			this.buttonElement.attr( "aria-pressed", checked );
+		} else {
+			this.buttonElement = this.element;
+		}
+	},
+
+	widget: function() {
+		return this.buttonElement;
+	},
+
+	destroy: function() {
+		this.element
+			.removeClass( "ui-helper-hidden-accessible" );
+		this.buttonElement
+			.removeClass( baseClasses + " " + stateClasses + " " + typeClasses )
+			.removeAttr( "role" )
+			.removeAttr( "aria-pressed" )
+			.html( this.buttonElement.find(".ui-button-text").html() );
+
+		if ( !this.hasTitle ) {
+			this.buttonElement.removeAttr( "title" );
+		}
+
+		$.Widget.prototype.destroy.call( this );
+	},
+
+	_setOption: function( key, value ) {
+		$.Widget.prototype._setOption.apply( this, arguments );
+		if ( key === "disabled" ) {
+			if ( value ) {
+				this.element.propAttr( "disabled", true );
+			} else {
+				this.element.propAttr( "disabled", false );
+			}
+			return;
+		}
+		this._resetButton();
+	},
+
+	refresh: function() {
+		var isDisabled = this.element.is( ":disabled" );
+		if ( isDisabled !== this.options.disabled ) {
+			this._setOption( "disabled", isDisabled );
+		}
+		if ( this.type === "radio" ) {
+			radioGroup( this.element[0] ).each(function() {
+				if ( $( this ).is( ":checked" ) ) {
+					$( this ).button( "widget" )
+						.addClass( "ui-state-active" )
+						.attr( "aria-pressed", "true" );
+				} else {
+					$( this ).button( "widget" )
+						.removeClass( "ui-state-active" )
+						.attr( "aria-pressed", "false" );
+				}
+			});
+		} else if ( this.type === "checkbox" ) {
+			if ( this.element.is( ":checked" ) ) {
+				this.buttonElement
+					.addClass( "ui-state-active" )
+					.attr( "aria-pressed", "true" );
+			} else {
+				this.buttonElement
+					.removeClass( "ui-state-active" )
+					.attr( "aria-pressed", "false" );
+			}
+		}
+	},
+
+	_resetButton: function() {
+		if ( this.type === "input" ) {
+			if ( this.options.label ) {
+				this.element.val( this.options.label );
+			}
+			return;
+		}
+		var buttonElement = this.buttonElement.removeClass( typeClasses ),
+			buttonText = $( "<span></span>" )
+				.addClass( "ui-button-text" )
+				.html( this.options.label )
+				.appendTo( buttonElement.empty() )
+				.text(),
+			icons = this.options.icons,
+			multipleIcons = icons.primary && icons.secondary,
+			buttonClasses = [];  
+
+		if ( icons.primary || icons.secondary ) {
+			if ( this.options.text ) {
+				buttonClasses.push( "ui-button-text-icon" + ( multipleIcons ? "s" : ( icons.primary ? "-primary" : "-secondary" ) ) );
+			}
+
+			if ( icons.primary ) {
+				buttonElement.prepend( "<span class='ui-button-icon-primary ui-icon " + icons.primary + "'></span>" );
+			}
+
+			if ( icons.secondary ) {
+				buttonElement.append( "<span class='ui-button-icon-secondary ui-icon " + icons.secondary + "'></span>" );
+			}
+
+			if ( !this.options.text ) {
+				buttonClasses.push( multipleIcons ? "ui-button-icons-only" : "ui-button-icon-only" );
+
+				if ( !this.hasTitle ) {
+					buttonElement.attr( "title", buttonText );
+				}
+			}
+		} else {
+			buttonClasses.push( "ui-button-text-only" );
+		}
+		buttonElement.addClass( buttonClasses.join( " " ) );
+	}
+});
+
+$.widget( "ui.buttonset", {
+	options: {
+		items: ":button, :submit, :reset, :checkbox, :radio, a, :data(button)"
+	},
+
+	_create: function() {
+		this.element.addClass( "ui-buttonset" );
+	},
+	
+	_init: function() {
+		this.refresh();
+	},
+
+	_setOption: function( key, value ) {
+		if ( key === "disabled" ) {
+			this.buttons.button( "option", key, value );
+		}
+
+		$.Widget.prototype._setOption.apply( this, arguments );
+	},
+	
+	refresh: function() {
+		var ltr = this.element.css( "direction" ) === "ltr";
+		
+		this.buttons = this.element.find( this.options.items )
+			.filter( ":ui-button" )
+				.button( "refresh" )
+			.end()
+			.not( ":ui-button" )
+				.button()
+			.end()
+			.map(function() {
+				return $( this ).button( "widget" )[ 0 ];
+			})
+				.removeClass( "ui-corner-all ui-corner-left ui-corner-right" )
+				.filter( ":first" )
+					.addClass( ltr ? "ui-corner-left" : "ui-corner-right" )
+				.end()
+				.filter( ":last" )
+					.addClass( ltr ? "ui-corner-right" : "ui-corner-left" )
+				.end()
+			.end();
+	},
+
+	destroy: function() {
+		this.element.removeClass( "ui-buttonset" );
+		this.buttons
+			.map(function() {
+				return $( this ).button( "widget" )[ 0 ];
+			})
+				.removeClass( "ui-corner-left ui-corner-right" )
+			.end()
+			.button( "destroy" );
+
+		$.Widget.prototype.destroy.call( this );
+	}
+});
+
+}( jQuery ) );
+/*
+ * jQuery UI Effects 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Effects/
+ */
+;jQuery.effects || (function($, undefined) {
+
+$.effects = {};
+
+
+
+/******************************************************************************/
+/****************************** COLOR ANIMATIONS ******************************/
+/******************************************************************************/
+
+// override the animation for color styles
+$.each(['backgroundColor', 'borderBottomColor', 'borderLeftColor',
+	'borderRightColor', 'borderTopColor', 'borderColor', 'color', 'outlineColor'],
+function(i, attr) {
+	$.fx.step[attr] = function(fx) {
+		if (!fx.colorInit) {
+			fx.start = getColor(fx.elem, attr);
+			fx.end = getRGB(fx.end);
+			fx.colorInit = true;
+		}
+
+		fx.elem.style[attr] = 'rgb(' +
+			Math.max(Math.min(parseInt((fx.pos * (fx.end[0] - fx.start[0])) + fx.start[0], 10), 255), 0) + ',' +
+			Math.max(Math.min(parseInt((fx.pos * (fx.end[1] - fx.start[1])) + fx.start[1], 10), 255), 0) + ',' +
+			Math.max(Math.min(parseInt((fx.pos * (fx.end[2] - fx.start[2])) + fx.start[2], 10), 255), 0) + ')';
+	};
+});
+
+// Color Conversion functions from highlightFade
+// By Blair Mitchelmore
+// http://jquery.offput.ca/highlightFade/
+
+// Parse strings looking for color tuples [255,255,255]
+function getRGB(color) {
+		var result;
+
+		// Check if we're already dealing with an array of colors
+		if ( color && color.constructor == Array && color.length == 3 )
+				return color;
+
+		// Look for rgb(num,num,num)
+		if (result = /rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(color))
+				return [parseInt(result[1],10), parseInt(result[2],10), parseInt(result[3],10)];
+
+		// Look for rgb(num%,num%,num%)
+		if (result = /rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/.exec(color))
+				return [parseFloat(result[1])*2.55, parseFloat(result[2])*2.55, parseFloat(result[3])*2.55];
+
+		// Look for #a0b1c2
+		if (result = /#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/.exec(color))
+				return [parseInt(result[1],16), parseInt(result[2],16), parseInt(result[3],16)];
+
+		// Look for #fff
+		if (result = /#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/.exec(color))
+				return [parseInt(result[1]+result[1],16), parseInt(result[2]+result[2],16), parseInt(result[3]+result[3],16)];
+
+		// Look for rgba(0, 0, 0, 0) == transparent in Safari 3
+		if (result = /rgba\(0, 0, 0, 0\)/.exec(color))
+				return colors['transparent'];
+
+		// Otherwise, we're most likely dealing with a named color
+		return colors[$.trim(color).toLowerCase()];
+}
+
+function getColor(elem, attr) {
+		var color;
+
+		do {
+				color = $.curCSS(elem, attr);
+
+				// Keep going until we find an element that has color, or we hit the body
+				if ( color != '' && color != 'transparent' || $.nodeName(elem, "body") )
+						break;
+
+				attr = "backgroundColor";
+		} while ( elem = elem.parentNode );
+
+		return getRGB(color);
+};
+
+// Some named colors to work with
+// From Interface by Stefan Petre
+// http://interface.eyecon.ro/
+
+var colors = {
+	aqua:[0,255,255],
+	azure:[240,255,255],
+	beige:[245,245,220],
+	black:[0,0,0],
+	blue:[0,0,255],
+	brown:[165,42,42],
+	cyan:[0,255,255],
+	darkblue:[0,0,139],
+	darkcyan:[0,139,139],
+	darkgrey:[169,169,169],
+	darkgreen:[0,100,0],
+	darkkhaki:[189,183,107],
+	darkmagenta:[139,0,139],
+	darkolivegreen:[85,107,47],
+	darkorange:[255,140,0],
+	darkorchid:[153,50,204],
+	darkred:[139,0,0],
+	darksalmon:[233,150,122],
+	darkviolet:[148,0,211],
+	fuchsia:[255,0,255],
+	gold:[255,215,0],
+	green:[0,128,0],
+	indigo:[75,0,130],
+	khaki:[240,230,140],
+	lightblue:[173,216,230],
+	lightcyan:[224,255,255],
+	lightgreen:[144,238,144],
+	lightgrey:[211,211,211],
+	lightpink:[255,182,193],
+	lightyellow:[255,255,224],
+	lime:[0,255,0],
+	magenta:[255,0,255],
+	maroon:[128,0,0],
+	navy:[0,0,128],
+	olive:[128,128,0],
+	orange:[255,165,0],
+	pink:[255,192,203],
+	purple:[128,0,128],
+	violet:[128,0,128],
+	red:[255,0,0],
+	silver:[192,192,192],
+	white:[255,255,255],
+	yellow:[255,255,0],
+	transparent: [255,255,255]
+};
+
+
+
+/******************************************************************************/
+/****************************** CLASS ANIMATIONS ******************************/
+/******************************************************************************/
+
+var classAnimationActions = ['add', 'remove', 'toggle'],
+	shorthandStyles = {
+		border: 1,
+		borderBottom: 1,
+		borderColor: 1,
+		borderLeft: 1,
+		borderRight: 1,
+		borderTop: 1,
+		borderWidth: 1,
+		margin: 1,
+		padding: 1
+	};
+
+function getElementStyles() {
+	var style = document.defaultView
+			? document.defaultView.getComputedStyle(this, null)
+			: this.currentStyle,
+		newStyle = {},
+		key,
+		camelCase;
+
+	// webkit enumerates style porperties
+	if (style && style.length && style[0] && style[style[0]]) {
+		var len = style.length;
+		while (len--) {
+			key = style[len];
+			if (typeof style[key] == 'string') {
+				camelCase = key.replace(/\-(\w)/g, function(all, letter){
+					return letter.toUpperCase();
+				});
+				newStyle[camelCase] = style[key];
+			}
+		}
+	} else {
+		for (key in style) {
+			if (typeof style[key] === 'string') {
+				newStyle[key] = style[key];
+			}
+		}
+	}
+	
+	return newStyle;
+}
+
+function filterStyles(styles) {
+	var name, value;
+	for (name in styles) {
+		value = styles[name];
+		if (
+			// ignore null and undefined values
+			value == null ||
+			// ignore functions (when does this occur?)
+			$.isFunction(value) ||
+			// shorthand styles that need to be expanded
+			name in shorthandStyles ||
+			// ignore scrollbars (break in IE)
+			(/scrollbar/).test(name) ||
+
+			// only colors or values that can be converted to numbers
+			(!(/color/i).test(name) && isNaN(parseFloat(value)))
+		) {
+			delete styles[name];
+		}
+	}
+	
+	return styles;
+}
+
+function styleDifference(oldStyle, newStyle) {
+	var diff = { _: 0 }, // http://dev.jquery.com/ticket/5459
+		name;
+
+	for (name in newStyle) {
+		if (oldStyle[name] != newStyle[name]) {
+			diff[name] = newStyle[name];
+		}
+	}
+
+	return diff;
+}
+
+$.effects.animateClass = function(value, duration, easing, callback) {
+	if ($.isFunction(easing)) {
+		callback = easing;
+		easing = null;
+	}
+
+	return this.queue(function() {
+		var that = $(this),
+			originalStyleAttr = that.attr('style') || ' ',
+			originalStyle = filterStyles(getElementStyles.call(this)),
+			newStyle,
+			className = that.attr('class');
+
+		$.each(classAnimationActions, function(i, action) {
+			if (value[action]) {
+				that[action + 'Class'](value[action]);
+			}
+		});
+		newStyle = filterStyles(getElementStyles.call(this));
+		that.attr('class', className);
+
+		that.animate(styleDifference(originalStyle, newStyle), {
+			queue: false,
+			duration: duration,
+			easing: easing,
+			complete: function() {
+				$.each(classAnimationActions, function(i, action) {
+					if (value[action]) { that[action + 'Class'](value[action]); }
+				});
+				// work around bug in IE by clearing the cssText before setting it
+				if (typeof that.attr('style') == 'object') {
+					that.attr('style').cssText = '';
+					that.attr('style').cssText = originalStyleAttr;
+				} else {
+					that.attr('style', originalStyleAttr);
+				}
+				if (callback) { callback.apply(this, arguments); }
+				$.dequeue( this );
+			}
+		});
+	});
+};
+
+$.fn.extend({
+	_addClass: $.fn.addClass,
+	addClass: function(classNames, speed, easing, callback) {
+		return speed ? $.effects.animateClass.apply(this, [{ add: classNames },speed,easing,callback]) : this._addClass(classNames);
+	},
+
+	_removeClass: $.fn.removeClass,
+	removeClass: function(classNames,speed,easing,callback) {
+		return speed ? $.effects.animateClass.apply(this, [{ remove: classNames },speed,easing,callback]) : this._removeClass(classNames);
+	},
+
+	_toggleClass: $.fn.toggleClass,
+	toggleClass: function(classNames, force, speed, easing, callback) {
+		if ( typeof force == "boolean" || force === undefined ) {
+			if ( !speed ) {
+				// without speed parameter;
+				return this._toggleClass(classNames, force);
+			} else {
+				return $.effects.animateClass.apply(this, [(force?{add:classNames}:{remove:classNames}),speed,easing,callback]);
+			}
+		} else {
+			// without switch parameter;
+			return $.effects.animateClass.apply(this, [{ toggle: classNames },force,speed,easing]);
+		}
+	},
+
+	switchClass: function(remove,add,speed,easing,callback) {
+		return $.effects.animateClass.apply(this, [{ add: add, remove: remove },speed,easing,callback]);
+	}
+});
+
+
+
+/******************************************************************************/
+/*********************************** EFFECTS **********************************/
+/******************************************************************************/
+
+$.extend($.effects, {
+	version: "1.8.16",
+
+	// Saves a set of properties in a data storage
+	save: function(element, set) {
+		for(var i=0; i < set.length; i++) {
+			if(set[i] !== null) element.data("ec.storage."+set[i], element[0].style[set[i]]);
+		}
+	},
+
+	// Restores a set of previously saved properties from a data storage
+	restore: function(element, set) {
+		for(var i=0; i < set.length; i++) {
+			if(set[i] !== null) element.css(set[i], element.data("ec.storage."+set[i]));
+		}
+	},
+
+	setMode: function(el, mode) {
+		if (mode == 'toggle') mode = el.is(':hidden') ? 'show' : 'hide'; // Set for toggle
+		return mode;
+	},
+
+	getBaseline: function(origin, original) { // Translates a [top,left] array into a baseline value
+		// this should be a little more flexible in the future to handle a string & hash
+		var y, x;
+		switch (origin[0]) {
+			case 'top': y = 0; break;
+			case 'middle': y = 0.5; break;
+			case 'bottom': y = 1; break;
+			default: y = origin[0] / original.height;
+		};
+		switch (origin[1]) {
+			case 'left': x = 0; break;
+			case 'center': x = 0.5; break;
+			case 'right': x = 1; break;
+			default: x = origin[1] / original.width;
+		};
+		return {x: x, y: y};
+	},
+
+	// Wraps the element around a wrapper that copies position properties
+	createWrapper: function(element) {
+
+		// if the element is already wrapped, return it
+		if (element.parent().is('.ui-effects-wrapper')) {
+			return element.parent();
+		}
+
+		// wrap the element
+		var props = {
+				width: element.outerWidth(true),
+				height: element.outerHeight(true),
+				'float': element.css('float')
+			},
+			wrapper = $('<div></div>')
+				.addClass('ui-effects-wrapper')
+				.css({
+					fontSize: '100%',
+					background: 'transparent',
+					border: 'none',
+					margin: 0,
+					padding: 0
+				}),
+			active = document.activeElement;
+
+		element.wrap(wrapper);
+
+		// Fixes #7595 - Elements lose focus when wrapped.
+		if ( element[ 0 ] === active || $.contains( element[ 0 ], active ) ) {
+			$( active ).focus();
+		}
+		
+		wrapper = element.parent(); //Hotfix for jQuery 1.4 since some change in wrap() seems to actually loose the reference to the wrapped element
+
+		// transfer positioning properties to the wrapper
+		if (element.css('position') == 'static') {
+			wrapper.css({ position: 'relative' });
+			element.css({ position: 'relative' });
+		} else {
+			$.extend(props, {
+				position: element.css('position'),
+				zIndex: element.css('z-index')
+			});
+			$.each(['top', 'left', 'bottom', 'right'], function(i, pos) {
+				props[pos] = element.css(pos);
+				if (isNaN(parseInt(props[pos], 10))) {
+					props[pos] = 'auto';
+				}
+			});
+			element.css({position: 'relative', top: 0, left: 0, right: 'auto', bottom: 'auto' });
+		}
+
+		return wrapper.css(props).show();
+	},
+
+	removeWrapper: function(element) {
+		var parent,
+			active = document.activeElement;
+		
+		if (element.parent().is('.ui-effects-wrapper')) {
+			parent = element.parent().replaceWith(element);
+			// Fixes #7595 - Elements lose focus when wrapped.
+			if ( element[ 0 ] === active || $.contains( element[ 0 ], active ) ) {
+				$( active ).focus();
+			}
+			return parent;
+		}
+			
+		return element;
+	},
+
+	setTransition: function(element, list, factor, value) {
+		value = value || {};
+		$.each(list, function(i, x){
+			unit = element.cssUnit(x);
+			if (unit[0] > 0) value[x] = unit[0] * factor + unit[1];
+		});
+		return value;
+	}
+});
+
+
+function _normalizeArguments(effect, options, speed, callback) {
+	// shift params for method overloading
+	if (typeof effect == 'object') {
+		callback = options;
+		speed = null;
+		options = effect;
+		effect = options.effect;
+	}
+	if ($.isFunction(options)) {
+		callback = options;
+		speed = null;
+		options = {};
+	}
+        if (typeof options == 'number' || $.fx.speeds[options]) {
+		callback = speed;
+		speed = options;
+		options = {};
+	}
+	if ($.isFunction(speed)) {
+		callback = speed;
+		speed = null;
+	}
+
+	options = options || {};
+
+	speed = speed || options.duration;
+	speed = $.fx.off ? 0 : typeof speed == 'number'
+		? speed : speed in $.fx.speeds ? $.fx.speeds[speed] : $.fx.speeds._default;
+
+	callback = callback || options.complete;
+
+	return [effect, options, speed, callback];
+}
+
+function standardSpeed( speed ) {
+	// valid standard speeds
+	if ( !speed || typeof speed === "number" || $.fx.speeds[ speed ] ) {
+		return true;
+	}
+	
+	// invalid strings - treat as "normal" speed
+	if ( typeof speed === "string" && !$.effects[ speed ] ) {
+		return true;
+	}
+	
+	return false;
+}
+
+$.fn.extend({
+	effect: function(effect, options, speed, callback) {
+		var args = _normalizeArguments.apply(this, arguments),
+			// TODO: make effects take actual parameters instead of a hash
+			args2 = {
+				options: args[1],
+				duration: args[2],
+				callback: args[3]
+			},
+			mode = args2.options.mode,
+			effectMethod = $.effects[effect];
+		
+		if ( $.fx.off || !effectMethod ) {
+			// delegate to the original method (e.g., .show()) if possible
+			if ( mode ) {
+				return this[ mode ]( args2.duration, args2.callback );
+			} else {
+				return this.each(function() {
+					if ( args2.callback ) {
+						args2.callback.call( this );
+					}
+				});
+			}
+		}
+		
+		return effectMethod.call(this, args2);
+	},
+
+	_show: $.fn.show,
+	show: function(speed) {
+		if ( standardSpeed( speed ) ) {
+			return this._show.apply(this, arguments);
+		} else {
+			var args = _normalizeArguments.apply(this, arguments);
+			args[1].mode = 'show';
+			return this.effect.apply(this, args);
+		}
+	},
+
+	_hide: $.fn.hide,
+	hide: function(speed) {
+		if ( standardSpeed( speed ) ) {
+			return this._hide.apply(this, arguments);
+		} else {
+			var args = _normalizeArguments.apply(this, arguments);
+			args[1].mode = 'hide';
+			return this.effect.apply(this, args);
+		}
+	},
+
+	// jQuery core overloads toggle and creates _toggle
+	__toggle: $.fn.toggle,
+	toggle: function(speed) {
+		if ( standardSpeed( speed ) || typeof speed === "boolean" || $.isFunction( speed ) ) {
+			return this.__toggle.apply(this, arguments);
+		} else {
+			var args = _normalizeArguments.apply(this, arguments);
+			args[1].mode = 'toggle';
+			return this.effect.apply(this, args);
+		}
+	},
+
+	// helper functions
+	cssUnit: function(key) {
+		var style = this.css(key), val = [];
+		$.each( ['em','px','%','pt'], function(i, unit){
+			if(style.indexOf(unit) > 0)
+				val = [parseFloat(style), unit];
+		});
+		return val;
+	}
+});
+
+
+
+/******************************************************************************/
+/*********************************** EASING ***********************************/
+/******************************************************************************/
+
+/*
+ * jQuery Easing v1.3 - http://gsgd.co.uk/sandbox/jquery/easing/
+ *
+ * Uses the built in easing capabilities added In jQuery 1.1
+ * to offer multiple easing options
+ *
+ * TERMS OF USE - jQuery Easing
+ *
+ * Open source under the BSD License.
+ *
+ * Copyright 2008 George McGinley Smith
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this list of
+ * conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice, this list
+ * of conditions and the following disclaimer in the documentation and/or other materials
+ * provided with the distribution.
+ *
+ * Neither the name of the author nor the names of contributors may be used to endorse
+ * or promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+*/
+
+// t: current time, b: begInnIng value, c: change In value, d: duration
+$.easing.jswing = $.easing.swing;
+
+$.extend($.easing,
+{
+	def: 'easeOutQuad',
+	swing: function (x, t, b, c, d) {
+		//alert($.easing.default);
+		return $.easing[$.easing.def](x, t, b, c, d);
+	},
+	easeInQuad: function (x, t, b, c, d) {
+		return c*(t/=d)*t + b;
+	},
+	easeOutQuad: function (x, t, b, c, d) {
+		return -c *(t/=d)*(t-2) + b;
+	},
+	easeInOutQuad: function (x, t, b, c, d) {
+		if ((t/=d/2) < 1) return c/2*t*t + b;
+		return -c/2 * ((--t)*(t-2) - 1) + b;
+	},
+	easeInCubic: function (x, t, b, c, d) {
+		return c*(t/=d)*t*t + b;
+	},
+	easeOutCubic: function (x, t, b, c, d) {
+		return c*((t=t/d-1)*t*t + 1) + b;
+	},
+	easeInOutCubic: function (x, t, b, c, d) {
+		if ((t/=d/2) < 1) return c/2*t*t*t + b;
+		return c/2*((t-=2)*t*t + 2) + b;
+	},
+	easeInQuart: function (x, t, b, c, d) {
+		return c*(t/=d)*t*t*t + b;
+	},
+	easeOutQuart: function (x, t, b, c, d) {
+		return -c * ((t=t/d-1)*t*t*t - 1) + b;
+	},
+	easeInOutQuart: function (x, t, b, c, d) {
+		if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+		return -c/2 * ((t-=2)*t*t*t - 2) + b;
+	},
+	easeInQuint: function (x, t, b, c, d) {
+		return c*(t/=d)*t*t*t*t + b;
+	},
+	easeOutQuint: function (x, t, b, c, d) {
+		return c*((t=t/d-1)*t*t*t*t + 1) + b;
+	},
+	easeInOutQuint: function (x, t, b, c, d) {
+		if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+		return c/2*((t-=2)*t*t*t*t + 2) + b;
+	},
+	easeInSine: function (x, t, b, c, d) {
+		return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+	},
+	easeOutSine: function (x, t, b, c, d) {
+		return c * Math.sin(t/d * (Math.PI/2)) + b;
+	},
+	easeInOutSine: function (x, t, b, c, d) {
+		return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+	},
+	easeInExpo: function (x, t, b, c, d) {
+		return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+	},
+	easeOutExpo: function (x, t, b, c, d) {
+		return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+	},
+	easeInOutExpo: function (x, t, b, c, d) {
+		if (t==0) return b;
+		if (t==d) return b+c;
+		if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+		return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+	},
+	easeInCirc: function (x, t, b, c, d) {
+		return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+	},
+	easeOutCirc: function (x, t, b, c, d) {
+		return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+	},
+	easeInOutCirc: function (x, t, b, c, d) {
+		if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+		return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+	},
+	easeInElastic: function (x, t, b, c, d) {
+		var s=1.70158;var p=0;var a=c;
+		if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+		if (a < Math.abs(c)) { a=c; var s=p/4; }
+		else var s = p/(2*Math.PI) * Math.asin (c/a);
+		return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+	},
+	easeOutElastic: function (x, t, b, c, d) {
+		var s=1.70158;var p=0;var a=c;
+		if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+		if (a < Math.abs(c)) { a=c; var s=p/4; }
+		else var s = p/(2*Math.PI) * Math.asin (c/a);
+		return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
+	},
+	easeInOutElastic: function (x, t, b, c, d) {
+		var s=1.70158;var p=0;var a=c;
+		if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+		if (a < Math.abs(c)) { a=c; var s=p/4; }
+		else var s = p/(2*Math.PI) * Math.asin (c/a);
+		if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+		return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+	},
+	easeInBack: function (x, t, b, c, d, s) {
+		if (s == undefined) s = 1.70158;
+		return c*(t/=d)*t*((s+1)*t - s) + b;
+	},
+	easeOutBack: function (x, t, b, c, d, s) {
+		if (s == undefined) s = 1.70158;
+		return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+	},
+	easeInOutBack: function (x, t, b, c, d, s) {
+		if (s == undefined) s = 1.70158;
+		if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+		return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+	},
+	easeInBounce: function (x, t, b, c, d) {
+		return c - $.easing.easeOutBounce (x, d-t, 0, c, d) + b;
+	},
+	easeOutBounce: function (x, t, b, c, d) {
+		if ((t/=d) < (1/2.75)) {
+			return c*(7.5625*t*t) + b;
+		} else if (t < (2/2.75)) {
+			return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+		} else if (t < (2.5/2.75)) {
+			return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+		} else {
+			return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+		}
+	},
+	easeInOutBounce: function (x, t, b, c, d) {
+		if (t < d/2) return $.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
+		return $.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
+	}
+});
+
+/*
+ *
+ * TERMS OF USE - EASING EQUATIONS
+ *
+ * Open source under the BSD License.
+ *
+ * Copyright 2001 Robert Penner
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this list of
+ * conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice, this list
+ * of conditions and the following disclaimer in the documentation and/or other materials
+ * provided with the distribution.
+ *
+ * Neither the name of the author nor the names of contributors may be used to endorse
+ * or promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+})(jQuery);
+/*
+ * jQuery UI Effects Fade 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Effects/Fade
+ *
+ * Depends:
+ *	jquery.effects.core.js
+ */
+(function( $, undefined ) {
+
+$.effects.fade = function(o) {
+	return this.queue(function() {
+		var elem = $(this),
+			mode = $.effects.setMode(elem, o.options.mode || 'hide');
+
+		elem.animate({ opacity: mode }, {
+			queue: false,
+			duration: o.duration,
+			easing: o.options.easing,
+			complete: function() {
+				(o.callback && o.callback.apply(this, arguments));
+				elem.dequeue();
+			}
+		});
+	});
+};
+
+})(jQuery);
+/*
+ * jQuery UI Effects Highlight 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Effects/Highlight
+ *
+ * Depends:
+ *	jquery.effects.core.js
+ */
+(function( $, undefined ) {
+
+$.effects.highlight = function(o) {
+	return this.queue(function() {
+		var elem = $(this),
+			props = ['backgroundImage', 'backgroundColor', 'opacity'],
+			mode = $.effects.setMode(elem, o.options.mode || 'show'),
+			animation = {
+				backgroundColor: elem.css('backgroundColor')
+			};
+
+		if (mode == 'hide') {
+			animation.opacity = 0;
+		}
+
+		$.effects.save(elem, props);
+		elem
+			.show()
+			.css({
+				backgroundImage: 'none',
+				backgroundColor: o.options.color || '#ffff99'
+			})
+			.animate(animation, {
+				queue: false,
+				duration: o.duration,
+				easing: o.options.easing,
+				complete: function() {
+					(mode == 'hide' && elem.hide());
+					$.effects.restore(elem, props);
+					(mode == 'show' && !$.support.opacity && this.style.removeAttribute('filter'));
+					(o.callback && o.callback.apply(this, arguments));
+					elem.dequeue();
+				}
+			});
+	});
+};
+
+})(jQuery);
+/*
+ * jQuery UI Effects Slide 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Effects/Slide
+ *
+ * Depends:
+ *	jquery.effects.core.js
+ */
+(function( $, undefined ) {
+
+$.effects.slide = function(o) {
+
+	return this.queue(function() {
+
+		// Create element
+		var el = $(this), props = ['position','top','bottom','left','right'];
+
+		// Set options
+		var mode = $.effects.setMode(el, o.options.mode || 'show'); // Set Mode
+		var direction = o.options.direction || 'left'; // Default Direction
+
+		// Adjust
+		$.effects.save(el, props); el.show(); // Save & Show
+		$.effects.createWrapper(el).css({overflow:'hidden'}); // Create Wrapper
+		var ref = (direction == 'up' || direction == 'down') ? 'top' : 'left';
+		var motion = (direction == 'up' || direction == 'left') ? 'pos' : 'neg';
+		var distance = o.options.distance || (ref == 'top' ? el.outerHeight({margin:true}) : el.outerWidth({margin:true}));
+		if (mode == 'show') el.css(ref, motion == 'pos' ? (isNaN(distance) ? "-" + distance : -distance) : distance); // Shift
+
+		// Animation
+		var animation = {};
+		animation[ref] = (mode == 'show' ? (motion == 'pos' ? '+=' : '-=') : (motion == 'pos' ? '-=' : '+=')) + distance;
+
+		// Animate
+		el.animate(animation, { queue: false, duration: o.duration, easing: o.options.easing, complete: function() {
+			if(mode == 'hide') el.hide(); // Hide
+			$.effects.restore(el, props); $.effects.removeWrapper(el); // Restore
+			if(o.callback) o.callback.apply(this, arguments); // Callback
+			el.dequeue();
+		}});
+
+	});
+
+};
+
+})(jQuery);
+/** @file
+ *
+ *  Provide a sprite-based checkbox.
+ *
+ *  Requires:
+ *      ui.core.js
+ *      ui.widget.js
+ */
+/*jslint nomen:false, laxbreak:true, white:false, onevar:false */
+/*global jQuery:false */
+(function($) {
+
+$.widget("ui.checkbox", {
+    version: "0.1.1",
+
+    /* Remove the strange ui.widget._trigger() class name prefix for events
+     * so we can bind to events like 'change' instead of 'checkboxchange'.
+     *
+     * If you need to know which widget the event was triggered from, either
+     * bind directly to the widget or look at the event object.
+     */
+    widgetEventPrefix:    '',
+
+    options: {
+        // Defaults
+        css:            'checkbox',         // General CSS class
+        cssOn:          'on',               // CSS class when    checked
+        cssOff:         'off',              // CSS class when un-checked
+        titleOn:        'click to turn off',// Title when    checked
+        titleOff:       'click to turn on', // Title when un-checked
+
+        useElTitle:     true,               // Include the title of the source
+                                            // element (or it's associated
+                                            // label) in the title of this
+                                            // checkbox.
+
+        hideLabel:      false               // Hide the associated label?  If
+                                            // not, clicking on the title will
+                                            // be the same as clicking on the
+                                            // checkbox.
+    },
+
+    /** @brief  Initialize a new instance.
+     *
+     *  Valid options are:
+     *      css             General space-separated CSS class(es) for the
+     *                      checkbox [ 'checkbox' ];
+     *      cssOn           Space-separated CSS class(es) when checked
+     *                      [ 'on' ];
+     *      cssOff          Space-separated CSS class(es) when un-checked
+     *                      [ 'off' ];
+     *      titleOn         Title when checked
+     *                      [ 'click to turn off' ];
+     *      titleOff        Title when un-checked
+     *                      [ 'click to turn on' ];
+     *
+     *      useElTitle      Include the title of the source element (or it's
+     *                      associated label) in the title of this checkbox (as
+     *                      a prefix to 'titleOn' or 'titleOff')
+     *                      [ true ];
+     *
+     *      hideLabel       Hide the associated label?  If not, clicking on the
+     *                      title will be the same as clicking on the checkbox
+     *                      [ false ].
+     *
+     *  @triggers:
+     *      'enabled'               when element is enabled;
+     *      'disabled'              when element is disabled;
+     *      'change' / 'checked'    when element is checked;
+     *      'change' / 'unchecked'  when element is unchecked.
+     */
+    _create: function() {
+        var self    = this;
+        var opts    = this.options;
+
+        opts.enabled = (opts.enabled === undefined
+                            ? (self.element.attr('disabled') ? false : true)
+                            : opts.enabled);
+        opts.checked = (opts.checked === undefined
+                            ? (self.element.attr('checked')  ? true  : false)
+                            : opts.checked);
+        opts.title   = '';
+
+        // Remember the original value
+        self.element.data('value.uicheckbox', opts.checked);
+
+        var name     = self.element.attr('name');
+        var id       = self.element.attr('id');
+
+        // Try to locate the associated label
+        self.$label  = false;
+
+        if (id)
+        {
+            self.$label = $('label[for='+ id +']');
+        }
+        if ( ((! self.$label) || (self.$label.length < 1)) && name)
+        {
+            self.$label = $('label[for='+ name +']');
+        }
+
+        if (opts.useElTitle === true)
+        {
+            opts.title = self.element.attr('title');
+            if ( ((! opts.title) || (opts.title.length < 1)) &&
+                 (self.$label.length > 0) )
+            {
+                // The element has no 'title', use the text of the label.
+                opts.title = self.$label.text();
+            }
+        }
+
+        var title   = opts.title
+                    + (opts.checked
+                            ? opts.titleOn
+                            : opts.titleOff);
+
+        // Create a new element that will be placed just after the current
+        self.$el    = $('<div />')
+                        .addClass(opts.css)
+                        .addClass('ui-state-default');
+
+        var iconCss = [ (opts.enabled ? ''          : 'disabled'),
+                        (opts.checked ? opts.cssOn  : opts.cssOff) ];
+        self.$icon  = $('<span />')
+                        .addClass( iconCss.join(' ') );
+        if (title && (title.length > 0))
+        {
+            self.$icon.attr('title', title);
+        }
+
+        self.$icon.appendTo( self.$el );
+
+        // Insert the new element after the existing and remove the existing.
+        self.$el.insertAfter(self.element);
+
+        // Hide the original element.
+        self.element.hide();
+
+        if (self.$label && (self.$label.length > 0))
+        {
+            // We have a label for this field.
+            if (opts.hideLabel === true)
+            {
+                // Hide it.
+                self.$label.hide();
+            }
+            else
+            {
+                // Treat a click on the label as a click on the item.
+                self.$label.click(function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    self.$el.trigger('click',[e]);
+                    return false;
+                });
+            }
+        }
+
+        // Interaction events
+        self._bindEvents();
+    },
+
+    /************************
+     * Private methods
+     *
+     */
+    _bindEvents: function() {
+        var self    = this;
+
+        var _mouseenter = function(e) {
+            if (self.options.enabled === true)
+            {
+                self.$el.addClass('ui-state-hover');
+            }
+        };
+
+        var _mouseleave = function(e) {
+            self.$el.removeClass('ui-state-hover');
+        };
+
+        var _focus      = function(e) {
+            if (self.options.enabled === true)
+            {
+                self.$el.addClass('ui-state-focus');
+            }
+        };
+
+        var _blur       = function(e) {
+            self.$el.removeClass('ui-state-focus');
+        };
+
+        var _click      = function(e) {
+            self.toggle();
+        };
+
+        self.$el.bind('mouseenter.uicheckbox', _mouseenter)
+                .bind('mouseleave.uicheckbox', _mouseleave)
+                .bind('focus.uicheckbox',      _focus)
+                .bind('blur.uicheckbox',       _blur)
+                .bind('click.uicheckbox',      _click);
+    },
+
+    /************************
+     * Public methods
+     *
+     */
+    isChecked: function() {
+        return this.options.checked;
+    },
+    isEnabled: function() {
+        return this.options.enabled;
+    },
+    val: function() {
+        return (this.isEnabled() && this.isChecked()
+                    ? this.element.val()
+                    : null);
+    },
+
+    enable: function()
+    {
+        if (! this.options.enabled)
+        {
+            this.options.enabled = true;
+            this.$el.removeClass('ui-state-disabled');
+
+            this._trigger('enabled');
+        }
+    },
+
+    disable: function()
+    {
+        if (this.options.enabled)
+        {
+            this.options.enabled = false;
+            this.$el.addClass('ui-state-disabled');
+
+            this._trigger('disabled');
+        }
+    },
+
+    toggle: function()
+    {
+        if (this.options.checked)
+        {
+            this.uncheck();
+        }
+        else
+        {
+            this.check();
+        }
+    },
+
+    check: function()
+    {
+        //if (this.options.enabled && (! this.options.checked))
+        if (! this.options.checked)
+        {
+            this.options.checked = true;
+
+            this.$icon
+                    .removeClass(this.options.cssOff)
+                    .addClass(this.options.cssOn)
+                    .attr('title', this.options.title + this.options.titleOn);
+
+            //this.element.click();
+            this._trigger('change', null, 'check');
+        }
+    },
+
+    uncheck: function()
+    {
+        //if (this.options.enabled && this.options.checked)
+        if (this.options.checked)
+        {
+            this.options.checked = false;
+
+            this.$icon
+                    .removeClass(this.options.cssOn)
+                    .addClass(this.options.cssOff)
+                    .attr('title', this.options.title + this.options.titleOff);
+
+            //this.element.click();
+            this._trigger('change', null, 'uncheck');
+        }
+    },
+
+    /** @brief  Reset the input to its original (creation or last direct set)
+     *          value.
+     */
+    reset: function()
+    {
+        // Remember the original value
+        if (this.element.data('value.uicheckbox'))
+        {
+            this.check();
+        }
+        else
+        {
+            this.uncheck();
+        }
+    },
+
+    /** @brief  Has the value of this input changed from its original?
+     *
+     *  @return true | false
+     */
+    hasChanged: function()
+    {
+        return (this.options.checked !== this.element.data('value.uicheckbox'));
+    },
+
+    destroy: function() {
+        if (this.$label)
+        {
+            this.$label.show();
+        }
+
+        this.$el.unbind('.uicheckbox');
+
+        this.$el.remove();
+
+        this.element.show();
+    }
+});
+
+
+}(jQuery));
 /** @file
  *
  *  A simple jQuery widget to present an article along with summarization
@@ -15806,7 +19005,8 @@ rangy.createModule("CssClassApplier", function(api, module) {
  *      jquery.js
  */
 (function($) {
-var app         = window.app = (window.app || {Model:{}, View:{}});
+var app = window.app = (this.app || {Model:{},      View:{},
+                                     Controller:{}, Helper:{}});
 
 // Application-wide defaults
 app = _.extend(app, {
@@ -16235,7 +19435,8 @@ $.Summary = Backbone.View.extend({
  *      jquery.js
  */
 (function($) {
-var app         = window.app = (window.app || {Model:{}, View:{}});
+var app = window.app = (this.app || {Model:{},      View:{},
+                                     Controller:{}, Helper:{}});
 
 // Application-wide defaults
 app = _.extend(app, {
