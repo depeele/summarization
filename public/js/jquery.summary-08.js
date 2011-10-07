@@ -10,7 +10,8 @@
  *      jquery.js
  */
 (function($) {
-var app         = window.app = (window.app || {Model:{}, View:{}});
+var app = window.app = (this.app || {Model:{},      View:{},
+                                     Controller:{}, Helper:{}});
 
 // Application-wide defaults
 app = _.extend(app, {

@@ -187,6 +187,12 @@ a {
       border-top:     1px solid @colorBackground;
       border-bottom:  1px solid @colorBackground;
 
+       /* Make it unselectable */
+       -moz-user-select:   none;
+       -webkit-user-select:none;
+       -khtml-user-select: none;
+       user-select:        none;
+
       p {
         display:      block;
         position:     relative;
@@ -200,6 +206,12 @@ a {
         //border-right: 1px solid @colorBackground;
   
         cursor:       pointer;
+
+        /* Make it unselectable */
+        -moz-user-select:   none;
+        -webkit-user-select:none;
+        -khtml-user-select: none;
+        user-select:        none;
 
         .controls {
           position:   absolute;
@@ -227,6 +239,18 @@ a {
           font-size:    1px;
           color:        @colorSentenceHidden;
 
+          /* Make it unselectable -- only expansions should be selectable*/
+          -moz-user-select:   none;
+          -webkit-user-select:none;
+          -khtml-user-select: none;
+          user-select:        none;
+
+          .overlay {
+            position:     absolute;
+            top:          0;
+            left:         0;
+          }
+
           .rank {
             position:     absolute;
             top:          -0.2em;
@@ -248,19 +272,19 @@ a {
             }
           }
 
-          .text {
-            position:   relative;
-            border:     none;
-          }
+          .content {}
         }
 
         .expanded,
         .expansion {
           font-size:    1em;
           line-height:  1.2em;
-          .content {
-            background-color: #f0f0f0;
-          }
+
+          /* Make it selectable */
+          -moz-user-select:   text;
+          -webkit-user-select:text;
+          -khtml-user-select: text;
+          user-select:        text;
         }
         .expanded {
           cursor:       text;

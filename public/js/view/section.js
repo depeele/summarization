@@ -10,7 +10,8 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app             = this.app = (this.app || {Model:{}, View:{}});
+    var app             = this.app = (this.app || {Model:{},      View:{},
+                                                   Controller:{}, Helper:{}});
     var $               = jQuery.noConflict();
     app.View.Section    = Backbone.View.extend({
         tagName:    'section',
@@ -29,11 +30,13 @@
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
 
+            self.$paragraphs = self.$el.find('.paragraphs:first');
+
             // Append a view of each paragraph
             self.model.get('paragraphs').each(function(model) {
                 var view = new app.View.Paragraph({model:model});
 
-                self.$el.append( view.render().el );
+                self.$paragraphs.append( view.render().el );
             });
 
             return self;

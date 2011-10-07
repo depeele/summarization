@@ -64,12 +64,22 @@ if (development === true)
         'model.section':{ src: 'js/model/section.js', req:['model.paragraph']},
         'model.doc':    { src: 'js/model/doc.js',     req:['model.section']},
 
+        // Backbone helpers
+        'helper.click': { src: 'js/helper/click.js',
+                          req:['backbone', 'jquery']},
+
         // Backbone views
         'view.sentence':{ src: 'js/view/sentence.js',
-                          req:['backbone', 'model.sentence', 'jquery']},
+                          req:['backbone',
+                               'model.sentence',
+                               'helper.click',
+                               'jquery']},
         'view.paragraph':
                         { src: 'js/view/paragraph.js',
-                          req:['model.paragraph', 'view.sentence', 'jquery']},
+                          req:['model.paragraph',
+                               'view.sentence',
+                               'helper.click',
+                               'jquery']},
         'view.section': { src: 'js/view/section.js',
                           req:['model.section', 'view.paragraph', 'jquery']},
         'view.doc':     { src: 'js/view/doc.js',
@@ -227,20 +237,21 @@ Req('preloadImages', function() {
     <% }); %>
    </div>
   </header>
-  <!-- sections -->
+  <div class='sections'></div>
  </script>
 
  <script id='template-section' type='text/template'>
-  <!-- paragraphs -->
+  <div class='paragraphs'></div>
  </script>
 
  <script id='template-paragraph' type='text/template'>
   <span class="controls">&para;</span>
-  <!-- sentences -->
+  <div class='sentences'></div>
  </script>
 
- <script id='template-sentence' type='text/template'>
-   <span class="rank"><%= Math.floor(rank * 100) %></span><%= content %>
- </script>
+ <script id='template-sentence' type='text/template'
+  ><span class="overlay"></span
+  ><span class="rank"><%= Math.floor(rank * 100) %></span
+  ><span class="content"><%= content %></span></script>
  <!-- Templates } -->
 </html>

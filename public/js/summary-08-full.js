@@ -2226,25 +2226,55 @@ Backbone.sync = function(method, model, options, error) {
             var tModule = require('./comment.js');
             _.extend(app, tModule.app);
         }
+
+        if (!app.Model.Position)
+        {
+            var tModule = require('./position.js');
+            _.extend(app, tModule.app);
+        }
     }
 
     app.Model.Note  = Backbone.Model.extend({
         defaults: {
             id:         null,
-            // Position within the document to highlight for this note
-            highlight:  {
-                start:  null,
-                end:    null
+
+            /* Position within the document of the content highlight associated
+             * with this note.
+             */
+            position:   {
+                start:  {
+                    sentence:   null,   /* The app.Model.Sentence instance or
+                                         * identifier.
+                                         */
+                    relativePos:null    /* Serialized position rooted in the
+                                         * identified sentence.
+                                         */
+                },
+                end:    {
+                    sentence:   null,   /* The app.Model.Sentence instance or
+                                         * identifier.
+                                         */
+                    relativePos:null    /* Serialized position rooted in the
+                                         * identified sentence.
+                                         */
+                }
             },
+
             // Comments associated with this note
             comments:   null
         },
 
         initialize: function(spec) {
             var comments    = this.get('comments');
-            if ( ! (comments instanceof app.Model.Comments) )
+            var position    = this.get('position');
+            if ((! comments) || ! (comments instanceof app.Model.Comments) )
             {
-                this.set({'comments': new app.Model.Comments(comments)});
+                this.set({comments: new app.Model.Comments(comments)});
+            }
+
+            if ((! position) || ! (position instanceof app.Model.Position) )
+            {
+                this.set({position: new app.Model.Position(position)});
             }
         }
     });
@@ -2416,6 +2446,11 @@ Backbone.sync = function(method, model, options, error) {
             var tModule = require('./section.js');
             _.extend(app, tModule.app);
         }
+        if (!app.Model.Notes)
+        {
+            var tModule = require('./note.js');
+            _.extend(app, tModule.app);
+        }
     }
 
     app.Model.Doc   = Backbone.Model.extend({
@@ -2428,25 +2463,42 @@ Backbone.sync = function(method, model, options, error) {
             published:  null,
             rank:       0.0,
             keywords:   null,
-            sections:   null
+            sections:   null,
+            notes:      null
         },
 
         initialize: function(spec) {
             var published   = this.get('published');
             var sections    = this.get('sections');
-            if ( ! (published instanceof Date) )
+            var notes       = this.get('notes');
+            if ((! published) || ! (published instanceof Date) )
             {
                 published = (published
                             ? new Date(published)
                             : new Date());
 
-                this.set({'published': published});
+                this.set({published: published});
             }
 
-            if (! (sections instanceof app.Model.Sections))
+            if ((! sections) || ! (sections instanceof app.Model.Sections))
             {
-                this.set({'sections': new app.Model.Sections(sections)});
+                this.set({sections: new app.Model.Sections(sections)});
             }
+
+            if ((! notes) || ! (notes instanceof app.Model.Notes))
+            {
+                this.set({notes: new app.Model.Notes(notes)});
+            }
+        },
+
+        /** @brief  Add a new note to this document.
+         *  @param  position    An app.Model.Position instance representing the
+         *                      position within the document to associate this
+         *                      note with;
+         */
+        addNote: function(position) {
+            var notes   = this.get('notes');
+            notes.add( {position:position} );
         }
     });
 

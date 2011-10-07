@@ -11,12 +11,20 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app             = this.app = (this.app || {Model:{}, View:{}});
+    var app             = this.app = (this.app || {Model:{},      View:{},
+                                                   Controller:{}, Helper:{}});
     var $               = jQuery.noConflict();
-    app.View.Sentence   = Backbone.View.extend({
+
+    // Mix the click helper into this view
+    var viewPrototype   = $.extend(true, {}, app.Helper.click, {
         tagName:    'span',
         className:  'sentence',
         template:   _.template($('#template-sentence').html()),
+
+        /* Set the name of the click event that will be fired by
+         * app.Helper.click
+         */
+        clickEvent: 'sentence:click',
 
         events: {
             'sentence:expand':              'expand',
@@ -26,7 +34,7 @@
             'sentence:expansionExpand':     'expansionExpand',
             'sentence:expansionCollapse':   'expansionCollapse',
             'sentence:expansionToggle':     'expansionToggle',
-            'click':                        'expansionToggle'
+            'sentence:click':               'expansionToggle'
         },
 
         initialize: function() {
@@ -132,5 +140,7 @@
             else                                { this.expansionExpand(e); }
         }
     });
+
+    app.View.Sentence   = Backbone.View.extend( viewPrototype );
 
  }).call(this);
