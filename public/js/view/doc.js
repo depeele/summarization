@@ -51,6 +51,12 @@
 
             self.$s = self.$el.find('.sentence');
 
+            // Give each sentence an indexed-based id
+            self.$s.each(function(idex) {
+                var $s  = $(this);
+                $s.attr('id', 'sentence-'+ idex);
+            });
+
             self.model.get('notes').each(function(model) {
                 // :TODO: Render this note
             });
@@ -68,8 +74,7 @@
             var $end        = $(range.endContainer);
             var $startS     = $start.parents('.sentence');
             var $endS       = $end.parents('.sentence');
-            var $selectable = [];
-            var ranges      = [];
+            var ranges      = new app.Model.Ranges();
 
             if (($startS.length > 0) || ($endS.length > 0))
             {
@@ -100,10 +105,11 @@
                  * Determine the contiguous sentences involved ending the range
                  * at the first un-expanded sentence.
                  */
-                var end             = self.$s.index( $endS ),
+                var end         = self.$s.index( $endS ),
+                    $selectable = [],
                     $s;
                 for ( var idex = self.$s.index( $startS );
-                        (idex <= end) && ($s = $(self.$s.get(idex)) );
+                        (idex <= end) && ($s = self.$s.eq(idex) );
                             idex++)
                 {
                     if ($s.hasClass('expanded') || $s.hasClass('expansion'))
@@ -156,35 +162,31 @@
                     $.each($selectable, function(idex, s) {
                         var $s          = $(s);
                         var $content    = $s.find('.content');
-                        var sRange      = range.cloneRange();
+                        var sRange      = new app.Model.Range({
+                                            sentenceId: $s.attr('id')
+                                          });
 
                         if (idex === 0)
                         {
-                            sRange.setStart($content[0].childNodes[0],
-                                            range.startOffset);
+                            sRange.setStart(range.startOffset);
 
                             /* Careful!  If there is only one sentence, don't
                              * loose the ending offset.
                              */
-                            sRange.setEnd($content[0].childNodes[0],
-                                          (idex >= (last - 1)
+                            sRange.setEnd((idex >= (last - 1)
                                             ? range.endOffset
                                             : $content.text().length) );
                         }
                         else if (idex >= (last - 1))
                         {
-                            sRange.setStart($content[0].childNodes[0], 0);
-                            sRange.setEnd(  $content[0].childNodes[0],
-                                            range.endOffset);
+                            sRange.setOffsets(0, range.endOffset);
                         }
                         else
                         {
-                            sRange.setStart($content[0].childNodes[0], 0);
-                            sRange.setEnd(  $content[0].childNodes[0],
-                                            $content.text().length);
+                            sRange.setOffsets(0, $content.text().length);
                         }
 
-                        ranges.push(sRange);
+                        ranges.add(sRange);
                     });
                 }
                 else
@@ -199,23 +201,22 @@
             else if (($startS.length > 0) && ($endS.length > 0))
             {
                 // Use the simple range for this single sentence.
-                $selectable.push($startS);
-                ranges.push(range);
+                ranges.add({
+                    sentenceId: $startS.attr('id'),
+                    offsetStart:range.startOffset,
+                    offsetEnd:  range.endOffset
+                });
             }
 
-            if ((ranges.length            === 1)                        &&
-                (ranges[0].startContainer === ranges[0].endContainer)   &&
-                (ranges[0].startOffset    === ranges[0].endOffset))
+            if ( (ranges.length === 1) && ranges.at(0).isEmpty() )
             {
                 // There is no sentence selection
-                $s = ranges = [];
+                ranges.remove( ranges.at(0) );
             }
 
             // Remember the selection information
-            self.selection = {
-                $s:     $selectable,
-                ranges: ranges
-            };
+            if (self.ranges)    { delete self.ranges; }
+            self.ranges = ranges;
 
             /*
             console.log('view.doc::setSelection(): '

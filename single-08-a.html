@@ -45,17 +45,19 @@ if (development === true)
                 };
             }
         },
-        'utils':        { src: 'js/jquery.utils.js',    req:['jquery']},
+        'utils':        { src: 'js/jquery.utils.js',  req:['jquery']},
 
         'backbone':     { src: 'js/backbone.js',
-                          req:['underscore', 'jquery']},
+                          req: ['underscore', 'jquery']},
         'backbone.localStorage':
                         { src: 'js/backbone.js',      req:['backbone']},
 
         // Backbone models
         'model.user':   { src: 'js/model/user.js',    req:['backbone']},
         'model.comment':{ src: 'js/model/comment.js', req:['backbone']},
-        'model.note':   { src: 'js/model/note.js',    req:['model.comment']},
+        'model.range':  { src: 'js/model/range.js',   req:['backbone']},
+        'model.note':   { src: 'js/model/note.js',
+                          req: [ 'model.comment', 'model.range' ]},
         'model.sentence':
                         { src: 'js/model/sentence.js',req:['backbone']},
         'model.paragraph':
@@ -66,24 +68,24 @@ if (development === true)
 
         // Backbone helpers
         'helper.click': { src: 'js/helper/click.js',
-                          req:['backbone', 'jquery']},
+                          req: ['backbone', 'jquery']},
 
         // Backbone views
         'view.sentence':{ src: 'js/view/sentence.js',
-                          req:['backbone',
-                               'model.sentence',
-                               'helper.click',
-                               'jquery']},
+                          req: ['backbone',
+                                'model.sentence',
+                                'helper.click',
+                                'jquery']},
         'view.paragraph':
                         { src: 'js/view/paragraph.js',
-                          req:['model.paragraph',
-                               'view.sentence',
-                               'helper.click',
-                               'jquery']},
+                          req: ['model.paragraph',
+                                'view.sentence',
+                                'helper.click',
+                                'jquery']},
         'view.section': { src: 'js/view/section.js',
-                          req:['model.section', 'view.paragraph', 'jquery']},
+                          req: ['model.section', 'view.paragraph', 'jquery']},
         'view.doc':     { src: 'js/view/doc.js',
-                          req:['model.doc', 'view.section', 'jquery']},
+                          req: ['model.doc', 'view.section', 'jquery']},
 
         // Rangy and plugins
         'rangy':        { src: 'js/rangy.js' },
