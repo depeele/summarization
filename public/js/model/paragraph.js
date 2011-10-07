@@ -9,8 +9,9 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -20,7 +21,7 @@
         if (!app.Model.Sentences)
         {
             var tModule = require('./sentence.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
     }
 

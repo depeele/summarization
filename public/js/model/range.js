@@ -9,8 +9,9 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -19,6 +20,7 @@
         if (!Backbone) { Backbone = require('../backbone.js'); }
     }
 
+    /** @brief  A range within a single sentence. */
     app.Model.Range = Backbone.Model.extend({
         defaults: {
             id:         null,
@@ -73,6 +75,7 @@
         }
     });
 
+    /** @brief  A collection of ranges within mutliple sentences. */
     app.Model.Ranges    = Backbone.Collection.extend({
         model:  app.Model.Range,
 

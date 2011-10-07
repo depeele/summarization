@@ -9,8 +9,9 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -20,12 +21,12 @@
         if (!app.Model.Sections)
         {
             var tModule = require('./section.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
         if (!app.Model.Notes)
         {
             var tModule = require('./note.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
     }
 
@@ -65,16 +66,6 @@
             {
                 this.set({notes: new app.Model.Notes(notes)});
             }
-        },
-
-        /** @brief  Add a new note to this document.
-         *  @param  position    An app.Model.Position instance representing the
-         *                      position within the document to associate this
-         *                      note with;
-         */
-        addNote: function(position) {
-            var notes   = this.get('notes');
-            notes.add( {position:position} );
         }
     });
 

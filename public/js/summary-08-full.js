@@ -15401,8 +15401,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var Backbone    = this.Backbone;
     if (!Backbone && (typeof require !== 'undefined'))
     {
@@ -15440,8 +15441,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -15451,7 +15453,7 @@ Backbone.sync = function(method, model, options, error) {
         if (!app.Model.User)
         {
             var tModule     = require('./user.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
     }
 
@@ -15501,8 +15503,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -15511,6 +15514,7 @@ Backbone.sync = function(method, model, options, error) {
         if (!Backbone) { Backbone = require('../backbone.js'); }
     }
 
+    /** @brief  A range within a single sentence. */
     app.Model.Range = Backbone.Model.extend({
         defaults: {
             id:         null,
@@ -15565,6 +15569,7 @@ Backbone.sync = function(method, model, options, error) {
         }
     });
 
+    /** @brief  A collection of ranges within mutliple sentences. */
     app.Model.Ranges    = Backbone.Collection.extend({
         model:  app.Model.Range,
 
@@ -15595,8 +15600,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -15606,41 +15612,20 @@ Backbone.sync = function(method, model, options, error) {
         if (!app.Model.Comments)
         {
             var tModule = require('./comment.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
 
-        if (!app.Model.Position)
+        if (!app.Model.Ranges)
         {
-            var tModule = require('./position.js');
-            _.extend(app, tModule.app);
+            var tModule = require('./range.js');
+            _.extend(app, tModule);
         }
     }
 
     app.Model.Note  = Backbone.Model.extend({
         defaults: {
             id:         null,
-
-            /* Position within the document of the content highlight associated
-             * with this note.
-             */
-            position:   {
-                start:  {
-                    sentence:   null,   /* The app.Model.Sentence instance or
-                                         * identifier.
-                                         */
-                    relativePos:null    /* Serialized position rooted in the
-                                         * identified sentence.
-                                         */
-                },
-                end:    {
-                    sentence:   null,   /* The app.Model.Sentence instance or
-                                         * identifier.
-                                         */
-                    relativePos:null    /* Serialized position rooted in the
-                                         * identified sentence.
-                                         */
-                }
-            },
+            ranges:     null,
 
             // Comments associated with this note
             comments:   null
@@ -15648,15 +15633,15 @@ Backbone.sync = function(method, model, options, error) {
 
         initialize: function(spec) {
             var comments    = this.get('comments');
-            var position    = this.get('position');
+            var ranges      = this.get('ranges');
             if ((! comments) || ! (comments instanceof app.Model.Comments) )
             {
                 this.set({comments: new app.Model.Comments(comments)});
             }
 
-            if ((! position) || ! (position instanceof app.Model.Position) )
+            if ((! ranges) || ! (ranges instanceof app.Model.Ranges) )
             {
-                this.set({position: new app.Model.Position(position)});
+                this.set({ranges: new app.Model.Ranges(ranges)});
             }
         }
     });
@@ -15679,8 +15664,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -15719,8 +15705,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -15730,7 +15717,7 @@ Backbone.sync = function(method, model, options, error) {
         if (!app.Model.Sentences)
         {
             var tModule = require('./sentence.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
     }
 
@@ -15769,8 +15756,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -15780,7 +15768,7 @@ Backbone.sync = function(method, model, options, error) {
         if (!app.Model.Paragraphs)
         {
             var tModule = require('./paragraph.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
     }
 
@@ -15819,8 +15807,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -15830,12 +15819,12 @@ Backbone.sync = function(method, model, options, error) {
         if (!app.Model.Sections)
         {
             var tModule = require('./section.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
         if (!app.Model.Notes)
         {
             var tModule = require('./note.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
     }
 
@@ -15875,16 +15864,6 @@ Backbone.sync = function(method, model, options, error) {
             {
                 this.set({notes: new app.Model.Notes(notes)});
             }
-        },
-
-        /** @brief  Add a new note to this document.
-         *  @param  position    An app.Model.Position instance representing the
-         *                      position within the document to associate this
-         *                      note with;
-         */
-        addNote: function(position) {
-            var notes   = this.get('notes');
-            notes.add( {position:position} );
         }
     });
 
@@ -16002,8 +15981,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app             = this.app = (this.app || {Model:{},      View:{},
-                                                   Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
     var $               = jQuery.noConflict();
 
     // Mix the click helper into this view
@@ -16062,7 +16042,8 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             if (! this.$el.hasClass('expanded'))
             {
-                this.$el.addClass('expanded', app.animSpeed, function() {
+                this.$el.addClass('expanded', app.Option.animSpeed,
+                                  function() {
                     self.$el.trigger('sentence:expanded');
                 });
             }
@@ -16073,7 +16054,8 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             if (this.$el.hasClass('expanded'))
             {
-                this.$el.removeClass('expanded', app.animSpeed, function() {
+                this.$el.removeClass('expanded', app.Option.animSpeed,
+                                     function() {
                     self.$el.trigger('sentence:collapsed');
                 });
             }
@@ -16095,7 +16077,8 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             if (! this.$el.hasClass('expansion'))
             {
-                this.$el.addClass('expansion', app.animSpeed, function() {
+                this.$el.addClass('expansion', app.Option.animSpeed,
+                                  function() {
                     self.$el.trigger('sentence:expansionExpanded');
                 });
 
@@ -16109,7 +16092,8 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             if (this.$el.hasClass('expansion'))
             {
-                this.$el.removeClass('expansion', app.animSpeed, function() {
+                this.$el.removeClass('expansion', app.Option.animSpeed,
+                                     function() {
                     self.$el.trigger('sentence:expansionCollapsed');
                 });
 
@@ -16148,8 +16132,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app             = this.app = (this.app || {Model:{},      View:{},
-                                                   Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
     var $               = jQuery.noConflict();
 
     // Mix the click helper into this view
@@ -16246,8 +16231,9 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app             = this.app = (this.app || {Model:{},      View:{},
-                                                   Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
     var $               = jQuery.noConflict();
     app.View.Section    = Backbone.View.extend({
         tagName:    'section',
@@ -16292,8 +16278,10 @@ Backbone.sync = function(method, model, options, error) {
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+    if (! app.Model)    { app.Model = {}; }
+
     var $           = jQuery.noConflict();
     app.View.Doc    = Backbone.View.extend({
         tagName:    'article',
@@ -16504,17 +16492,6 @@ Backbone.sync = function(method, model, options, error) {
             console.log('view.doc::setSelection(): '
                         + ranges.length +' ranges');
             // */
-        },
-
-        /** @brief  Add a new note to this document.
-         *
-         *  This makes use of the current (rangy) selection to generate a new
-         *  note.
-         */
-        addNote: function() {
-            var notes       = this.get('notes');
-            var position    = new app.Model.Position();
-            notes.add( {position:position} );
         }
     });
 
@@ -19010,8 +18987,10 @@ var app = window.app = (this.app || {Model:{},      View:{},
 
 // Application-wide defaults
 app = _.extend(app, {
-    quickTag:       true,       // Using quick tag?
-    animSpeed:      200     // Speed (in ms) of animations
+    Option: {
+        quickTag:       true,       // Using quick tag?
+        animSpeed:      200     // Speed (in ms) of animations
+    }
 });
 
 
@@ -19266,7 +19245,7 @@ $.Summary = Backbone.View.extend({
              * is a little backwards.  If the checkbox is NOT checked,
              * we're in 'quick' mode, otherwise, 'normal' mode.
              */
-            app.quickTag = (! $el.checkbox('val') );
+            app.Option.quickTag = (! $el.checkbox('val') );
             break;
         }
     },
@@ -19327,7 +19306,7 @@ $.Summary = Backbone.View.extend({
              * little backwards.  If the checkbox is NOT checked, we're in
              * 'quick' mode, otherwise, 'normal' mode.
              */
-            checked:    (! app.quickTag )
+            checked:    (! app.Option.quickTag )
         });
 
         self.$paneControls.show();
@@ -19440,8 +19419,10 @@ var app = window.app = (this.app || {Model:{},      View:{},
 
 // Application-wide defaults
 app = _.extend(app, {
-    quickTag:       true,       // Using quick tag?
-    animSpeed:      200     // Speed (in ms) of animations
+    Option: {
+        quickTag:       true,       // Using quick tag?
+        animSpeed:      200     // Speed (in ms) of animations
+    }
 });
 
 
@@ -19696,7 +19677,7 @@ $.Summary = Backbone.View.extend({
              * is a little backwards.  If the checkbox is NOT checked,
              * we're in 'quick' mode, otherwise, 'normal' mode.
              */
-            app.quickTag = (! $el.checkbox('val') );
+            app.Option.quickTag = (! $el.checkbox('val') );
             break;
         }
     },
@@ -19757,7 +19738,7 @@ $.Summary = Backbone.View.extend({
              * little backwards.  If the checkbox is NOT checked, we're in
              * 'quick' mode, otherwise, 'normal' mode.
              */
-            checked:    (! app.quickTag )
+            checked:    (! app.Option.quickTag )
         });
 
         self.$paneControls.show();

@@ -10,26 +10,28 @@
 (function() {
 
 // Define the application object
-var app     = this.app = (this.app || {Model:{},      View:{},
-                                       Controller:{}, Helper:{}});
-app.mode    = 'development';
+var app             = this.app = (this.app || {Option:{},   Model:{},
+                                               View:{},     Controller:{},
+                                               Helper:{}});
+app.Option.mode    = 'development';
 
 /** @brief  Boot the application once all dependencies are loaded. */
 function bootApp()
 {
     var $       = jQuery.noConflict();
-    var docId   = (window.location.search
-                    ? window.location.search
-                        .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.json|\.xml)?$/, '$1')
-                    : '0001a');
+
+    app.Option.docId = (window.location.search
+                            ? window.location.search
+                                .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.json|\.xml)?$/, '$1')
+                            : '0001a');
 
     $(document).ready(function() {
         /* Startup the application (js/jquery.summary-08.js)
          * attaching to the DOM element with id 'app-Summary'
          */
-        this.appSummary = new $.Summary({
+        app.main = new $.Summary({
             el:     $('#app-Summary'),
-            doc:    'samples/'+ docId +'.json'
+            doc:    'samples/'+ app.Option.docId +'.json'
         });
     });
 }
@@ -38,7 +40,7 @@ function bootApp()
  * Load dependencies and, once loading is complete, invoke bootApp().
  *
  */
-if (app.mode === 'development')
+if (app.Option.mode === 'development')
 {
     // Development dependencies
     Req.assets = {

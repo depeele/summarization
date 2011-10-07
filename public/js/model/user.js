@@ -8,8 +8,9 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var Backbone    = this.Backbone;
     if (!Backbone && (typeof require !== 'undefined'))
     {

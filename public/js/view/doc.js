@@ -10,8 +10,10 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+    if (! app.Model)    { app.Model = {}; }
+
     var $           = jQuery.noConflict();
     app.View.Doc    = Backbone.View.extend({
         tagName:    'article',
@@ -222,17 +224,6 @@
             console.log('view.doc::setSelection(): '
                         + ranges.length +' ranges');
             // */
-        },
-
-        /** @brief  Add a new note to this document.
-         *
-         *  This makes use of the current (rangy) selection to generate a new
-         *  note.
-         */
-        addNote: function() {
-            var notes       = this.get('notes');
-            var position    = new app.Model.Position();
-            notes.add( {position:position} );
         }
     });
 

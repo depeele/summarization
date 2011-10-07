@@ -11,8 +11,9 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app             = this.app = (this.app || {Model:{},      View:{},
-                                                   Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
     var $               = jQuery.noConflict();
 
     // Mix the click helper into this view

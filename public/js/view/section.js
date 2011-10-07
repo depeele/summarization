@@ -10,8 +10,9 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app             = this.app = (this.app || {Model:{},      View:{},
-                                                   Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
     var $               = jQuery.noConflict();
     app.View.Section    = Backbone.View.extend({
         tagName:    'section',

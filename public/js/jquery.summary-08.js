@@ -15,8 +15,10 @@ var app = window.app = (this.app || {Model:{},      View:{},
 
 // Application-wide defaults
 app = _.extend(app, {
-    quickTag:       true,       // Using quick tag?
-    animSpeed:      200     // Speed (in ms) of animations
+    Option: {
+        quickTag:       true,       // Using quick tag?
+        animSpeed:      200     // Speed (in ms) of animations
+    }
 });
 
 
@@ -271,7 +273,7 @@ $.Summary = Backbone.View.extend({
              * is a little backwards.  If the checkbox is NOT checked,
              * we're in 'quick' mode, otherwise, 'normal' mode.
              */
-            app.quickTag = (! $el.checkbox('val') );
+            app.Option.quickTag = (! $el.checkbox('val') );
             break;
         }
     },
@@ -332,7 +334,7 @@ $.Summary = Backbone.View.extend({
              * little backwards.  If the checkbox is NOT checked, we're in
              * 'quick' mode, otherwise, 'normal' mode.
              */
-            checked:    (! app.quickTag )
+            checked:    (! app.Option.quickTag )
         });
 
         self.$paneControls.show();

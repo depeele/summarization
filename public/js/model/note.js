@@ -8,8 +8,9 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app         = this.app = (this.app || {Model:{},      View:{},
-                                               Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
     var _           = this._;
     var Backbone    = this.Backbone;
     if (typeof require !== 'undefined')
@@ -19,41 +20,20 @@
         if (!app.Model.Comments)
         {
             var tModule = require('./comment.js');
-            _.extend(app, tModule.app);
+            _.extend(app, tModule);
         }
 
-        if (!app.Model.Position)
+        if (!app.Model.Ranges)
         {
-            var tModule = require('./position.js');
-            _.extend(app, tModule.app);
+            var tModule = require('./range.js');
+            _.extend(app, tModule);
         }
     }
 
     app.Model.Note  = Backbone.Model.extend({
         defaults: {
             id:         null,
-
-            /* Position within the document of the content highlight associated
-             * with this note.
-             */
-            position:   {
-                start:  {
-                    sentence:   null,   /* The app.Model.Sentence instance or
-                                         * identifier.
-                                         */
-                    relativePos:null    /* Serialized position rooted in the
-                                         * identified sentence.
-                                         */
-                },
-                end:    {
-                    sentence:   null,   /* The app.Model.Sentence instance or
-                                         * identifier.
-                                         */
-                    relativePos:null    /* Serialized position rooted in the
-                                         * identified sentence.
-                                         */
-                }
-            },
+            ranges:     null,
 
             // Comments associated with this note
             comments:   null
@@ -61,15 +41,15 @@
 
         initialize: function(spec) {
             var comments    = this.get('comments');
-            var position    = this.get('position');
+            var ranges      = this.get('ranges');
             if ((! comments) || ! (comments instanceof app.Model.Comments) )
             {
                 this.set({comments: new app.Model.Comments(comments)});
             }
 
-            if ((! position) || ! (position instanceof app.Model.Position) )
+            if ((! ranges) || ! (ranges instanceof app.Model.Ranges) )
             {
-                this.set({position: new app.Model.Position(position)});
+                this.set({ranges: new app.Model.Ranges(ranges)});
             }
         }
     });

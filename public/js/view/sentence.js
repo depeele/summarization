@@ -11,8 +11,9 @@
 /*jslint nomen:false,laxbreak:true,white:false,onevar:false */
 /*global Backbone:false */
 (function() {
-    var app             = this.app = (this.app || {Model:{},      View:{},
-                                                   Controller:{}, Helper:{}});
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
     var $               = jQuery.noConflict();
 
     // Mix the click helper into this view
@@ -71,7 +72,8 @@
             var self    = this;
             if (! this.$el.hasClass('expanded'))
             {
-                this.$el.addClass('expanded', app.animSpeed, function() {
+                this.$el.addClass('expanded', app.Option.animSpeed,
+                                  function() {
                     self.$el.trigger('sentence:expanded');
                 });
             }
@@ -82,7 +84,8 @@
             var self    = this;
             if (this.$el.hasClass('expanded'))
             {
-                this.$el.removeClass('expanded', app.animSpeed, function() {
+                this.$el.removeClass('expanded', app.Option.animSpeed,
+                                     function() {
                     self.$el.trigger('sentence:collapsed');
                 });
             }
@@ -104,7 +107,8 @@
             var self    = this;
             if (! this.$el.hasClass('expansion'))
             {
-                this.$el.addClass('expansion', app.animSpeed, function() {
+                this.$el.addClass('expansion', app.Option.animSpeed,
+                                  function() {
                     self.$el.trigger('sentence:expansionExpanded');
                 });
 
@@ -118,7 +122,8 @@
             var self    = this;
             if (this.$el.hasClass('expansion'))
             {
-                this.$el.removeClass('expansion', app.animSpeed, function() {
+                this.$el.removeClass('expansion', app.Option.animSpeed,
+                                     function() {
                     self.$el.trigger('sentence:expansionCollapsed');
                 });
 
