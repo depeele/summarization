@@ -113,6 +113,13 @@ if (app.Option.mode === 'development')
         'view.doc':     { src: 'js/view/doc.js',
                           req: ['model.doc', 'view.section', 'jquery']},
 
+        'view.range':   { src: 'js/view/range.js',
+                          req: ['model.range', 'jquery', 'rangy']},
+
+        'view.selection':
+                        { src: 'js/view/selection.js',
+                          req: ['view.range', 'jquery']},
+
         // Rangy and plugins
         'rangy':        { src: 'js/rangy.js' },
         'rangy.serializer':
@@ -126,7 +133,7 @@ if (app.Option.mode === 'development')
         // Final suummary app
         'summary':      { src: 'js/jquery.summary-08.js',
                           req: [ 'model.user', 'model.comment', 'model.note',
-                                 'view.doc',
+                                 'view.doc', 'view.selection',
                                  'jquery', 'utils',
                                  'rangy.serializer',
                                  'ui.checkbox'

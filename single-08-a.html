@@ -130,5 +130,34 @@
   ><span class="overlay"></span
   ><span class="rank"><%= Math.floor(rank * 100) %></span
   ><span class="content"><%= content %></span></script>
+
+ <script id='template-selection' type='text/template'>
+   <span class='range-control'>
+    <span class='su-icon su-state-reverse su-icon-tag tag'
+          name='note-add'
+         title='add note'></span>
+   </span>
+ </script>
+
+ <script id='template-note' type='text/template'>
+   <span class='range-control'>
+    <span class='su-icon ui-state-default su-icon-cancel-blue remove'
+          name='note-remove'
+         title='remove note'></span>
+   </span>
+   <div class='arrow-outer'></div>
+   <div class='arrow-inner'></div>
+   <div class='note-body'>
+    <!-- comments will be placed here -->
+   </div>
+   <div class='note-input-pane'>
+    <textarea class='note-reply' title="Reply to this comment..."></textarea>
+    <div class='buttons'>
+     <button name='reply'>reply</button>
+     <button name='cancel-reply'>cancel</button>
+    </div>
+  </div>
+ </script>
+
  <!-- Templates } -->
 </html>

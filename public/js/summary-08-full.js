@@ -14126,6 +14126,254 @@ rangy.createModule("CssClassApplier", function(api, module) {
                dayDiff <  31     && Math.ceil( dayDiff/ 7 )  +" weeks ago";
     };
 
+    /* Borrowed from jQuery UI Position 1.8.16
+     *
+     * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+     * Dual licensed under the MIT or GPL Version 2 licenses.
+     * http://jquery.org/license
+     *
+     * http://docs.jquery.com/UI/Position
+     */
+    $.ui = $.ui || {};
+    
+    var horizontalPositions = /left|center|right/,
+    	verticalPositions = /top|center|bottom/,
+    	center = "center",
+    	_position = $.fn.position,
+    	_offset = $.fn.offset;
+    
+    $.fn.position = function( options ) {
+    	if ( !options || !options.of ) {
+    		return _position.apply( this, arguments );
+    	}
+    
+    	// make a copy, we don't want to modify arguments
+    	options = $.extend( {}, options );
+    
+    	var target = $( options.of ),
+    		targetElem = target[0],
+    		collision = ( options.collision || "flip" ).split( " " ),
+    		offset = options.offset ? options.offset.split( " " ) : [ 0, 0 ],
+    		targetWidth,
+    		targetHeight,
+    		basePosition;
+    
+    	if ( targetElem.nodeType === 9 ) {
+    		targetWidth = target.width();
+    		targetHeight = target.height();
+    		basePosition = { top: 0, left: 0 };
+    	// TODO: use $.isWindow() in 1.9
+    	} else if ( targetElem.setTimeout ) {
+    		targetWidth = target.width();
+    		targetHeight = target.height();
+    		basePosition = { top: target.scrollTop(), left: target.scrollLeft() };
+    	} else if ( targetElem.preventDefault ) {
+    		// force left top to allow flipping
+    		options.at = "left top";
+    		targetWidth = targetHeight = 0;
+    		basePosition = { top: options.of.pageY, left: options.of.pageX };
+    	} else {
+    		targetWidth = target.outerWidth();
+    		targetHeight = target.outerHeight();
+    		basePosition = target.offset();
+    	}
+    
+    	// force my and at to have valid horizontal and veritcal positions
+    	// if a value is missing or invalid, it will be converted to center 
+    	$.each( [ "my", "at" ], function() {
+    		var pos = ( options[this] || "" ).split( " " );
+    		if ( pos.length === 1) {
+    			pos = horizontalPositions.test( pos[0] ) ?
+    				pos.concat( [center] ) :
+    				verticalPositions.test( pos[0] ) ?
+    					[ center ].concat( pos ) :
+    					[ center, center ];
+    		}
+    		pos[ 0 ] = horizontalPositions.test( pos[0] ) ? pos[ 0 ] : center;
+    		pos[ 1 ] = verticalPositions.test( pos[1] ) ? pos[ 1 ] : center;
+    		options[ this ] = pos;
+    	});
+    
+    	// normalize collision option
+    	if ( collision.length === 1 ) {
+    		collision[ 1 ] = collision[ 0 ];
+    	}
+    
+    	// normalize offset option
+    	offset[ 0 ] = parseInt( offset[0], 10 ) || 0;
+    	if ( offset.length === 1 ) {
+    		offset[ 1 ] = offset[ 0 ];
+    	}
+    	offset[ 1 ] = parseInt( offset[1], 10 ) || 0;
+    
+    	if ( options.at[0] === "right" ) {
+    		basePosition.left += targetWidth;
+    	} else if ( options.at[0] === center ) {
+    		basePosition.left += targetWidth / 2;
+    	}
+    
+    	if ( options.at[1] === "bottom" ) {
+    		basePosition.top += targetHeight;
+    	} else if ( options.at[1] === center ) {
+    		basePosition.top += targetHeight / 2;
+    	}
+    
+    	basePosition.left += offset[ 0 ];
+    	basePosition.top += offset[ 1 ];
+    
+    	return this.each(function() {
+    		var elem = $( this ),
+    			elemWidth = elem.outerWidth(),
+    			elemHeight = elem.outerHeight(),
+    			marginLeft = parseInt( $.curCSS( this, "marginLeft", true ) ) || 0,
+    			marginTop = parseInt( $.curCSS( this, "marginTop", true ) ) || 0,
+    			collisionWidth = elemWidth + marginLeft +
+    				( parseInt( $.curCSS( this, "marginRight", true ) ) || 0 ),
+    			collisionHeight = elemHeight + marginTop +
+    				( parseInt( $.curCSS( this, "marginBottom", true ) ) || 0 ),
+    			position = $.extend( {}, basePosition ),
+    			collisionPosition;
+    
+    		if ( options.my[0] === "right" ) {
+    			position.left -= elemWidth;
+    		} else if ( options.my[0] === center ) {
+    			position.left -= elemWidth / 2;
+    		}
+    
+    		if ( options.my[1] === "bottom" ) {
+    			position.top -= elemHeight;
+    		} else if ( options.my[1] === center ) {
+    			position.top -= elemHeight / 2;
+    		}
+    
+    		// prevent fractions (see #5280)
+    		position.left = Math.round( position.left );
+    		position.top = Math.round( position.top );
+    
+    		collisionPosition = {
+    			left: position.left - marginLeft,
+    			top: position.top - marginTop
+    		};
+    
+    		$.each( [ "left", "top" ], function( i, dir ) {
+    			if ( $.ui.position[ collision[i] ] ) {
+    				$.ui.position[ collision[i] ][ dir ]( position, {
+    					targetWidth: targetWidth,
+    					targetHeight: targetHeight,
+    					elemWidth: elemWidth,
+    					elemHeight: elemHeight,
+    					collisionPosition: collisionPosition,
+    					collisionWidth: collisionWidth,
+    					collisionHeight: collisionHeight,
+    					offset: offset,
+    					my: options.my,
+    					at: options.at
+    				});
+    			}
+    		});
+    
+    		if ( $.fn.bgiframe ) {
+    			elem.bgiframe();
+    		}
+    		elem.offset( $.extend( position, { using: options.using } ) );
+    	});
+    };
+    
+    $.ui.position = {
+    	fit: {
+    		left: function( position, data ) {
+    			var win = $( window ),
+    				over = data.collisionPosition.left + data.collisionWidth - win.width() - win.scrollLeft();
+    			position.left = over > 0 ? position.left - over : Math.max( position.left - data.collisionPosition.left, position.left );
+    		},
+    		top: function( position, data ) {
+    			var win = $( window ),
+    				over = data.collisionPosition.top + data.collisionHeight - win.height() - win.scrollTop();
+    			position.top = over > 0 ? position.top - over : Math.max( position.top - data.collisionPosition.top, position.top );
+    		}
+    	},
+    
+    	flip: {
+    		left: function( position, data ) {
+    			if ( data.at[0] === center ) {
+    				return;
+    			}
+    			var win = $( window ),
+    				over = data.collisionPosition.left + data.collisionWidth - win.width() - win.scrollLeft(),
+    				myOffset = data.my[ 0 ] === "left" ?
+    					-data.elemWidth :
+    					data.my[ 0 ] === "right" ?
+    						data.elemWidth :
+    						0,
+    				atOffset = data.at[ 0 ] === "left" ?
+    					data.targetWidth :
+    					-data.targetWidth,
+    				offset = -2 * data.offset[ 0 ];
+    			position.left += data.collisionPosition.left < 0 ?
+    				myOffset + atOffset + offset :
+    				over > 0 ?
+    					myOffset + atOffset + offset :
+    					0;
+    		},
+    		top: function( position, data ) {
+    			if ( data.at[1] === center ) {
+    				return;
+    			}
+    			var win = $( window ),
+    				over = data.collisionPosition.top + data.collisionHeight - win.height() - win.scrollTop(),
+    				myOffset = data.my[ 1 ] === "top" ?
+    					-data.elemHeight :
+    					data.my[ 1 ] === "bottom" ?
+    						data.elemHeight :
+    						0,
+    				atOffset = data.at[ 1 ] === "top" ?
+    					data.targetHeight :
+    					-data.targetHeight,
+    				offset = -2 * data.offset[ 1 ];
+    			position.top += data.collisionPosition.top < 0 ?
+    				myOffset + atOffset + offset :
+    				over > 0 ?
+    					myOffset + atOffset + offset :
+    					0;
+    		}
+    	}
+    };
+    
+    // offset setter from jQuery 1.4
+    if ( !$.offset.setOffset ) {
+    	$.offset.setOffset = function( elem, options ) {
+    		// set position first, in-case top/left are set even on static elem
+    		if ( /static/.test( $.curCSS( elem, "position" ) ) ) {
+    			elem.style.position = "relative";
+    		}
+    		var curElem   = $( elem ),
+    			curOffset = curElem.offset(),
+    			curTop    = parseInt( $.curCSS( elem, "top",  true ), 10 ) || 0,
+    			curLeft   = parseInt( $.curCSS( elem, "left", true ), 10)  || 0,
+    			props     = {
+    				top:  (options.top  - curOffset.top)  + curTop,
+    				left: (options.left - curOffset.left) + curLeft
+    			};
+    		
+    		if ( 'using' in options ) {
+    			options.using.call( elem, props );
+    		} else {
+    			curElem.css( props );
+    		}
+    	};
+    
+    	$.fn.offset = function( options ) {
+    		var elem = this[ 0 ];
+    		if ( !elem || !elem.ownerDocument ) { return null; }
+    		if ( options ) { 
+    			return this.each(function() {
+    				$.offset.setOffset( this, options );
+    			});
+    		}
+    		return _offset.call( this );
+    	};
+    }
+
 }(jQuery));
 //     Backbone.js 0.5.3
 //     (c) 2010 Jeremy Ashkenas, DocumentCloud Inc.
@@ -15943,11 +16191,20 @@ Backbone.sync = function(method, model, options, error) {
                         setTimeout(function() {
                             if (orig === self._clickDown)
                             {
+                                /* Create a new event that encapsulates THIS
+                                 * event, and for the event type to
+                                 * 'clickEvent'
+                                 */
+                                var event   = new $.Event( e, {
+                                                    type: self.clickEvent
+                                              } );
+
                                 /*
                                 console.log('Helper::_trackClick: trigger[ '
-                                             + self.clickEvent +' ]');
+                                             + event.type +' ]');
                                 // */
-                                self.$el.trigger( self.clickEvent );
+
+                                self.$el.trigger( event );
                             }
 
                             self._clickDown = null;
@@ -16028,6 +16285,9 @@ Backbone.sync = function(method, model, options, error) {
             self.$el.attr('id',   self.model.cid);
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
+
+            // Store a reference to this view instance
+            self.$el.data('View:Sentence', self);
 
             return self;
         },
@@ -16170,6 +16430,9 @@ Backbone.sync = function(method, model, options, error) {
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
 
+            // Store a reference to this view instance
+            self.$el.data('View:Paragraph', self);
+
             self.$sentences = self.$el.find('.sentences:first');
 
             // Append a view of each paragraph
@@ -16252,6 +16515,9 @@ Backbone.sync = function(method, model, options, error) {
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
 
+            // Store a reference to this view instance
+            self.$el.data('View:Section', self);
+
             self.$paragraphs = self.$el.find('.paragraphs:first');
 
             // Append a view of each paragraph
@@ -16310,6 +16576,9 @@ Backbone.sync = function(method, model, options, error) {
             self.$el.attr('id', self.model.cid);
             self.$el.html( self.template( self.model.toJSON() ) );
 
+            // Store a reference to this view instance
+            self.$el.data('View:Doc', self);
+
             self.$sections = self.$el.find('.sections:first');
 
             // Append a view of each section
@@ -16335,11 +16604,20 @@ Backbone.sync = function(method, model, options, error) {
         },
 
         /** @brief  On mouseup, check to see if we have a rangy selection.
+         *          If we do, generate a Model.Ranges instance representing the
+         *          selection and instantiate a View.Selection to present it.
          */
         setSelection: function() {
             var self        = this;
+            var opts        = self.options;
+
+            if (! opts.$notes)
+            {
+                return;
+            }
+
             var sel         = rangy.getSelection();
-            var range       = sel.getRangeAt(0);
+            var range       = sel.getRangeAt(0);        // rangy range
             var $start      = $(range.startContainer);
             var $end        = $(range.endContainer);
             var $startS     = $start.parents('.sentence');
@@ -16425,38 +16703,38 @@ Backbone.sync = function(method, model, options, error) {
                     // Establish the new range.
                     sel.setSingleRange( range );
 
-                    /* Finally, create an independent range for each involved
+                    /* Create an independent app.Model.Range for each involved
                      * sentence.
                      */
                     var last    = $selectable.length;
                     $.each($selectable, function(idex, s) {
                         var $s          = $(s);
                         var $content    = $s.find('.content');
-                        var sRange      = new app.Model.Range({
+                        var rangeModel  = new app.Model.Range({
                                             sentenceId: $s.attr('id')
                                           });
 
                         if (idex === 0)
                         {
-                            sRange.setStart(range.startOffset);
+                            rangeModel.setStart(range.startOffset);
 
                             /* Careful!  If there is only one sentence, don't
                              * loose the ending offset.
                              */
-                            sRange.setEnd((idex >= (last - 1)
-                                            ? range.endOffset
-                                            : $content.text().length) );
+                            rangeModel.setEnd((idex >= (last - 1)
+                                                ? range.endOffset
+                                                : $content.text().length) );
                         }
                         else if (idex >= (last - 1))
                         {
-                            sRange.setOffsets(0, range.endOffset);
+                            rangeModel.setOffsets(0, range.endOffset);
                         }
                         else
                         {
-                            sRange.setOffsets(0, $content.text().length);
+                            rangeModel.setOffsets(0, $content.text().length);
                         }
 
-                        ranges.add(sRange);
+                        ranges.add(rangeModel);
                     });
                 }
                 else
@@ -16484,11 +16762,23 @@ Backbone.sync = function(method, model, options, error) {
                 ranges.remove( ranges.at(0) );
             }
 
-            // Remember the selection information
-            if (self.ranges)    { delete self.ranges; }
-            self.ranges = ranges;
+            if (self.selection)
+            {
+                // Remove any current Selection View.
+                self.selection.remove();
+                self.selection = null;
+            }
 
-            /*
+            if (ranges.length > 0)
+            {
+                /* Create a new Selection View using the generated ranges
+                 * model.
+                 */
+                self.selection = new app.View.Selection( {model: ranges} );
+                opts.$notes.append( self.selection.render().el );
+            }
+
+            // /*
             console.log('view.doc::setSelection(): '
                         + ranges.length +' ranges');
             // */
@@ -19025,6 +19315,9 @@ $.Summary = Backbone.View.extend({
         var opts    = self.options;
 
         self._initialize_controlPane();
+        self._initialize_contentPane();
+        self._initialize_tagsPane();
+        self._initialize_notesPane();
 
         self.$paneContent  = self.el.find('.content-pane');
         self.$paneContent.addClass('loading');
@@ -19051,6 +19344,15 @@ $.Summary = Backbone.View.extend({
         }
     },
 
+    /** @brief  Override so we can unbind events bound via initialize(),
+     * specifically in _initialize_notesPane().
+     */
+    remove: function() {
+        $(document).unbind('.summary');
+
+        return Backbone.View.prototype.remove.call(this);
+    },
+
     /** @brief  (Re)render the application. */
     render: function() {
         var self    = this;
@@ -19058,7 +19360,8 @@ $.Summary = Backbone.View.extend({
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view    = new app.View.Doc({model:opts.doc});
+            var view    = new app.View.Doc({model:  opts.doc,
+                                            $notes: self.$paneNotes});
 
             self.$paneContent.html( view.render().el );
 
@@ -19310,6 +19613,30 @@ $.Summary = Backbone.View.extend({
         });
 
         self.$paneControls.show();
+    },
+
+    /** @brief  Initialize the content pane */
+    _initialize_contentPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$contentNotes = self.el.find('.contents-pane');
+    },
+
+    /** @brief  Initialize the tags pane */
+    _initialize_tagsPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$tagsNotes = self.el.find('.tags-pane');
+    },
+
+    /** @brief  Initialize the notes pane */
+    _initialize_notesPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$paneNotes = self.el.find('.notes-pane');
     },
 
     /** @brief  Compute the thresholds based upon opts.showSentences.
@@ -19457,6 +19784,9 @@ $.Summary = Backbone.View.extend({
         var opts    = self.options;
 
         self._initialize_controlPane();
+        self._initialize_contentPane();
+        self._initialize_tagsPane();
+        self._initialize_notesPane();
 
         self.$paneContent  = self.el.find('.content-pane');
         self.$paneContent.addClass('loading');
@@ -19483,6 +19813,15 @@ $.Summary = Backbone.View.extend({
         }
     },
 
+    /** @brief  Override so we can unbind events bound via initialize(),
+     * specifically in _initialize_notesPane().
+     */
+    remove: function() {
+        $(document).unbind('.summary');
+
+        return Backbone.View.prototype.remove.call(this);
+    },
+
     /** @brief  (Re)render the application. */
     render: function() {
         var self    = this;
@@ -19490,7 +19829,8 @@ $.Summary = Backbone.View.extend({
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view    = new app.View.Doc({model:opts.doc});
+            var view    = new app.View.Doc({model:  opts.doc,
+                                            $notes: self.$paneNotes});
 
             self.$paneContent.html( view.render().el );
 
@@ -19742,6 +20082,30 @@ $.Summary = Backbone.View.extend({
         });
 
         self.$paneControls.show();
+    },
+
+    /** @brief  Initialize the content pane */
+    _initialize_contentPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$contentNotes = self.el.find('.contents-pane');
+    },
+
+    /** @brief  Initialize the tags pane */
+    _initialize_tagsPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$tagsNotes = self.el.find('.tags-pane');
+    },
+
+    /** @brief  Initialize the notes pane */
+    _initialize_notesPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$paneNotes = self.el.find('.notes-pane');
     },
 
     /** @brief  Compute the thresholds based upon opts.showSentences.

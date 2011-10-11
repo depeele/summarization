@@ -66,11 +66,20 @@
                         setTimeout(function() {
                             if (orig === self._clickDown)
                             {
+                                /* Create a new event that encapsulates THIS
+                                 * event, and for the event type to
+                                 * 'clickEvent'
+                                 */
+                                var event   = new $.Event( e, {
+                                                    type: self.clickEvent
+                                              } );
+
                                 /*
                                 console.log('Helper::_trackClick: trigger[ '
-                                             + self.clickEvent +' ]');
+                                             + event.type +' ]');
                                 // */
-                                self.$el.trigger( self.clickEvent );
+
+                                self.$el.trigger( event );
                             }
 
                             self._clickDown = null;

@@ -59,6 +59,9 @@
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
 
+            // Store a reference to this view instance
+            self.$el.data('View:Sentence', self);
+
             return self;
         },
 

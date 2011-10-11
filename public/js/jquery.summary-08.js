@@ -53,6 +53,9 @@ $.Summary = Backbone.View.extend({
         var opts    = self.options;
 
         self._initialize_controlPane();
+        self._initialize_contentPane();
+        self._initialize_tagsPane();
+        self._initialize_notesPane();
 
         self.$paneContent  = self.el.find('.content-pane');
         self.$paneContent.addClass('loading');
@@ -79,6 +82,15 @@ $.Summary = Backbone.View.extend({
         }
     },
 
+    /** @brief  Override so we can unbind events bound via initialize(),
+     * specifically in _initialize_notesPane().
+     */
+    remove: function() {
+        $(document).unbind('.summary');
+
+        return Backbone.View.prototype.remove.call(this);
+    },
+
     /** @brief  (Re)render the application. */
     render: function() {
         var self    = this;
@@ -86,7 +98,8 @@ $.Summary = Backbone.View.extend({
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view    = new app.View.Doc({model:opts.doc});
+            var view    = new app.View.Doc({model:  opts.doc,
+                                            $notes: self.$paneNotes});
 
             self.$paneContent.html( view.render().el );
 
@@ -338,6 +351,30 @@ $.Summary = Backbone.View.extend({
         });
 
         self.$paneControls.show();
+    },
+
+    /** @brief  Initialize the content pane */
+    _initialize_contentPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$contentNotes = self.el.find('.contents-pane');
+    },
+
+    /** @brief  Initialize the tags pane */
+    _initialize_tagsPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$tagsNotes = self.el.find('.tags-pane');
+    },
+
+    /** @brief  Initialize the notes pane */
+    _initialize_notesPane: function() {
+        var self    = this;
+        var opts    = self.options;
+
+        self.$paneNotes = self.el.find('.notes-pane');
     },
 
     /** @brief  Compute the thresholds based upon opts.showSentences.

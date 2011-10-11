@@ -463,6 +463,7 @@ a:hover {
   }
 }
 .su-icon {
+  display: block;
   width: 16px;
   height: 16px;
   background-image: url('images/icons-16.png');
@@ -851,6 +852,39 @@ a {
   top: 0;
   left: 0;
 }
+.content-pane article section p .sentence .overlay .range, .content-pane article section p .sentence .overlay .selection, .content-pane article section p .sentence .overlay .note {
+  position: relative;
+  top: auto;
+  left: auto;
+}
+.content-pane article section p .sentence .overlay .range .range-control, .content-pane article section p .sentence .overlay .selection .range-control, .content-pane article section p .sentence .overlay .note .range-control {
+  position: absolute;
+  padding: 2px;
+  cursor: pointer;
+}
+.content-pane article section p .sentence .overlay .range .before,
+.content-pane article section p .sentence .overlay .selection .before,
+.content-pane article section p .sentence .overlay .note .before,
+.content-pane article section p .sentence .overlay .range .after,
+.content-pane article section p .sentence .overlay .selection .after,
+.content-pane article section p .sentence .overlay .note .after {
+  visibility: hidden;
+}
+.content-pane article section p .sentence .overlay .range .selected, .content-pane article section p .sentence .overlay .selection .selected, .content-pane article section p .sentence .overlay .note .selected {
+  padding: 0.1em;
+}
+.content-pane article section p .sentence .overlay .range .segment, .content-pane article section p .sentence .overlay .selection .segment, .content-pane article section p .sentence .overlay .note .segment {
+  position: absolute;
+  display: block;
+}
+.content-pane article section p .sentence .overlay .selection .range-control, .content-pane article section p .sentence .overlay .selection .selected {
+  background-color: #444444;
+  color: #ffffff;
+}
+.content-pane article section p .sentence .overlay .note .range-control, .content-pane article section p .sentence .overlay .note .selected {
+  background-color: #444444;
+  color: #ffffff;
+}
 .content-pane article section p .sentence .rank {
   position: absolute;
   top: -0.2em;
@@ -1036,6 +1070,14 @@ a {
 .notes-pane {
   position: absolute;
   top: 7em;
+}
+.notes-pane .range-control {
+  position: absolute;
+  padding: 2px;
+}
+.notes-pane .selection .range-control {
+  background-color: #444444;
+  color: #ffffff;
 }
 /*******************
  * Note

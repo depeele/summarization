@@ -46,7 +46,8 @@
 
 @colorControls:                 lighten(@colorText, 40%);
 
-@colorSelectedBackground:       @colorTextLight;
+@colorSelection:                @colorArticleBackground;
+@colorSelectedBackground:       @colorText;
 
 @colorTagBackground:            #d7ebf9;
 @colorTag:                      #2779aa;
@@ -246,9 +247,49 @@ a {
           user-select:        none;
 
           .overlay {
+            // Make sure .overlay mirrors any styling within .content that
+            // would effect positioning!
             position:     absolute;
             top:          0;
             left:         0;
+
+            .range, .selection, .note {
+                position:   relative;
+                top:        auto;
+                left:       auto;
+
+                .range-control {
+                  position:       absolute;
+                  padding:        2px;
+                  cursor:         pointer;
+                }
+
+                .before, .after {
+                    visibility: hidden;
+                }
+                .selected {
+                    padding:            0.1em;
+                }
+
+                .segment {
+                    position:   absolute;
+                    display:    block;
+                }
+            }
+
+            .selection {
+                .range-control, .selected {
+                    background-color:   @colorSelectedBackground;
+                    color:              @colorSelection;
+                }
+            }
+
+            .note {
+                .range-control, .selected {
+                    background-color:   @colorSelectedBackground;
+                    color:              @colorSelection;
+                }
+            }
           }
 
           .rank {
@@ -272,7 +313,10 @@ a {
             }
           }
 
-          .content {}
+          .content {
+            // Make sure .overlay mirrors any styling within .content that
+            // would effect positioning!
+          }
         }
 
         .expanded,
@@ -466,6 +510,18 @@ a {
 .notes-pane {
   position:         absolute;
   top:              7em;
+
+  .range-control {
+    position:       absolute;
+    padding:        2px;
+  }
+
+  .selection {
+    .range-control {
+      background-color:   @colorSelectedBackground;
+      color:              @colorSelection;
+    }
+  }
 
   //z-index:          11;
 }

@@ -42,6 +42,9 @@
             self.$el.attr('id', self.model.cid);
             self.$el.html( self.template( self.model.toJSON() ) );
 
+            // Store a reference to this view instance
+            self.$el.data('View:Doc', self);
+
             self.$sections = self.$el.find('.sections:first');
 
             // Append a view of each section
@@ -67,11 +70,20 @@
         },
 
         /** @brief  On mouseup, check to see if we have a rangy selection.
+         *          If we do, generate a Model.Ranges instance representing the
+         *          selection and instantiate a View.Selection to present it.
          */
         setSelection: function() {
             var self        = this;
+            var opts        = self.options;
+
+            if (! opts.$notes)
+            {
+                return;
+            }
+
             var sel         = rangy.getSelection();
-            var range       = sel.getRangeAt(0);
+            var range       = sel.getRangeAt(0);        // rangy range
             var $start      = $(range.startContainer);
             var $end        = $(range.endContainer);
             var $startS     = $start.parents('.sentence');
@@ -157,38 +169,38 @@
                     // Establish the new range.
                     sel.setSingleRange( range );
 
-                    /* Finally, create an independent range for each involved
+                    /* Create an independent app.Model.Range for each involved
                      * sentence.
                      */
                     var last    = $selectable.length;
                     $.each($selectable, function(idex, s) {
                         var $s          = $(s);
                         var $content    = $s.find('.content');
-                        var sRange      = new app.Model.Range({
+                        var rangeModel  = new app.Model.Range({
                                             sentenceId: $s.attr('id')
                                           });
 
                         if (idex === 0)
                         {
-                            sRange.setStart(range.startOffset);
+                            rangeModel.setStart(range.startOffset);
 
                             /* Careful!  If there is only one sentence, don't
                              * loose the ending offset.
                              */
-                            sRange.setEnd((idex >= (last - 1)
-                                            ? range.endOffset
-                                            : $content.text().length) );
+                            rangeModel.setEnd((idex >= (last - 1)
+                                                ? range.endOffset
+                                                : $content.text().length) );
                         }
                         else if (idex >= (last - 1))
                         {
-                            sRange.setOffsets(0, range.endOffset);
+                            rangeModel.setOffsets(0, range.endOffset);
                         }
                         else
                         {
-                            sRange.setOffsets(0, $content.text().length);
+                            rangeModel.setOffsets(0, $content.text().length);
                         }
 
-                        ranges.add(sRange);
+                        ranges.add(rangeModel);
                     });
                 }
                 else
@@ -216,11 +228,23 @@
                 ranges.remove( ranges.at(0) );
             }
 
-            // Remember the selection information
-            if (self.ranges)    { delete self.ranges; }
-            self.ranges = ranges;
+            if (self.selection)
+            {
+                // Remove any current Selection View.
+                self.selection.remove();
+                self.selection = null;
+            }
 
-            /*
+            if (ranges.length > 0)
+            {
+                /* Create a new Selection View using the generated ranges
+                 * model.
+                 */
+                self.selection = new app.View.Selection( {model: ranges} );
+                opts.$notes.append( self.selection.render().el );
+            }
+
+            // /*
             console.log('view.doc::setSelection(): '
                         + ranges.length +' ranges');
             // */

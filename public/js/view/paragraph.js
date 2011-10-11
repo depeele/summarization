@@ -49,6 +49,9 @@
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
 
+            // Store a reference to this view instance
+            self.$el.data('View:Paragraph', self);
+
             self.$sentences = self.$el.find('.sentences:first');
 
             // Append a view of each paragraph
