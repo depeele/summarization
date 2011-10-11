@@ -17,6 +17,7 @@
 
     /** @brief  A View for a app.Model.Ranges instance. */
     app.View.Selection = Backbone.View.extend({
+        viewName:   'Selection',
         clickEvent: 'control:click',
 
         tagName:    'div',
@@ -41,9 +42,9 @@
              *        (i.e. the control moved from it's original container into
              *              the '.selected' element).
              */
-            var events  = [ 'mouseup.selection' ];
+            var events  = [ 'mouseup.'+ this.viewName ];
             $.each(app.Helper.click.events, function(event, method) {
-                events.push( event +'.selection' );
+                events.push( event +'.'+ this.viewName );
             });
 
             this._trackClickEvents = events.join(' ');
@@ -61,7 +62,7 @@
                     var view    = this;
 
                     // Un-bind event handlers
-                    $(view.el).undelegate('.selected', '.selection');
+                    $(view.el).undelegate('.selected', '.'+ self.viewName);
 
                     view.remove();
                 });
@@ -69,7 +70,7 @@
 
             if (self.$control)
             {
-                self.$control.unbind('.selection');
+                self.$control.unbind('.'+ self.viewName);
             }
 
             return Backbone.View.prototype.remove.call(this);
@@ -83,7 +84,7 @@
             self.$el.html( self.template( self.model.toJSON() ) );
 
             // Store a reference to this view instance
-            self.$el.data('View:Selection', self);
+            self.$el.data('View:'+ self.viewName, self);
 
             // Gather our pieces
             self.$control = self.$el.find('.range-control')
@@ -91,14 +92,16 @@
 
             self.rangeViews  = [];
             self.model.each(function(model) {
-                var view    = new app.View.Range( { parentView: self,
-                                                    model:      model,
-                                                    className:  'selection' });
+                var view    = new app.View.Range( {
+                                    parentView: self,
+                                    model:      model,
+                                    className:  self.className
+                              });
                 view.render();
 
                 // Bind to mouse events on this range view
-                $(view.el).delegate('.selected',
-                                    'mouseenter.selection mouseleave.selection',
+                $(view.el).delegate('.selected',  'mouseenter.'+ self.viewName
+                                                + 'mouseleave.'+ self.viewName,
                                     _.bind(self._rangeMouse, self));
 
                 self.rangeViews.push( view );
@@ -130,7 +133,7 @@
             var $el     = $(e.originalEvent.target);
             var name    = $el.attr('name');
 
-            console.log('View.Selection::_controlClick(): '
+            console.log('View.'+ self.viewName +'::_controlClick(): '
                         +   'name[ '+ name +' ]');
 
             switch (name)
@@ -158,7 +161,7 @@
                  */
                 if (self.$control.parent().get(0) !== $selected.get(0))
                 {
-                    self.$control.unbind('.selection');
+                    self.$control.unbind('.'+ self.viewName);
 
                     self.$control.prependTo($selected);
 
