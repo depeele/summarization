@@ -17,15 +17,10 @@
     var $               = jQuery.noConflict();
 
     // Mix the click helper into this view
-    var viewPrototype   = $.extend(true, {}, app.Helper.click, {
+    app.View.Sentence   = Backbone.View.extend( {
         tagName:    'span',
         className:  'sentence',
         template:   _.template($('#template-sentence').html()),
-
-        /* Set the name of the click event that will be fired by
-         * app.Helper.click
-         */
-        clickEvent: 'sentence:click',
 
         events: {
             'sentence:expand':              'expand',
@@ -35,7 +30,8 @@
             'sentence:expansionExpand':     'expansionExpand',
             'sentence:expansionCollapse':   'expansionCollapse',
             'sentence:expansionToggle':     'expansionToggle',
-            'sentence:click':               'expansionToggle'
+
+            'click':                        'expansionToggle'
         },
 
         initialize: function() {
@@ -137,10 +133,11 @@
 
         /** @brief  Toggle this sentence iff collapsed to use 'expansion'. */
         expansionToggle: function(e) {
+            // Mark this event as "handled" by stopping its propagation
+            if (e)  { e.stopPropagation(); }
+
             if (this.$el.hasClass('expanded'))
             {
-                // Mark this event as "handled" by stopping its propagation
-                if (e)  { e.stopPropagation(); }
                 return;
             }
 
@@ -148,7 +145,5 @@
             else                                { this.expansionExpand(e); }
         }
     });
-
-    app.View.Sentence   = Backbone.View.extend( viewPrototype );
 
  }).call(this);

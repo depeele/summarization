@@ -24,7 +24,8 @@
 
             rangy.init();
 
-            $(document).bind('mouseup.doc', _.bind(this.setSelection, this));
+            $(document).bind('mouseup.doc click.doc',
+                             _.bind(this.setSelection, this));
         },
 
         /** @brief  Override so we can unbind events bound in initialize().
@@ -72,13 +73,39 @@
         /** @brief  On mouseup, check to see if we have a rangy selection.
          *          If we do, generate a Model.Ranges instance representing the
          *          selection and instantiate a View.Selection to present it.
+         *  @param  e       The triggering event;
          */
-        setSelection: function() {
+        setSelection: function(e) {
             var self        = this;
             var opts        = self.options;
 
             if (! opts.$notes)
             {
+                return;
+            }
+
+            console.log('View::Doc:setSelection(): '
+                        +   'type[ '+ (e ? e.type : '--') +' ]');
+
+            if (e && e.type === 'mouseup')
+            {
+                /* Wait a short time to see if this will be part of a click
+                 * event
+                 */
+                self._mouseup = setTimeout(function() {
+                    // Re-invoke setSelection with no event
+                    self.setSelection();
+                    self._mouseup = null;
+                }, 100);
+                return;
+            }
+            else if (e && e.type === 'click')
+            {
+                if (self._mouseup)
+                {
+                    clearTimeout( self._mouseup );
+                    self._mouseup = null;
+                }
                 return;
             }
 

@@ -73,6 +73,11 @@ if (app.Option.mode === 'development')
         },
         'utils':        { src: 'js/jquery.utils.js',  req:['jquery']},
 
+        // Rangy and plugins
+        'rangy':        { src: 'js/rangy.js' },
+
+
+        // Backbone and storage
         'backbone':     { src: 'js/backbone.js',
                           req: ['underscore', 'jquery']},
         'backbone.localStorage':
@@ -92,38 +97,25 @@ if (app.Option.mode === 'development')
         'model.section':{ src: 'js/model/section.js', req:['model.paragraph']},
         'model.doc':    { src: 'js/model/doc.js',     req:['model.section']},
 
-        // Backbone helpers
-        'helper.click': { src: 'js/helper/click.js',
-                          req: ['backbone', 'jquery']},
-
         // Backbone views
         'view.sentence':{ src: 'js/view/sentence.js',
-                          req: ['backbone',
-                                'model.sentence',
-                                'helper.click',
-                                'jquery']},
+                          req: ['backbone', 'model.sentence', 'jquery']},
         'view.paragraph':
                         { src: 'js/view/paragraph.js',
-                          req: ['model.paragraph',
-                                'view.sentence',
-                                'helper.click',
-                                'jquery']},
+                          req: ['model.paragraph', 'view.sentence', 'jquery']},
         'view.section': { src: 'js/view/section.js',
                           req: ['model.section', 'view.paragraph', 'jquery']},
-        'view.doc':     { src: 'js/view/doc.js',
-                          req: ['model.doc', 'view.section', 'jquery']},
 
         'view.range':   { src: 'js/view/range.js',
                           req: ['model.range', 'jquery', 'rangy']},
-
         'view.selection':
                         { src: 'js/view/selection.js',
                           req: ['view.range', 'jquery']},
 
-        // Rangy and plugins
-        'rangy':        { src: 'js/rangy.js' },
-        'rangy.serializer':
-                        { src: 'js/rangy/serializer.js',req: ['rangy'] },
+        'view.doc':     { src: 'js/view/doc.js',
+                          req: ['model.doc',
+                                'view.section', 'view.selection',
+                                'jquery']},
 
         // jQuery-ui and widgets
         'jquery-ui':    { src: 'js/jquery-ui.js',       req: ['jquery'] },
@@ -132,11 +124,11 @@ if (app.Option.mode === 'development')
     
         // Final suummary app
         'summary':      { src: 'js/jquery.summary-08.js',
-                          req: [ 'model.user', 'model.comment', 'model.note',
-                                 'view.doc', 'view.selection',
-                                 'jquery', 'utils',
-                                 'rangy.serializer',
-                                 'ui.checkbox'
+                          req: [ 'jquery', 'utils',
+                                 'rangy',
+                                 'ui.checkbox',
+                                 'model.user', 'model.note',
+                                 'view.doc'
                           ] }
     };
 }

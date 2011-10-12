@@ -18,7 +18,6 @@
     /** @brief  A View for a app.Model.Ranges instance. */
     app.View.Selection = Backbone.View.extend({
         viewName:   'Selection',
-        clickEvent: 'control:click',
 
         tagName:    'div',
         className:  'selection',
@@ -26,28 +25,12 @@
         rangeViews: null,
 
         events: {
-            'control:click':    '_controlClick'
+            'mouseenter .range-control':    '_controlMouse',
+            'mouseleave .range-control':    '_controlMouse',
+            'click .range-control':         '_controlClick'
         },
 
         initialize: function() {
-
-            // Mix in the _trackClick method from the click helper
-            this._trackClick = _.bind(app.Helper.click._trackClick, this);
-
-            /* Gather the events used by _trackClick, ensuring that 'mouseup'
-             * is included.
-             *
-             * :NOTE: If we don't include 'mouseup', _trackClick will not
-             *        properly handle the click event for this situation
-             *        (i.e. the control moved from it's original container into
-             *              the '.selected' element).
-             */
-            var events  = [ 'mouseup.'+ this.viewName ];
-            $.each(app.Helper.click.events, function(event, method) {
-                events.push( event +'.'+ this.viewName );
-            });
-
-            this._trackClickEvents = events.join(' ');
         },
 
         /** @brief  Override so we can properly remove component range views.
@@ -119,12 +102,96 @@
             return self;
         },
 
+        /** @brief  Retrieve the bounding segments of the selection.
+         *  @param  force   If true, force a re-computation, otherwise, if we
+         *                  have cached values, return them;
+         *
+         *  The bounds of any selection can be defined by 3 contiguous
+         *  segments:
+         *      +------------------------------------------+
+         *      |                                          |
+         *      |          +-----------------------------+ |
+         *      |          | 1                           | |
+         *      | +--------+-----------------------------+ |
+         *      | |          2                           | |
+         *      | +-------------------------+------------+ |
+         *      | |          3              |              |
+         *      | +-------------------------+              |
+         *      |                                          |
+         *      +------------------------------------------+
+         *
+         *  @return The bounding segments, each in the form:
+         *              { top:, right:, bottom:, left: }
+         */
+        boundingSegments: function(force) {
+            var self            = this;
+
+            if ( (force !== true) && self._boundingSegments)
+            {
+                return self._boundingSegments;
+            }
+
+            var $first          = $( _.first(self.rangeViews).el )
+                                                        .find('.selected'),
+                $last           = $( _.last(self.rangeViews).el )
+                                                        .find('.selected'),
+                $measureStart   = $first.find('.measure-start'),
+                $measureEnd     = $last.find('.measure-end'),
+                segments        = [],
+                segment;
+
+            // Compute segment 1
+            segment         = $measureStart.offset();
+            // Account for padding
+            segment.left   -= ($first.outerWidth() - $first.width()) / 2;
+            segment.bottom  = segment.top  + $measureStart.height();
+            segment.right   = (segment.left + $first.outerWidth()) -
+                             (segment.left - $first.offset().left);
+
+            segments[0] = $.extend({}, segment);
+
+            // Compute segment 3
+            segment = $measureEnd.offset();
+            if (segments[0].top === segment.top)
+            {
+                // Segment 3 === Segment 1 (single segment)
+                segment = segments[0];
+            }
+            else
+            {
+                segment.bottom = segment.top  + $measureStart.height();
+                segment.right  = segment.left;
+                segment.left   = $last.offset().left;
+            }
+
+            segments[2] = $.extend({}, segment);
+
+            // Compute segment 2 (if it exists)
+            segment.top = segment.bottom = segment.right = segment.left = 0;
+            if (segments[0].bottom < segments[2].top)
+            {
+                // There is something between.  Construct a non-empty segment
+                segment.top    = segments[0].bottom;
+                segment.right  = segments[0].right;
+                segment.bottom = segments[2].top;
+                segment.left   = segments[2].left;
+            }
+            segments[1] = $.extend({}, segment);
+
+            // Cache the segments
+            self._boundingSegments = segments;
+
+            //console.log(segments);
+
+            return segments;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
          */
 
-        /** @brief  Handle control:click events.
+        /** @brief  Handle click events on our control element.
          *  @param  e       The triggering event which SHOULD include an
          *                  'originalEvent' that can be used to identify the
          *                  originating target;
@@ -134,13 +201,46 @@
             var $el     = $(e.originalEvent.target);
             var name    = $el.attr('name');
 
+            /*
             console.log('View.'+ self.viewName +'::_controlClick(): '
                         +   'name[ '+ name +' ]');
+            // */
 
             switch (name)
             {
             case 'note-add':
                 // :TODO: Convert this Selection view to a Note view.
+                break;
+            }
+        },
+
+        /** @brief  Handle mouseenter/leave within the range control.
+         *  @param  e       The triggering event;
+         *
+         */
+        _controlMouse: function(e) {
+            var self    = this;
+
+            switch (e.type)
+            {
+            case 'mouseenter':
+                if (self._pendingLeave)
+                {
+                    // Cancel any pending leave
+                    clearTimeout( self._pendingLeave );
+                    self._pendingLeave = null;
+                }
+                break;
+
+            case 'mouseleave':
+                /* Wait a short time to see if _rangeMouse() is fired with
+                 * 'mouseenter'.
+                 */
+                self._pendingLeave = setTimeout(function() {
+                    // Hide the range controls
+                    self.$control.hide();
+                    self._pendingLeave = null;
+                }, 100);
                 break;
             }
         },
@@ -156,57 +256,105 @@
             {
             case 'mouseenter':
                 var $selected   = $(e.target);
-
-                /* Move the control INTO the target overlay so mouse movement
-                 * will NOT indicate 'leave'
-                 */
-                if (self.$control.parent().get(0) !== $selected.get(0))
+                if (self._pendingLeave)
                 {
-                    self.$control.unbind('.'+ self.viewName);
-
-                    self.$control.prependTo($selected);
-
-                    // Bind the events needed by _trackClick
-                    self.$control.bind( self._trackClickEvents,
-                                        _.bind(self._trackClick, self) );
+                    // Cancel any pending leave
+                    clearTimeout( self._pendingLeave );
+                    self._pendingLeave = null;
                 }
 
-                /* :TODO: Move the control to the nearest edge of the target
-                 *        and position the controls there, perhaps adjusting
-                 *        the border radius according to which edge abuts the
-                 *        range.
-                 *
-                 *        The bounds of any selection can be defined by 3
-                 *        contiguous elements:
-                 *           +------------------------------------------+
-                 *           |                                          |
-                 *           |          +-----------------------------+ |
-                 *           |          | 1                           | |
-                 *           | +--------+-----------------------------+ |
-                 *           | |          2                           | |
-                 *           | +-------------------------+------------+ |
-                 *           | |          3              |              |
-                 *           | +-------------------------+              |
-                 *           |                                          |
-                 *           +------------------------------------------+
-                 */
-                var position    = {
-                    my: 'bottom',
-                    at: 'top',
-                    of: $selected
-                };
-
-                self.$control.show()
-                             .position( position );
+                self._showControl( {x: e.pageX, y: e.pageY} );
                 break;
 
             case 'mouseleave':
-                // :TODO: If the mouse is IN the control, do NOT hide it.
-
-                // Hide the range controls
-                self.$control.hide();
+                /* Wait a short time to see if _controlMouse() is fired with
+                 * 'mouseenter'.
+                 */
+                self._pendingLeave = setTimeout(function() {
+                    // Hide the range controls
+                    self.$control.hide();
+                    self._pendingLeave = null;
+                }, 100);
                 break;
             }
+        },
+
+        /** @brief  Given x,y coordinates, determine if they fall within one of 
+         *          our bounding segments.  If so, show the control along the
+         *          edge of the nearest segment near the provided coordinates.
+         *  @param  coords      An object of { x: , y: } coordinates;
+         *
+         *  @return The offset, or null.
+         */
+        _showControl: function( coords ) {
+            var self    = this;
+            var segment = self._inSegment( coords );
+
+            if (! segment)  { return null; }
+
+            var offset  = {top:0, left:0};
+
+            // Find the nearest horizontal edge
+            if ((coords.y - segment.top) >
+                    ((segment.bottom - segment.top) / 2))
+            {
+                // Nearest the bottom of 'segment'
+                offset.top = segment.bottom;
+                self.$control.removeClass('ui-corner-top')
+                             .addClass('ui-corner-bottom');
+            }
+            else
+            {
+                // Nearest the top of 'segment'
+                offset.top = segment.top - self.$control.height();
+                self.$control.removeClass('ui-corner-bottom')
+                             .addClass('ui-corner-top');
+            }
+
+            // Find the nearest vertical edge
+            var cWidth  = self.$control.outerWidth();
+            offset.left = coords.x - (cWidth / 2);
+            if ((offset.left + cWidth) > segment.right)
+            {
+                offset.left = segment.right - cWidth;
+            }
+            else if (offset.left < segment.left)
+            {
+                offset.left = segment.left;
+            }
+
+            self.$control.show()
+                         .offset( offset );
+        },
+
+        /** @brief  Determine if the given x,y coordinates fall within one of
+         *          our bounding segments.  If so, return the segment.
+         *  @param  coords      An object of { x: , y: } coordinates;
+         *
+         *  @return The segment the contains { x: , y: } or null.
+         */
+        _inSegment: function( coords ) {
+            var self        = this,
+                segments    = self.boundingSegments(),
+                inSegment   = null;
+
+            /*
+            console.log('View:Selection:_inSegment( '
+                        + coords.x +', '+ coords.y +' )');
+            // */
+
+            $.each(segments, function(idex, segment) {
+
+                if ((coords.x >= segment.left) && (coords.x <= segment.right) &&
+                    (coords.y >= segment.top)  && (coords.y <= segment.bottom))
+                {
+                    // HIT
+                    inSegment = segment;
+                    return false;           // terminate iteration
+                }
+            });
+
+            return inSegment;
         }
     });
 

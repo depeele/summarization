@@ -9824,6 +9824,193 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
 // Expose jQuery to the global object
 window.jQuery = window.$ = jQuery;
 })(window);
+/** @file
+ *
+ *  jQuery Utilities/extensions
+ *
+ */
+(function($) {
+
+    /*************************************************************************
+     * String extensions
+     *
+     */
+
+    /** @brief  Left pad the provided string to the specified number of
+     *          characters using the provided padding character.
+     *  @param  str         The string to pad;
+     *  @param  numChars    The total number of charcters desired [ 2 ];
+     *  @param  padChar     The desired padding character         [ '0' ];
+     *
+     *  @return A new, padded string.
+     */
+    $.padString = function(str, numChars, padChar) {
+        numChars = numChars || 2;
+        padChar  = padChar  || '0';
+
+        // Ensure 'str' is actually a string
+        str = ''+ str;
+
+        while (str.length < numChars)
+        {
+            str = padChar + str;
+        }
+
+        return str;
+    };
+
+    /*************************************************************************
+     * Date extensions
+     *
+     */
+
+    /** @brief  Month Strings. */
+    $.months    = [
+        "January",      "Febrary",  "March",    "April",
+        "May",          "June",     "July",     "August",
+        "September",    "October",  "November", "December"
+    ];
+
+
+    /** @brief  Convert a Date instance to a client-localized string of the
+     *          form:
+     *              YYYY-MM-DD g:mm a
+     *  @param  date        The Date instance to convert.  If not provided, use
+     *                      the current date/time.
+     *
+     *  @param  timeOnly    Exclude the date information? [ false ]
+     *
+     *  @return The string representation of the given date.
+     */
+    $.date2str = function(date, timeOnly) {
+        if (date === undefined)
+        {
+            date = new Date();
+        }
+        if ( ! (date instanceof Date) )
+        {
+            date = new Date(date);
+        }
+
+        var dateStr     = $.months[date.getMonth()]  //.substr(0,3)
+                        +' '+  date.getDate()
+                        +' '+ date.getFullYear()
+                        +', ';
+        var hour        = date.getHours();
+        var meridian    = 'am';
+        if (hour === 0)
+        {
+            hour     = 12;
+        }
+        else if (hour === 12)
+        {
+            meridian = 'pm';
+        }
+        else if (hour > 12)
+        {
+            hour     -= 12;
+            meridian  = 'pm';
+        }
+
+        /* Using a string for padding works here because we'll only ever need
+         * to add 1 character at most.
+         *
+         * We use the span to try and ensure that we'll always align properly
+         * since the only value that MIGHT be in the empty field is 1.
+         */
+        dateStr += hour
+                +':'+ $.padString(date.getMinutes())
+                +' '+ meridian;
+
+        return dateStr;
+    };
+
+    /** @brief  Convert the given string into a Date instance.
+     *  @param  str     The date string to convert
+     *                      (MUST be GMT in the form 'YYYY-MM-DD HH:MM:SS')
+     *
+     *  @return The Date instance (null if invalid).
+     */
+    $.str2date = function(str) {
+        // Ensure 'str' is a string
+        str = ''+str;
+
+        var parts       = str.split(' ');
+        var dateParts   = parts[0].split('-');
+        var timeParts   = parts[1].split(':');
+        var date        = new Date();
+
+        date.setUTCFullYear(dateParts[0] );
+        date.setUTCMonth(   parseInt(dateParts[1], 10) - 1 );
+        date.setUTCDate(    dateParts[2] );
+        date.setUTCHours(   timeParts[0] );
+        date.setUTCMinutes( timeParts[1] );
+        date.setUTCSeconds( timeParts[2] );
+
+        return date;
+    };
+
+    /** @brief  Given a number, return the ordinal suffix for that number.
+     *  @param  num     The number.
+     *
+     *  @return The number with the appropriate ordinal suffix string.
+     */
+    $.ordinal = function(num) {
+        var suffix  = 'th';
+        if ( ((num % 100) < 11) || ((num % 100) > 13) )
+        {
+            switch (num % 10)
+            {
+            case 1: suffix = 'st';  break;
+            case 2: suffix = 'nd';  break;
+            case 3: suffix = 'rd';  break;
+            }
+        }
+
+        return num +'<sup>'+ suffix +'</sup>';
+    };
+
+    /** @brief  Takes a date/time and returns a string representing how long
+     *          ago the date occurred.
+     *  @param  date        The Date instance or ISO Date string to convert.
+     *                      If not provided, use the current date/time.
+     *
+     *  @return The date string.
+     */
+    $.prettyDate = function(date) {
+        if (date === undefined)
+        {
+            date = new Date();
+        }
+        if ( ! (date instanceof Date) )
+        {
+            date = new Date(date);
+        }
+        var diff    = (( (new Date()).getTime() - date.getTime()) / 1000);
+        var dayDiff = Math.floor(diff / 86400);
+
+        if ( isNaN(dayDiff) || (dayDiff < 0) || (dayDiff >= 31))
+        {
+            var day = date.getDate();
+
+            return $.months[date.getMonth()]  //.substr(0,3)
+                    +' '+  $.ordinal(day)
+                    +', '+ date.getFullYear();
+        }
+
+        return dayDiff == 0 && (
+                    diff < 60    && "just now"                               ||
+                    diff < 120   && "1 minute ago"                           ||
+                    diff < 3600  && Math.floor( diff / 60 )  +" minutes ago" ||
+                    diff < 7200  && "1 hour ago"                             ||
+                    diff < 86400 && Math.floor( diff / 3600) +" hours ago")  ||
+               dayDiff == 1      && "Yesterday"                              ||
+               dayDiff <  7      && dayDiff                  +" days ago"    ||
+               dayDiff <  14     && "1 week ago"                             ||
+               dayDiff <  31     && Math.ceil( dayDiff/ 7 )  +" weeks ago";
+    };
+
+}(jQuery));
 /**
  * @license Rangy, a cross-browser JavaScript range and selection library
  * http://code.google.com/p/rangy/
@@ -12928,1453 +13115,6 @@ rangy.createModule("DomUtil", function(api, module) {
         win = null;
     });
 });
-/**
- * @license Serializer module for Rangy.
- * Serializes Ranges and Selections. An example use would be to store a user's selection on a particular page in a
- * cookie or local storage and restore it on the user's next visit to the same page.
- *
- * Part of Rangy, a cross-browser JavaScript range and selection library
- * http://code.google.com/p/rangy/
- *
- * Depends on Rangy core.
- *
- * Copyright 2011, Tim Down
- * Licensed under the MIT license.
- * Version: 1.2
- * Build date: 22 August 2011
- */
-rangy.createModule("Serializer", function(api, module) {
-    api.requireModules( ["WrappedSelection", "WrappedRange"] );
-    var UNDEF = "undefined";
-
-    // encodeURIComponent and decodeURIComponent are required for cookie handling
-    if (typeof encodeURIComponent == UNDEF || typeof decodeURIComponent == UNDEF) {
-        module.fail("Global object is missing encodeURIComponent and/or decodeURIComponent method");
-    }
-
-    // Checksum for checking whether range can be serialized
-    var crc32 = (function() {
-        function utf8encode(str) {
-            var utf8CharCodes = [];
-
-            for (var i = 0, len = str.length, c; i < len; ++i) {
-                c = str.charCodeAt(i);
-                if (c < 128) {
-                    utf8CharCodes.push(c);
-                } else if (c < 2048) {
-                    utf8CharCodes.push((c >> 6) | 192, (c & 63) | 128);
-                } else {
-                    utf8CharCodes.push((c >> 12) | 224, ((c >> 6) & 63) | 128, (c & 63) | 128);
-                }
-            }
-            return utf8CharCodes;
-        }
-
-        var cachedCrcTable = null;
-
-        function buildCRCTable() {
-            var table = [];
-            for (var i = 0, j, crc; i < 256; ++i) {
-                crc = i;
-                j = 8;
-                while (j--) {
-                    if ((crc & 1) == 1) {
-                        crc = (crc >>> 1) ^ 0xEDB88320;
-                    } else {
-                        crc >>>= 1;
-                    }
-                }
-                table[i] = crc >>> 0;
-            }
-            return table;
-        }
-
-        function getCrcTable() {
-            if (!cachedCrcTable) {
-                cachedCrcTable = buildCRCTable();
-            }
-            return cachedCrcTable;
-        }
-
-        return function(str) {
-            var utf8CharCodes = utf8encode(str), crc = -1, crcTable = getCrcTable();
-            for (var i = 0, len = utf8CharCodes.length, y; i < len; ++i) {
-                y = (crc ^ utf8CharCodes[i]) & 0xFF;
-                crc = (crc >>> 8) ^ crcTable[y];
-            }
-            return (crc ^ -1) >>> 0;
-        };
-    })();
-
-    var dom = api.dom;
-
-    function escapeTextForHtml(str) {
-        return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    function nodeToInfoString(node, infoParts) {
-        infoParts = infoParts || [];
-        var nodeType = node.nodeType, children = node.childNodes, childCount = children.length;
-        var nodeInfo = [nodeType, node.nodeName, childCount].join(":");
-        var start = "", end = "";
-        switch (nodeType) {
-            case 3: // Text node
-                start = escapeTextForHtml(node.nodeValue);
-                break;
-            case 8: // Comment
-                start = "<!--" + escapeTextForHtml(node.nodeValue) + "-->";
-                break;
-            default:
-                start = "<" + nodeInfo + ">";
-                end = "</>";
-                break;
-        }
-        if (start) {
-            infoParts.push(start);
-        }
-        for (var i = 0; i < childCount; ++i) {
-            nodeToInfoString(children[i], infoParts);
-        }
-        if (end) {
-            infoParts.push(end);
-        }
-        return infoParts;
-    }
-
-    // Creates a string representation of the specified element's contents that is similar to innerHTML but omits all
-    // attributes and comments and includes child node counts. This is done instead of using innerHTML to work around
-    // IE <= 8's policy of including element properties in attributes, which ruins things by changing an element's
-    // innerHTML whenever the user changes an input within the element.
-    function getElementChecksum(el) {
-        var info = nodeToInfoString(el).join("");
-        return crc32(info).toString(16);
-    }
-
-    function serializePosition(node, offset, rootNode) {
-        var pathBits = [], n = node;
-        rootNode = rootNode || dom.getDocument(node).documentElement;
-        while (n && n != rootNode) {
-            pathBits.push(dom.getNodeIndex(n, true));
-            n = n.parentNode;
-        }
-        return pathBits.join("/") + ":" + offset;
-    }
-
-    function deserializePosition(serialized, rootNode, doc) {
-        if (rootNode) {
-            doc = doc || dom.getDocument(rootNode);
-        } else {
-            doc = doc || document;
-            rootNode = doc.documentElement;
-        }
-        var bits = serialized.split(":");
-        var node = rootNode;
-        var nodeIndices = bits[0] ? bits[0].split("/") : [], i = nodeIndices.length, nodeIndex;
-
-        while (i--) {
-            nodeIndex = parseInt(nodeIndices[i], 10);
-            if (nodeIndex < node.childNodes.length) {
-                node = node.childNodes[parseInt(nodeIndices[i], 10)];
-            } else {
-                throw module.createError("deserializePosition failed: node " + dom.inspectNode(node) +
-                        " has no child with index " + nodeIndex + ", " + i);
-            }
-        }
-
-        return new dom.DomPosition(node, parseInt(bits[1], 10));
-    }
-
-    function serializeRange(range, omitChecksum, rootNode) {
-        rootNode = rootNode || api.DomRange.getRangeDocument(range).documentElement;
-        if (!dom.isAncestorOf(rootNode, range.commonAncestorContainer, true)) {
-            throw new Error("serializeRange: range is not wholly contained within specified root node");
-        }
-        var serialized = serializePosition(range.startContainer, range.startOffset, rootNode) + "," +
-            serializePosition(range.endContainer, range.endOffset, rootNode);
-        if (!omitChecksum) {
-            serialized += "{" + getElementChecksum(rootNode) + "}";
-        }
-        return serialized;
-    }
-
-    function deserializeRange(serialized, rootNode, doc) {
-        if (rootNode) {
-            doc = doc || dom.getDocument(rootNode);
-        } else {
-            doc = doc || document;
-            rootNode = doc.documentElement;
-        }
-        var result = /^([^,]+),([^,\{]+)({([^}]+)})?$/.exec(serialized);
-        var checksum = result[4], rootNodeChecksum = getElementChecksum(rootNode);
-        if (checksum && checksum !== getElementChecksum(rootNode)) {
-            throw new Error("deserializeRange: checksums of serialized range root node (" + checksum +
-                    ") and target root node (" + rootNodeChecksum + ") do not match");
-        }
-        var start = deserializePosition(result[1], rootNode, doc), end = deserializePosition(result[2], rootNode, doc);
-        var range = api.createRange(doc);
-        range.setStart(start.node, start.offset);
-        range.setEnd(end.node, end.offset);
-        return range;
-    }
-
-    function canDeserializeRange(serialized, rootNode, doc) {
-        if (rootNode) {
-            doc = doc || dom.getDocument(rootNode);
-        } else {
-            doc = doc || document;
-            rootNode = doc.documentElement;
-        }
-        var result = /^([^,]+),([^,]+)({([^}]+)})?$/.exec(serialized);
-        var checksum = result[3];
-        return !checksum || checksum === getElementChecksum(rootNode);
-    }
-
-    function serializeSelection(selection, omitChecksum, rootNode) {
-        selection = selection || api.getSelection();
-        var ranges = selection.getAllRanges(), serializedRanges = [];
-        for (var i = 0, len = ranges.length; i < len; ++i) {
-            serializedRanges[i] = serializeRange(ranges[i], omitChecksum, rootNode);
-        }
-        return serializedRanges.join("|");
-    }
-
-    function deserializeSelection(serialized, rootNode, win) {
-        if (rootNode) {
-            win = win || dom.getWindow(rootNode);
-        } else {
-            win = win || window;
-            rootNode = win.document.documentElement;
-        }
-        var serializedRanges = serialized.split("|");
-        var sel = api.getSelection(win);
-        var ranges = [];
-
-        for (var i = 0, len = serializedRanges.length; i < len; ++i) {
-            ranges[i] = deserializeRange(serializedRanges[i], rootNode, win.document);
-        }
-        sel.setRanges(ranges);
-
-        return sel;
-    }
-
-    function canDeserializeSelection(serialized, rootNode, win) {
-        var doc;
-        if (rootNode) {
-            doc = win ? win.document : dom.getDocument(rootNode);
-        } else {
-            win = win || window;
-            rootNode = win.document.documentElement;
-        }
-        var serializedRanges = serialized.split("|");
-
-        for (var i = 0, len = serializedRanges.length; i < len; ++i) {
-            if (!canDeserializeRange(serializedRanges[i], rootNode, doc)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-
-    var cookieName = "rangySerializedSelection";
-
-    function getSerializedSelectionFromCookie(cookie) {
-        var parts = cookie.split(/[;,]/);
-        for (var i = 0, len = parts.length, nameVal, val; i < len; ++i) {
-            nameVal = parts[i].split("=");
-            if (nameVal[0].replace(/^\s+/, "") == cookieName) {
-                val = nameVal[1];
-                if (val) {
-                    return decodeURIComponent(val.replace(/\s+$/, ""));
-                }
-            }
-        }
-        return null;
-    }
-
-    function restoreSelectionFromCookie(win) {
-        win = win || window;
-        var serialized = getSerializedSelectionFromCookie(win.document.cookie);
-        if (serialized) {
-            deserializeSelection(serialized, win.doc)
-        }
-    }
-
-    function saveSelectionCookie(win, props) {
-        win = win || window;
-        props = (typeof props == "object") ? props : {};
-        var expires = props.expires ? ";expires=" + props.expires.toUTCString() : "";
-        var path = props.path ? ";path=" + props.path : "";
-        var domain = props.domain ? ";domain=" + props.domain : "";
-        var secure = props.secure ? ";secure" : "";
-        var serialized = serializeSelection(api.getSelection(win));
-        win.document.cookie = encodeURIComponent(cookieName) + "=" + encodeURIComponent(serialized) + expires + path + domain + secure;
-    }
-
-    api.serializePosition = serializePosition;
-    api.deserializePosition = deserializePosition;
-
-    api.serializeRange = serializeRange;
-    api.deserializeRange = deserializeRange;
-    api.canDeserializeRange = canDeserializeRange;
-
-    api.serializeSelection = serializeSelection;
-    api.deserializeSelection = deserializeSelection;
-    api.canDeserializeSelection = canDeserializeSelection;
-
-    api.restoreSelectionFromCookie = restoreSelectionFromCookie;
-    api.saveSelectionCookie = saveSelectionCookie;
-
-    api.getElementChecksum = getElementChecksum;
-});
-/**
- * @license CSS Class Applier module for Rangy.
- * Adds, removes and toggles CSS classes on Ranges and Selections
- *
- * Part of Rangy, a cross-browser JavaScript range and selection library
- * http://code.google.com/p/rangy/
- *
- * Depends on Rangy core.
- *
- * Copyright 2011, Tim Down
- * Licensed under the MIT license.
- * Version: 1.2
- * Build date: 22 August 2011
- */
-rangy.createModule("CssClassApplier", function(api, module) {
-    api.requireModules( ["WrappedSelection", "WrappedRange"] );
-
-    var dom = api.dom;
-
-
-
-    var defaultTagName = "span";
-
-    function trim(str) {
-        return str.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
-    }
-
-    function hasClass(el, cssClass) {
-        return el.className && new RegExp("(?:^|\\s)" + cssClass + "(?:\\s|$)").test(el.className);
-    }
-
-    function addClass(el, cssClass) {
-        if (el.className) {
-            if (!hasClass(el, cssClass)) {
-                el.className += " " + cssClass;
-            }
-        } else {
-            el.className = cssClass;
-        }
-    }
-
-    var removeClass = (function() {
-        function replacer(matched, whiteSpaceBefore, whiteSpaceAfter) {
-            return (whiteSpaceBefore && whiteSpaceAfter) ? " " : "";
-        }
-
-        return function(el, cssClass) {
-            if (el.className) {
-                el.className = el.className.replace(new RegExp("(?:^|\\s)" + cssClass + "(?:\\s|$)"), replacer);
-            }
-        };
-    })();
-
-    function sortClassName(className) {
-        return className.split(/\s+/).sort().join(" ");
-    }
-
-    function getSortedClassName(el) {
-        return sortClassName(el.className);
-    }
-
-    function haveSameClasses(el1, el2) {
-        return getSortedClassName(el1) == getSortedClassName(el2);
-    }
-
-    function replaceWithOwnChildren(el) {
-
-        var parent = el.parentNode;
-        while (el.hasChildNodes()) {
-            parent.insertBefore(el.firstChild, el);
-        }
-        parent.removeChild(el);
-    }
-
-    function rangeSelectsAnyText(range, textNode) {
-        var textRange = range.cloneRange();
-        textRange.selectNodeContents(textNode);
-
-        var intersectionRange = textRange.intersection(range);
-        var text = intersectionRange ? intersectionRange.toString() : "";
-        textRange.detach();
-
-        return text != "";
-    }
-
-    function getEffectiveTextNodes(range) {
-        return range.getNodes([3], function(textNode) {
-            return rangeSelectsAnyText(range, textNode);
-        });
-    }
-
-    function elementsHaveSameNonClassAttributes(el1, el2) {
-        if (el1.attributes.length != el2.attributes.length) return false;
-        for (var i = 0, len = el1.attributes.length, attr1, attr2, name; i < len; ++i) {
-            attr1 = el1.attributes[i];
-            name = attr1.name;
-            if (name != "class") {
-                attr2 = el2.attributes.getNamedItem(name);
-                if (attr1.specified != attr2.specified) return false;
-                if (attr1.specified && attr1.nodeValue !== attr2.nodeValue) return false;
-            }
-        }
-        return true;
-    }
-
-    function elementHasNonClassAttributes(el, exceptions) {
-        for (var i = 0, len = el.attributes.length, attrName; i < len; ++i) {
-            attrName = el.attributes[i].name;
-            if ( !(exceptions && dom.arrayContains(exceptions, attrName)) && el.attributes[i].specified && attrName != "class") {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function elementHasProps(el, props) {
-        for (var p in props) {
-            if (props.hasOwnProperty(p) && el[p] !== props[p]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    var getComputedStyleProperty;
-
-    if (typeof window.getComputedStyle != "undefined") {
-        getComputedStyleProperty = function(el, propName) {
-            return dom.getWindow(el).getComputedStyle(el, null)[propName];
-        };
-    } else if (typeof document.documentElement.currentStyle != "undefined") {
-        getComputedStyleProperty = function(el, propName) {
-            return el.currentStyle[propName];
-        };
-    } else {
-        module.fail("No means of obtaining computed style properties found");
-    }
-
-    var isEditableElement;
-
-    (function() {
-        var testEl = document.createElement("div");
-        if (typeof testEl.isContentEditable == "boolean") {
-            isEditableElement = function(node) {
-                return node && node.nodeType == 1 && node.isContentEditable;
-            };
-        } else {
-            isEditableElement = function(node) {
-                if (!node || node.nodeType != 1 || node.contentEditable == "false") {
-                    return false;
-                }
-                return node.contentEditable == "true" || isEditableElement(node.parentNode);
-            };
-        }
-    })();
-
-    function isEditingHost(node) {
-        var parent;
-        return node && node.nodeType == 1
-            && (( (parent = node.parentNode) && parent.nodeType == 9 && parent.designMode == "on")
-            || (isEditableElement(node) && !isEditableElement(node.parentNode)));
-    }
-
-    function isEditable(node) {
-        return (isEditableElement(node) || (node.nodeType != 1 && isEditableElement(node.parentNode))) && !isEditingHost(node);
-    }
-
-    var inlineDisplayRegex = /^inline(-block|-table)?$/i;
-
-    function isNonInlineElement(node) {
-        return node && node.nodeType == 1 && !inlineDisplayRegex.test(getComputedStyleProperty(node, "display"));
-    }
-
-    // White space characters as defined by HTML 4 (http://www.w3.org/TR/html401/struct/text.html)
-    var htmlNonWhiteSpaceRegex = /[^\r\n\t\f \u200B]/;
-
-    function isUnrenderedWhiteSpaceNode(node) {
-        if (node.data.length == 0) {
-            return true;
-        }
-        if (htmlNonWhiteSpaceRegex.test(node.data)) {
-            return false;
-        }
-        var cssWhiteSpace = getComputedStyleProperty(node.parentNode, "whiteSpace");
-        switch (cssWhiteSpace) {
-            case "pre":
-            case "pre-wrap":
-            case "-moz-pre-wrap":
-                return false;
-            case "pre-line":
-                if (/[\r\n]/.test(node.data)) {
-                    return false;
-                }
-        }
-
-        // We now have a whitespace-only text node that may be rendered depending on its context. If it is adjacent to a
-        // non-inline element, it will not be rendered. This seems to be a good enough definition.
-        return isNonInlineElement(node.previousSibling) || isNonInlineElement(node.nextSibling);
-    }
-
-    function isSplitPoint(node, offset) {
-        if (dom.isCharacterDataNode(node)) {
-            if (offset == 0) {
-                return !!node.previousSibling;
-            } else if (offset == node.length) {
-                return !!node.nextSibling;
-            } else {
-                return true;
-            }
-        }
-
-        return offset > 0 && offset < node.childNodes.length;
-    }
-
-    function splitNodeAt(node, descendantNode, descendantOffset, rangesToPreserve) {
-        var newNode;
-        var splitAtStart = (descendantOffset == 0);
-
-        if (dom.isAncestorOf(descendantNode, node)) {
-            throw module.createError("descendant is ancestor of node");
-        }
-
-        if (dom.isCharacterDataNode(descendantNode)) {
-            if (descendantOffset == 0) {
-                descendantOffset = dom.getNodeIndex(descendantNode);
-                descendantNode = descendantNode.parentNode;
-            } else if (descendantOffset == descendantNode.length) {
-                descendantOffset = dom.getNodeIndex(descendantNode) + 1;
-                descendantNode = descendantNode.parentNode;
-            } else {
-                throw module.createError("splitNodeAt should not be called with offset in the middle of a data node ("
-                    + descendantOffset + " in " + descendantNode.data);
-            }
-        }
-
-        if (isSplitPoint(descendantNode, descendantOffset)) {
-            if (!newNode) {
-                newNode = descendantNode.cloneNode(false);
-                if (newNode.id) {
-                    newNode.removeAttribute("id");
-                }
-                var child;
-                while ((child = descendantNode.childNodes[descendantOffset])) {
-                    newNode.appendChild(child);
-                }
-                dom.insertAfter(newNode, descendantNode);
-            }
-            return (descendantNode == node) ? newNode : splitNodeAt(node, newNode.parentNode, dom.getNodeIndex(newNode), rangesToPreserve);
-        } else if (node != descendantNode) {
-            newNode = descendantNode.parentNode;
-
-            // Work out a new split point in the parent node
-            var newNodeIndex = dom.getNodeIndex(descendantNode);
-
-            if (!splitAtStart) {
-                newNodeIndex++;
-            }
-            return splitNodeAt(node, newNode, newNodeIndex, rangesToPreserve);
-        }
-        return node;
-    }
-
-    function areElementsMergeable(el1, el2) {
-        return el1.tagName == el2.tagName && haveSameClasses(el1, el2) && elementsHaveSameNonClassAttributes(el1, el2);
-    }
-
-    function createAdjacentMergeableTextNodeGetter(forward) {
-        var propName = forward ? "nextSibling" : "previousSibling";
-
-        return function(textNode, checkParentElement) {
-            var el = textNode.parentNode;
-            var adjacentNode = textNode[propName];
-            if (adjacentNode) {
-                // Can merge if the node's previous/next sibling is a text node
-                if (adjacentNode && adjacentNode.nodeType == 3) {
-                    return adjacentNode;
-                }
-            } else if (checkParentElement) {
-                // Compare text node parent element with its sibling
-                adjacentNode = el[propName];
-
-                if (adjacentNode && adjacentNode.nodeType == 1 && areElementsMergeable(el, adjacentNode)) {
-                    return adjacentNode[forward ? "firstChild" : "lastChild"];
-                }
-            }
-            return null;
-        }
-    }
-
-    var getPreviousMergeableTextNode = createAdjacentMergeableTextNodeGetter(false),
-        getNextMergeableTextNode = createAdjacentMergeableTextNodeGetter(true);
-
-
-    function Merge(firstNode) {
-        this.isElementMerge = (firstNode.nodeType == 1);
-        this.firstTextNode = this.isElementMerge ? firstNode.lastChild : firstNode;
-        this.textNodes = [this.firstTextNode];
-    }
-
-    Merge.prototype = {
-        doMerge: function() {
-            var textBits = [], textNode, parent, text;
-            for (var i = 0, len = this.textNodes.length; i < len; ++i) {
-                textNode = this.textNodes[i];
-                parent = textNode.parentNode;
-                textBits[i] = textNode.data;
-                if (i) {
-                    parent.removeChild(textNode);
-                    if (!parent.hasChildNodes()) {
-                        parent.parentNode.removeChild(parent);
-                    }
-                }
-            }
-            this.firstTextNode.data = text = textBits.join("");
-            return text;
-        },
-
-        getLength: function() {
-            var i = this.textNodes.length, len = 0;
-            while (i--) {
-                len += this.textNodes[i].length;
-            }
-            return len;
-        },
-
-        toString: function() {
-            var textBits = [];
-            for (var i = 0, len = this.textNodes.length; i < len; ++i) {
-                textBits[i] = "'" + this.textNodes[i].data + "'";
-            }
-            return "[Merge(" + textBits.join(",") + ")]";
-        }
-    };
-
-    var optionProperties = ["elementTagName", "ignoreWhiteSpace", "applyToEditableOnly"];
-
-    // Allow "class" as a property name in object properties
-    var mappedPropertyNames = {"class" : "className"};
-
-    function CssClassApplier(cssClass, options, tagNames) {
-        this.cssClass = cssClass;
-        var normalize, i, len, propName;
-
-        var elementPropertiesFromOptions = null;
-
-        // Initialize from options object
-        if (typeof options == "object" && options !== null) {
-            tagNames = options.tagNames;
-            elementPropertiesFromOptions = options.elementProperties;
-
-            for (i = 0; propName = optionProperties[i++]; ) {
-                if (options.hasOwnProperty(propName)) {
-                    this[propName] = options[propName];
-                }
-            }
-            normalize = options.normalize;
-        } else {
-            normalize = options;
-        }
-
-        // Backwards compatibility: the second parameter can also be a Boolean indicating whether normalization
-        this.normalize = (typeof normalize == "undefined") ? true : normalize;
-
-        // Initialize element properties and attribute exceptions
-        this.attrExceptions = [];
-        var el = document.createElement(this.elementTagName);
-        this.elementProperties = {};
-        for (var p in elementPropertiesFromOptions) {
-            if (elementPropertiesFromOptions.hasOwnProperty(p)) {
-                // Map "class" to "className"
-                if (mappedPropertyNames.hasOwnProperty(p)) {
-                    p = mappedPropertyNames[p];
-                }
-                el[p] = elementPropertiesFromOptions[p];
-
-                // Copy the property back from the dummy element so that later comparisons to check whether elements
-                // may be removed are checking against the right value. For example, the href property of an element
-                // returns a fully qualified URL even if it was previously assigned a relative URL.
-                this.elementProperties[p] = el[p];
-                this.attrExceptions.push(p);
-            }
-        }
-
-        this.elementSortedClassName = this.elementProperties.hasOwnProperty("className") ?
-            sortClassName(this.elementProperties.className + " " + cssClass) : cssClass;
-
-        // Initialize tag names
-        this.applyToAnyTagName = false;
-        var type = typeof tagNames;
-        if (type == "string") {
-            if (tagNames == "*") {
-                this.applyToAnyTagName = true;
-            } else {
-                this.tagNames = trim(tagNames.toLowerCase()).split(/\s*,\s*/);
-            }
-        } else if (type == "object" && typeof tagNames.length == "number") {
-            this.tagNames = [];
-            for (i = 0, len = tagNames.length; i < len; ++i) {
-                if (tagNames[i] == "*") {
-                    this.applyToAnyTagName = true;
-                } else {
-                    this.tagNames.push(tagNames[i].toLowerCase());
-                }
-            }
-        } else {
-            this.tagNames = [this.elementTagName];
-        }
-    }
-
-    CssClassApplier.prototype = {
-        elementTagName: defaultTagName,
-        elementProperties: {},
-        ignoreWhiteSpace: true,
-        applyToEditableOnly: false,
-
-        hasClass: function(node) {
-            return node.nodeType == 1 && dom.arrayContains(this.tagNames, node.tagName.toLowerCase()) && hasClass(node, this.cssClass);
-        },
-
-        getSelfOrAncestorWithClass: function(node) {
-            while (node) {
-                if (this.hasClass(node, this.cssClass)) {
-                    return node;
-                }
-                node = node.parentNode;
-            }
-            return null;
-        },
-
-        isModifiable: function(node) {
-            return !this.applyToEditableOnly || isEditable(node);
-        },
-
-        // White space adjacent to an unwrappable node can be ignored for wrapping
-        isIgnorableWhiteSpaceNode: function(node) {
-            return this.ignoreWhiteSpace && node && node.nodeType == 3 && isUnrenderedWhiteSpaceNode(node);
-        },
-
-        // Normalizes nodes after applying a CSS class to a Range.
-        postApply: function(textNodes, range, isUndo) {
-
-            var firstNode = textNodes[0], lastNode = textNodes[textNodes.length - 1];
-
-            var merges = [], currentMerge;
-
-            var rangeStartNode = firstNode, rangeEndNode = lastNode;
-            var rangeStartOffset = 0, rangeEndOffset = lastNode.length;
-
-            var textNode, precedingTextNode;
-
-            for (var i = 0, len = textNodes.length; i < len; ++i) {
-                textNode = textNodes[i];
-                precedingTextNode = getPreviousMergeableTextNode(textNode, !isUndo);
-
-                if (precedingTextNode) {
-                    if (!currentMerge) {
-                        currentMerge = new Merge(precedingTextNode);
-                        merges.push(currentMerge);
-                    }
-                    currentMerge.textNodes.push(textNode);
-                    if (textNode === firstNode) {
-                        rangeStartNode = currentMerge.firstTextNode;
-                        rangeStartOffset = rangeStartNode.length;
-                    }
-                    if (textNode === lastNode) {
-                        rangeEndNode = currentMerge.firstTextNode;
-                        rangeEndOffset = currentMerge.getLength();
-                    }
-                } else {
-                    currentMerge = null;
-                }
-            }
-
-            // Test whether the first node after the range needs merging
-            var nextTextNode = getNextMergeableTextNode(lastNode, !isUndo);
-
-            if (nextTextNode) {
-                if (!currentMerge) {
-                    currentMerge = new Merge(lastNode);
-                    merges.push(currentMerge);
-                }
-                currentMerge.textNodes.push(nextTextNode);
-            }
-
-            // Do the merges
-            if (merges.length) {
-
-                for (i = 0, len = merges.length; i < len; ++i) {
-                    merges[i].doMerge();
-                }
-
-
-                // Set the range boundaries
-                range.setStart(rangeStartNode, rangeStartOffset);
-                range.setEnd(rangeEndNode, rangeEndOffset);
-            }
-
-        },
-
-        createContainer: function(doc) {
-            var el = doc.createElement(this.elementTagName);
-            api.util.extend(el, this.elementProperties);
-            addClass(el, this.cssClass);
-            return el;
-        },
-
-        applyToTextNode: function(textNode) {
-
-
-            var parent = textNode.parentNode;
-            if (parent.childNodes.length == 1 && dom.arrayContains(this.tagNames, parent.tagName.toLowerCase())) {
-                addClass(parent, this.cssClass);
-            } else {
-                var el = this.createContainer(dom.getDocument(textNode));
-                textNode.parentNode.insertBefore(el, textNode);
-                el.appendChild(textNode);
-            }
-
-        },
-
-        isRemovable: function(el) {
-            return el.tagName.toLowerCase() == this.elementTagName
-                    && getSortedClassName(el) == this.elementSortedClassName
-                    && elementHasProps(el, this.elementProperties)
-                    && !elementHasNonClassAttributes(el, this.attrExceptions)
-                    && this.isModifiable(el);
-        },
-
-        undoToTextNode: function(textNode, range, ancestorWithClass) {
-
-            if (!range.containsNode(ancestorWithClass)) {
-                // Split out the portion of the ancestor from which we can remove the CSS class
-                //var parent = ancestorWithClass.parentNode, index = dom.getNodeIndex(ancestorWithClass);
-                var ancestorRange = range.cloneRange();
-                ancestorRange.selectNode(ancestorWithClass);
-
-                if (ancestorRange.isPointInRange(range.endContainer, range.endOffset)/* && isSplitPoint(range.endContainer, range.endOffset)*/) {
-                    splitNodeAt(ancestorWithClass, range.endContainer, range.endOffset, [range]);
-                    range.setEndAfter(ancestorWithClass);
-                }
-                if (ancestorRange.isPointInRange(range.startContainer, range.startOffset)/* && isSplitPoint(range.startContainer, range.startOffset)*/) {
-                    ancestorWithClass = splitNodeAt(ancestorWithClass, range.startContainer, range.startOffset, [range]);
-                }
-            }
-
-            if (this.isRemovable(ancestorWithClass)) {
-                replaceWithOwnChildren(ancestorWithClass);
-            } else {
-                removeClass(ancestorWithClass, this.cssClass);
-            }
-        },
-
-        applyToRange: function(range) {
-            range.splitBoundaries();
-            var textNodes = getEffectiveTextNodes(range);
-
-            if (textNodes.length) {
-                var textNode;
-
-                for (var i = 0, len = textNodes.length; i < len; ++i) {
-                    textNode = textNodes[i];
-
-                    if (!this.isIgnorableWhiteSpaceNode(textNode) && !this.getSelfOrAncestorWithClass(textNode)
-                            && this.isModifiable(textNode)) {
-                        this.applyToTextNode(textNode);
-                    }
-                }
-                range.setStart(textNodes[0], 0);
-                textNode = textNodes[textNodes.length - 1];
-                range.setEnd(textNode, textNode.length);
-                if (this.normalize) {
-                    this.postApply(textNodes, range, false);
-                }
-            }
-        },
-
-        applyToSelection: function(win) {
-
-            win = win || window;
-            var sel = api.getSelection(win);
-
-            var range, ranges = sel.getAllRanges();
-            sel.removeAllRanges();
-            var i = ranges.length;
-            while (i--) {
-                range = ranges[i];
-                this.applyToRange(range);
-                sel.addRange(range);
-            }
-
-        },
-
-        undoToRange: function(range) {
-
-            range.splitBoundaries();
-            var textNodes = getEffectiveTextNodes(range);
-            var textNode, ancestorWithClass;
-            var lastTextNode = textNodes[textNodes.length - 1];
-
-            if (textNodes.length) {
-                for (var i = 0, len = textNodes.length; i < len; ++i) {
-                    textNode = textNodes[i];
-                    ancestorWithClass = this.getSelfOrAncestorWithClass(textNode);
-                    if (ancestorWithClass && this.isModifiable(textNode)) {
-                        this.undoToTextNode(textNode, range, ancestorWithClass);
-                    }
-
-                    // Ensure the range is still valid
-                    range.setStart(textNodes[0], 0);
-                    range.setEnd(lastTextNode, lastTextNode.length);
-                }
-
-
-
-                if (this.normalize) {
-                    this.postApply(textNodes, range, true);
-                }
-            }
-        },
-
-        undoToSelection: function(win) {
-            win = win || window;
-            var sel = api.getSelection(win);
-            var ranges = sel.getAllRanges(), range;
-            sel.removeAllRanges();
-            for (var i = 0, len = ranges.length; i < len; ++i) {
-                range = ranges[i];
-                this.undoToRange(range);
-                sel.addRange(range);
-            }
-        },
-
-        getTextSelectedByRange: function(textNode, range) {
-            var textRange = range.cloneRange();
-            textRange.selectNodeContents(textNode);
-
-            var intersectionRange = textRange.intersection(range);
-            var text = intersectionRange ? intersectionRange.toString() : "";
-            textRange.detach();
-
-            return text;
-        },
-
-        isAppliedToRange: function(range) {
-            if (range.collapsed) {
-                return !!this.getSelfOrAncestorWithClass(range.commonAncestorContainer);
-            } else {
-                var textNodes = range.getNodes( [3] );
-                for (var i = 0, textNode; textNode = textNodes[i++]; ) {
-                    if (!this.isIgnorableWhiteSpaceNode(textNode) && rangeSelectsAnyText(range, textNode)
-                            && this.isModifiable(textNode) && !this.getSelfOrAncestorWithClass(textNode)) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        },
-
-        isAppliedToSelection: function(win) {
-            win = win || window;
-            var sel = api.getSelection(win);
-            var ranges = sel.getAllRanges();
-            var i = ranges.length;
-            while (i--) {
-                if (!this.isAppliedToRange(ranges[i])) {
-                    return false;
-                }
-            }
-
-            return true;
-        },
-
-        toggleRange: function(range) {
-            if (this.isAppliedToRange(range)) {
-                this.undoToRange(range);
-            } else {
-                this.applyToRange(range);
-            }
-        },
-
-        toggleSelection: function(win) {
-            if (this.isAppliedToSelection(win)) {
-                this.undoToSelection(win);
-            } else {
-                this.applyToSelection(win);
-            }
-        },
-
-        detach: function() {}
-    };
-
-    function createCssClassApplier(cssClass, options, tagNames) {
-        return new CssClassApplier(cssClass, options, tagNames);
-    }
-
-    CssClassApplier.util = {
-        hasClass: hasClass,
-        addClass: addClass,
-        removeClass: removeClass,
-        hasSameClasses: haveSameClasses,
-        replaceWithOwnChildren: replaceWithOwnChildren,
-        elementsHaveSameNonClassAttributes: elementsHaveSameNonClassAttributes,
-        elementHasNonClassAttributes: elementHasNonClassAttributes,
-        splitNodeAt: splitNodeAt,
-        isEditableElement: isEditableElement,
-        isEditingHost: isEditingHost,
-        isEditable: isEditable
-    };
-
-    api.CssClassApplier = CssClassApplier;
-    api.createCssClassApplier = createCssClassApplier;
-});
-/** @file
- *
- *  jQuery Utilities/extensions
- *
- */
-(function($) {
-
-    /*************************************************************************
-     * String extensions
-     *
-     */
-
-    /** @brief  Left pad the provided string to the specified number of
-     *          characters using the provided padding character.
-     *  @param  str         The string to pad;
-     *  @param  numChars    The total number of charcters desired [ 2 ];
-     *  @param  padChar     The desired padding character         [ '0' ];
-     *
-     *  @return A new, padded string.
-     */
-    $.padString = function(str, numChars, padChar) {
-        numChars = numChars || 2;
-        padChar  = padChar  || '0';
-
-        // Ensure 'str' is actually a string
-        str = ''+ str;
-
-        while (str.length < numChars)
-        {
-            str = padChar + str;
-        }
-
-        return str;
-    };
-
-    /*************************************************************************
-     * Date extensions
-     *
-     */
-
-    /** @brief  Month Strings. */
-    $.months    = [
-        "January",      "Febrary",  "March",    "April",
-        "May",          "June",     "July",     "August",
-        "September",    "October",  "November", "December"
-    ];
-
-
-    /** @brief  Convert a Date instance to a client-localized string of the
-     *          form:
-     *              YYYY-MM-DD g:mm a
-     *  @param  date        The Date instance to convert.  If not provided, use
-     *                      the current date/time.
-     *
-     *  @param  timeOnly    Exclude the date information? [ false ]
-     *
-     *  @return The string representation of the given date.
-     */
-    $.date2str = function(date, timeOnly) {
-        if (date === undefined)
-        {
-            date = new Date();
-        }
-        if ( ! (date instanceof Date) )
-        {
-            date = new Date(date);
-        }
-
-        var dateStr     = $.months[date.getMonth()]  //.substr(0,3)
-                        +' '+  date.getDate()
-                        +' '+ date.getFullYear()
-                        +', ';
-        var hour        = date.getHours();
-        var meridian    = 'am';
-        if (hour === 0)
-        {
-            hour     = 12;
-        }
-        else if (hour === 12)
-        {
-            meridian = 'pm';
-        }
-        else if (hour > 12)
-        {
-            hour     -= 12;
-            meridian  = 'pm';
-        }
-
-        /* Using a string for padding works here because we'll only ever need
-         * to add 1 character at most.
-         *
-         * We use the span to try and ensure that we'll always align properly
-         * since the only value that MIGHT be in the empty field is 1.
-         */
-        dateStr += hour
-                +':'+ $.padString(date.getMinutes())
-                +' '+ meridian;
-
-        return dateStr;
-    };
-
-    /** @brief  Convert the given string into a Date instance.
-     *  @param  str     The date string to convert
-     *                      (MUST be GMT in the form 'YYYY-MM-DD HH:MM:SS')
-     *
-     *  @return The Date instance (null if invalid).
-     */
-    $.str2date = function(str) {
-        // Ensure 'str' is a string
-        str = ''+str;
-
-        var parts       = str.split(' ');
-        var dateParts   = parts[0].split('-');
-        var timeParts   = parts[1].split(':');
-        var date        = new Date();
-
-        date.setUTCFullYear(dateParts[0] );
-        date.setUTCMonth(   parseInt(dateParts[1], 10) - 1 );
-        date.setUTCDate(    dateParts[2] );
-        date.setUTCHours(   timeParts[0] );
-        date.setUTCMinutes( timeParts[1] );
-        date.setUTCSeconds( timeParts[2] );
-
-        return date;
-    };
-
-    /** @brief  Given a number, return the ordinal suffix for that number.
-     *  @param  num     The number.
-     *
-     *  @return The number with the appropriate ordinal suffix string.
-     */
-    $.ordinal = function(num) {
-        var suffix  = 'th';
-        if ( ((num % 100) < 11) || ((num % 100) > 13) )
-        {
-            switch (num % 10)
-            {
-            case 1: suffix = 'st';  break;
-            case 2: suffix = 'nd';  break;
-            case 3: suffix = 'rd';  break;
-            }
-        }
-
-        return num +'<sup>'+ suffix +'</sup>';
-    };
-
-    /** @brief  Takes a date/time and returns a string representing how long
-     *          ago the date occurred.
-     *  @param  date        The Date instance or ISO Date string to convert.
-     *                      If not provided, use the current date/time.
-     *
-     *  @return The date string.
-     */
-    $.prettyDate = function(date) {
-        if (date === undefined)
-        {
-            date = new Date();
-        }
-        if ( ! (date instanceof Date) )
-        {
-            date = new Date(date);
-        }
-        var diff    = (( (new Date()).getTime() - date.getTime()) / 1000);
-        var dayDiff = Math.floor(diff / 86400);
-
-        if ( isNaN(dayDiff) || (dayDiff < 0) || (dayDiff >= 31))
-        {
-            var day = date.getDate();
-
-            return $.months[date.getMonth()]  //.substr(0,3)
-                    +' '+  $.ordinal(day)
-                    +', '+ date.getFullYear();
-        }
-
-        return dayDiff == 0 && (
-                    diff < 60    && "just now"                               ||
-                    diff < 120   && "1 minute ago"                           ||
-                    diff < 3600  && Math.floor( diff / 60 )  +" minutes ago" ||
-                    diff < 7200  && "1 hour ago"                             ||
-                    diff < 86400 && Math.floor( diff / 3600) +" hours ago")  ||
-               dayDiff == 1      && "Yesterday"                              ||
-               dayDiff <  7      && dayDiff                  +" days ago"    ||
-               dayDiff <  14     && "1 week ago"                             ||
-               dayDiff <  31     && Math.ceil( dayDiff/ 7 )  +" weeks ago";
-    };
-
-    /* Borrowed from jQuery UI Position 1.8.16
-     *
-     * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
-     * Dual licensed under the MIT or GPL Version 2 licenses.
-     * http://jquery.org/license
-     *
-     * http://docs.jquery.com/UI/Position
-     */
-    $.ui = $.ui || {};
-    
-    var horizontalPositions = /left|center|right/,
-        verticalPositions = /top|center|bottom/,
-        center = "center",
-        _position = $.fn.position,
-        _offset = $.fn.offset;
-    
-    $.fn.position = function( options ) {
-        if ( !options || !options.of ) {
-            return _position.apply( this, arguments );
-        }
-    
-        // make a copy, we don't want to modify arguments
-        options = $.extend( {}, options );
-    
-        var target = $( options.of ),
-            targetElem = target[0],
-            collision = ( options.collision || "flip" ).split( " " ),
-            offset = options.offset ? options.offset.split( " " ) : [ 0, 0 ],
-            targetWidth,
-            targetHeight,
-            basePosition;
-    
-        if ( targetElem.nodeType === 9 ) {
-            targetWidth = target.width();
-            targetHeight = target.height();
-            basePosition = { top: 0, left: 0 };
-        // TODO: use $.isWindow() in 1.9
-        } else if ( targetElem.setTimeout ) {
-            targetWidth = target.width();
-            targetHeight = target.height();
-            basePosition = { top: target.scrollTop(), left: target.scrollLeft() };
-        } else if ( targetElem.preventDefault ) {
-            // force left top to allow flipping
-            options.at = "left top";
-            targetWidth = targetHeight = 0;
-            basePosition = { top: options.of.pageY, left: options.of.pageX };
-        } else {
-            targetWidth = target.outerWidth();
-            targetHeight = target.outerHeight();
-            basePosition = target.offset();
-        }
-    
-        // force my and at to have valid horizontal and veritcal positions
-        // if a value is missing or invalid, it will be converted to center 
-        $.each( [ "my", "at" ], function() {
-            var pos = ( options[this] || "" ).split( " " );
-            if ( pos.length === 1) {
-                pos = horizontalPositions.test( pos[0] ) ?
-                    pos.concat( [center] ) :
-                    verticalPositions.test( pos[0] ) ?
-                        [ center ].concat( pos ) :
-                        [ center, center ];
-            }
-            pos[ 0 ] = horizontalPositions.test( pos[0] ) ? pos[ 0 ] : center;
-            pos[ 1 ] = verticalPositions.test( pos[1] ) ? pos[ 1 ] : center;
-            options[ this ] = pos;
-        });
-    
-        // normalize collision option
-        if ( collision.length === 1 ) {
-            collision[ 1 ] = collision[ 0 ];
-        }
-    
-        // normalize offset option
-        offset[ 0 ] = parseInt( offset[0], 10 ) || 0;
-        if ( offset.length === 1 ) {
-            offset[ 1 ] = offset[ 0 ];
-        }
-        offset[ 1 ] = parseInt( offset[1], 10 ) || 0;
-    
-        if ( options.at[0] === "right" ) {
-            basePosition.left += targetWidth;
-        } else if ( options.at[0] === center ) {
-            basePosition.left += targetWidth / 2;
-        }
-    
-        if ( options.at[1] === "bottom" ) {
-            basePosition.top += targetHeight;
-        } else if ( options.at[1] === center ) {
-            basePosition.top += targetHeight / 2;
-        }
-    
-        basePosition.left += offset[ 0 ];
-        basePosition.top += offset[ 1 ];
-    
-        return this.each(function() {
-            var elem = $( this ),
-                elemWidth = elem.outerWidth(),
-                elemHeight = elem.outerHeight(),
-                marginLeft = parseInt( $.curCSS( this, "marginLeft", true ) ) || 0,
-                marginTop = parseInt( $.curCSS( this, "marginTop", true ) ) || 0,
-                collisionWidth = elemWidth + marginLeft +
-                    ( parseInt( $.curCSS( this, "marginRight", true ) ) || 0 ),
-                collisionHeight = elemHeight + marginTop +
-                    ( parseInt( $.curCSS( this, "marginBottom", true ) ) || 0 ),
-                position = $.extend( {}, basePosition ),
-                collisionPosition;
-    
-            if ( options.my[0] === "right" ) {
-                position.left -= elemWidth;
-            } else if ( options.my[0] === center ) {
-                position.left -= elemWidth / 2;
-            }
-    
-            if ( options.my[1] === "bottom" ) {
-                position.top -= elemHeight;
-            } else if ( options.my[1] === center ) {
-                position.top -= elemHeight / 2;
-            }
-    
-            // prevent fractions (see #5280)
-            position.left = Math.round( position.left );
-            position.top = Math.round( position.top );
-    
-            collisionPosition = {
-                left: position.left - marginLeft,
-                top: position.top - marginTop
-            };
-    
-            $.each( [ "left", "top" ], function( i, dir ) {
-                if ( $.ui.position[ collision[i] ] ) {
-                    $.ui.position[ collision[i] ][ dir ]( position, {
-                        targetWidth: targetWidth,
-                        targetHeight: targetHeight,
-                        elemWidth: elemWidth,
-                        elemHeight: elemHeight,
-                        collisionPosition: collisionPosition,
-                        collisionWidth: collisionWidth,
-                        collisionHeight: collisionHeight,
-                        offset: offset,
-                        my: options.my,
-                        at: options.at
-                    });
-                }
-            });
-    
-            if ( $.fn.bgiframe ) {
-                elem.bgiframe();
-            }
-            elem.offset( $.extend( position, { using: options.using } ) );
-        });
-    };
-    
-    $.ui.position = {
-        fit: {
-            left: function( position, data ) {
-                var win = $( window ),
-                    over = data.collisionPosition.left + data.collisionWidth - win.width() - win.scrollLeft();
-                position.left = over > 0 ? position.left - over : Math.max( position.left - data.collisionPosition.left, position.left );
-            },
-            top: function( position, data ) {
-                var win = $( window ),
-                    over = data.collisionPosition.top + data.collisionHeight - win.height() - win.scrollTop();
-                position.top = over > 0 ? position.top - over : Math.max( position.top - data.collisionPosition.top, position.top );
-            }
-        },
-    
-        flip: {
-            left: function( position, data ) {
-                if ( data.at[0] === center ) {
-                    return;
-                }
-                var win = $( window ),
-                    over = data.collisionPosition.left + data.collisionWidth - win.width() - win.scrollLeft(),
-                    myOffset = data.my[ 0 ] === "left" ?
-                        -data.elemWidth :
-                        data.my[ 0 ] === "right" ?
-                            data.elemWidth :
-                            0,
-                    atOffset = data.at[ 0 ] === "left" ?
-                        data.targetWidth :
-                        -data.targetWidth,
-                    offset = -2 * data.offset[ 0 ];
-                position.left += data.collisionPosition.left < 0 ?
-                    myOffset + atOffset + offset :
-                    over > 0 ?
-                        myOffset + atOffset + offset :
-                        0;
-            },
-            top: function( position, data ) {
-                if ( data.at[1] === center ) {
-                    return;
-                }
-                var win = $( window ),
-                    over = data.collisionPosition.top + data.collisionHeight - win.height() - win.scrollTop(),
-                    myOffset = data.my[ 1 ] === "top" ?
-                        -data.elemHeight :
-                        data.my[ 1 ] === "bottom" ?
-                            data.elemHeight :
-                            0,
-                    atOffset = data.at[ 1 ] === "top" ?
-                        data.targetHeight :
-                        -data.targetHeight,
-                    offset = -2 * data.offset[ 1 ];
-                position.top += data.collisionPosition.top < 0 ?
-                    myOffset + atOffset + offset :
-                    over > 0 ?
-                        myOffset + atOffset + offset :
-                        0;
-            }
-        }
-    };
-    
-    // offset setter from jQuery 1.4
-    if ( !$.offset.setOffset ) {
-        $.offset.setOffset = function( elem, options ) {
-            // set position first, in-case top/left are set even on static elem
-            if ( /static/.test( $.curCSS( elem, "position" ) ) ) {
-                elem.style.position = "relative";
-            }
-            var curElem   = $( elem ),
-                curOffset = curElem.offset(),
-                curTop    = parseInt( $.curCSS( elem, "top",  true ), 10 ) || 0,
-                curLeft   = parseInt( $.curCSS( elem, "left", true ), 10)  || 0,
-                props     = {
-                    top:  (options.top  - curOffset.top)  + curTop,
-                    left: (options.left - curOffset.left) + curLeft
-                };
-            
-            if ( 'using' in options ) {
-                options.using.call( elem, props );
-            } else {
-                curElem.css( props );
-            }
-        };
-    
-        $.fn.offset = function( options ) {
-            var elem = this[ 0 ];
-            if ( !elem || !elem.ownerDocument ) { return null; }
-            if ( options ) { 
-                return this.each(function() {
-                    $.offset.setOffset( this, options );
-                });
-            }
-            return _offset.call( this );
-        };
-    }
-
-}(jQuery));
 //     Backbone.js 0.5.3
 //     (c) 2010 Jeremy Ashkenas, DocumentCloud Inc.
 //     Backbone may be freely distributed under the MIT license.
@@ -16125,108 +14865,6 @@ Backbone.sync = function(method, model, options, error) {
  }).call(this);
 /** @file
  *
- *  Backbone Helper to properly handle click events.
- *
- *  Requires:
- *      backbone.js
- *      jquery.js
- */
-/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
-/*global Backbone:false */
-(function() {
-    var app             = this.app = (this.app || {Model:{},      View:{},
-                                                   Controller:{}, Helper:{}});
-    var $               = jQuery.noConflict();
-    app.Helper.click    = {
-        clickEvent:         'element:click',
-        dblClickTimeout:    150,
-        events:             {
-            /* Track mouse events to fuse a single click event iff the mouse
-             * was IN this paragraph on mousedown AND mouseup/click.
-             */
-            'mousedown':    '_trackClick',
-            'click':        '_trackClick',
-            'mouseenter':   '_trackClick',
-            'mouseleave':   '_trackClick',
-            'dblclick':     '_trackClick'
-        },
-
-        /** @brief  Monitor mouseDown/Up for clicks WITHIN this element. */
-        _trackClick: function(e) {
-            var self    = this;
-
-            //console.log('Helper::_trackClick: type[ '+ e.type +' ]');
-
-            /* To ensure that nested elements perform properly, invoking a
-             * click event ONLY on the lowest level element, stop
-             * propagation of this mouse event.
-             */
-            e.stopPropagation();
-
-            switch (e.type)
-            {
-            case 'mousedown':
-                self._clickDown = e;
-                break;
-
-            case 'click':
-                if (self._clickDown !== null)
-                {
-                    /* We've seen a mousedown WITHIN this paragraph.  If this
-                     * 'up' event is NEAR the 'down' event, it is a potential
-                     * click.
-                     */
-                    var delta   = {
-                        x:  Math.abs( self._clickDown.pageX - e.pageX ),
-                        y:  Math.abs( self._clickDown.pageY - e.pageY )
-                    };
-
-                    if ((delta.x < 10) && (delta.y < 10))
-                    {
-                        /* In order to avoid squelching double-clicks, wait a
-                         * short time to see if there is an additional 'down'
-                         * event.
-                         */
-                        var orig    = self._clickDown;
-                        setTimeout(function() {
-                            if (orig === self._clickDown)
-                            {
-                                /* Create a new event that encapsulates THIS
-                                 * event, and for the event type to
-                                 * 'clickEvent'
-                                 */
-                                var event   = new $.Event( e, {
-                                                    type: self.clickEvent
-                                              } );
-
-                                /*
-                                console.log('Helper::_trackClick: trigger[ '
-                                             + event.type +' ]');
-                                // */
-
-                                self.$el.trigger( event );
-                            }
-
-                            self._clickDown = null;
-                        }, self.dblClickTimeout);
-                        return;
-                    }
-                }
-
-                // Fallthrough to reset the click state
-
-            case 'dblclick':
-            case 'mouseenter':
-            case 'mouseleave':
-                self._clickDown = null;
-                break;
-            }
-        }
-    };
-
- }).call(this);
-/** @file
- *
  *  Backbone View for a paragraph.
  *
  *  Requires:
@@ -16244,15 +14882,10 @@ Backbone.sync = function(method, model, options, error) {
     var $               = jQuery.noConflict();
 
     // Mix the click helper into this view
-    var viewPrototype   = $.extend(true, {}, app.Helper.click, {
+    app.View.Sentence   = Backbone.View.extend( {
         tagName:    'span',
         className:  'sentence',
         template:   _.template($('#template-sentence').html()),
-
-        /* Set the name of the click event that will be fired by
-         * app.Helper.click
-         */
-        clickEvent: 'sentence:click',
 
         events: {
             'sentence:expand':              'expand',
@@ -16262,7 +14895,8 @@ Backbone.sync = function(method, model, options, error) {
             'sentence:expansionExpand':     'expansionExpand',
             'sentence:expansionCollapse':   'expansionCollapse',
             'sentence:expansionToggle':     'expansionToggle',
-            'sentence:click':               'expansionToggle'
+
+            'click':                        'expansionToggle'
         },
 
         initialize: function() {
@@ -16364,10 +14998,11 @@ Backbone.sync = function(method, model, options, error) {
 
         /** @brief  Toggle this sentence iff collapsed to use 'expansion'. */
         expansionToggle: function(e) {
+            // Mark this event as "handled" by stopping its propagation
+            if (e)  { e.stopPropagation(); }
+
             if (this.$el.hasClass('expanded'))
             {
-                // Mark this event as "handled" by stopping its propagation
-                if (e)  { e.stopPropagation(); }
                 return;
             }
 
@@ -16375,8 +15010,6 @@ Backbone.sync = function(method, model, options, error) {
             else                                { this.expansionExpand(e); }
         }
     });
-
-    app.View.Sentence   = Backbone.View.extend( viewPrototype );
 
  }).call(this);
 /** @file
@@ -16398,14 +15031,9 @@ Backbone.sync = function(method, model, options, error) {
     var $               = jQuery.noConflict();
 
     // Mix the click helper into this view
-    var viewPrototype   = $.extend(true, {}, app.Helper.click, {
+    app.View.Paragraph  = Backbone.View.extend( {
         tagName:    'p',
         template:   _.template($('#template-paragraph').html()),
-
-        /* Set the name of the click event that will be fired by
-         * app.Helper.click
-         */
-        clickEvent: 'paragraph:click',
 
         events: {
             'paragraph:collapseCheck':              'collapseCheck',
@@ -16414,7 +15042,7 @@ Backbone.sync = function(method, model, options, error) {
             'sentence:expansionExpanded .sentence': 'collapseCheck',
             'sentence:expansionCollapsed .sentence':'collapseCheck',
 
-            'paragraph:click':                      'toggle'
+            'click':                                'toggle'
         },
 
         initialize: function() {
@@ -16479,8 +15107,6 @@ Backbone.sync = function(method, model, options, error) {
         }
     });
 
-    app.View.Paragraph  = Backbone.View.extend( viewPrototype );
-
  }).call(this);
 /** @file
  *
@@ -16534,6 +15160,457 @@ Backbone.sync = function(method, model, options, error) {
  }).call(this);
 /** @file
  *
+ *  Backbone View for a range.
+ *
+ *  Requires:
+ *      jquery.js
+ *      backbone.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
+    var $           = jQuery.noConflict();
+
+    /** @brief  A View for a single app.Model.Range */
+    app.View.Range  = Backbone.View.extend({
+        tagName:    'span',
+        className:  'range',
+
+        initialize: function() {
+        },
+
+        /** @brief  (Re)render the contents of the range item. */
+        render:     function() {
+            var self    = this;
+            self.$s     = $( '#'+ self.model.get('sentenceId') );
+
+            self.$el = $(this.el);
+
+            // ALWAYS include 'range' as a class
+            self.$el.addClass('range');
+            self.$el.attr('id', self.model.cid);
+            self.$el.empty();
+
+            // Store a reference to this view instance
+            self.$el.data('View:Range', self);
+
+            // Locate the content and overlay elements of the target sentence.
+            self.$sOverlay = self.$s.find('.overlay');
+            self.$sContent = self.$s.find('.content');
+
+            /* Move this element into the overlay area of self.$s.  Needed to
+             * ensure that our measurments are within the context of the target
+             * sentence.
+             */
+            self.$sOverlay.append( self.$el );
+
+            /******************************************************************
+             * Break the selection into $before, $selected, and $after.
+             *
+             */
+            var strFull     = self.$sContent.text();
+            var start       = self.model.get('offsetStart');
+            var end         = self.model.get('offsetEnd');
+            var strSelection= strFull.substr(start, end - start);
+
+            var $before     = $('<span />')
+                                .addClass('before')
+                                .text( strFull.substr(0, start) )
+                                .appendTo( self.$el );
+            var $selected   = $('<span />')
+                                .addClass('selected')
+                                .text( strFull.substr(start, end - start ) )
+                                .appendTo( self.$el );
+            var $after      = $('<span />')
+                                .addClass('after')
+                                .text( strFull.substr(end) )
+                                .appendTo( self.$el );
+
+            /* Add measurement elements to the beginning and end of $selected
+             * to make it easier for others to determine the edges of this
+             * range.  The CSS for .measure should set the display to
+             * 'inline-block' and width to '0px'.
+             */
+            $('<span />')
+                .addClass('measure measure-start')
+                .text('|')
+                .prependTo( $selected );
+            $('<span />')
+                .addClass('measure measure-end')
+                .text('|')
+                .appendTo( $selected );
+
+            return self;
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  Backbone View for a single selection defined by a Model.Ranges instance.
+ *
+ *  Requires:
+ *      jquery.js
+ *      backbone.js
+ *      model/range.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
+    var $           = jQuery.noConflict();
+
+    /** @brief  A View for a app.Model.Ranges instance. */
+    app.View.Selection = Backbone.View.extend({
+        viewName:   'Selection',
+
+        tagName:    'div',
+        className:  'selection',
+        template:   _.template($('#template-selection').html()),
+        rangeViews: null,
+
+        events: {
+            'mouseenter .range-control':    '_controlMouse',
+            'mouseleave .range-control':    '_controlMouse',
+            'click .range-control':         '_controlClick'
+        },
+
+        initialize: function() {
+        },
+
+        /** @brief  Override so we can properly remove component range views.
+         */
+        remove: function() {
+            var self    = this;
+
+            if (self.rangeViews)
+            {
+                // Remove all component View.Range elements
+                $.each(self.rangeViews, function() {
+                    var view    = this;
+
+                    // Un-bind event handlers
+                    $(view.el).undelegate('.selected', '.'+ self.viewName);
+
+                    view.remove();
+                });
+            }
+
+            if (self.$control)
+            {
+                self.$control.unbind('.'+ self.viewName);
+            }
+
+            return Backbone.View.prototype.remove.call(this);
+        },
+
+        render: function() {
+            var self    = this;
+
+            self.$el = $(self.el);
+            self.$el.attr('id', self.model.cid);
+            self.$el.html( self.template( self.model.toJSON() ) );
+
+            // Store a reference to this view instance
+            self.$el.data('View:'+ self.viewName, self);
+
+            // Gather our pieces
+            self.$control = self.$el.find('.range-control')
+                                    .hide();
+
+            self.rangeViews  = [];
+            var events       = [ 'mouseenter.'+ self.viewName,
+                                 'mouseleave.'+ self.viewName ].join(' ');
+            self.model.each(function(model) {
+                var view    = new app.View.Range( {
+                                    parentView: self,
+                                    model:      model,
+                                    className:  self.className
+                              });
+                view.render();
+
+                // Bind to mouse events on this range view
+                $(view.el).delegate('.selected',  events,
+                                    _.bind(self._rangeMouse, self));
+
+                self.rangeViews.push( view );
+
+                /* The Range view inserts itself in the proper sentence
+                 * overlay.  Do NOT move it by appending it to our own element.
+                 * Instead, we maintain the 'views' array to contain a list of
+                 * our component views.
+                 *
+                 * self.$el.append( view.render().el );
+                 */
+            });
+
+            return self;
+        },
+
+        /** @brief  Retrieve the bounding segments of the selection.
+         *  @param  force   If true, force a re-computation, otherwise, if we
+         *                  have cached values, return them;
+         *
+         *  The bounds of any selection can be defined by 3 contiguous
+         *  segments:
+         *      +------------------------------------------+
+         *      |                                          |
+         *      |          +-----------------------------+ |
+         *      |          | 1                           | |
+         *      | +--------+-----------------------------+ |
+         *      | |          2                           | |
+         *      | +-------------------------+------------+ |
+         *      | |          3              |              |
+         *      | +-------------------------+              |
+         *      |                                          |
+         *      +------------------------------------------+
+         *
+         *  @return The bounding segments, each in the form:
+         *              { top:, right:, bottom:, left: }
+         */
+        boundingSegments: function(force) {
+            var self            = this;
+
+            if ( (force !== true) && self._boundingSegments)
+            {
+                return self._boundingSegments;
+            }
+
+            var $first          = $( _.first(self.rangeViews).el )
+                                                        .find('.selected'),
+                $last           = $( _.last(self.rangeViews).el )
+                                                        .find('.selected'),
+                $measureStart   = $first.find('.measure-start'),
+                $measureEnd     = $last.find('.measure-end'),
+                segments        = [],
+                segment;
+
+            // Compute segment 1
+            segment         = $measureStart.offset();
+            // Account for padding
+            segment.left   -= ($first.outerWidth() - $first.width()) / 2;
+            segment.bottom  = segment.top  + $measureStart.height();
+            segment.right   = (segment.left + $first.outerWidth()) -
+                             (segment.left - $first.offset().left);
+
+            segments[0] = $.extend({}, segment);
+
+            // Compute segment 3
+            segment = $measureEnd.offset();
+            if (segments[0].top === segment.top)
+            {
+                // Segment 3 === Segment 1 (single segment)
+                segment = segments[0];
+            }
+            else
+            {
+                segment.bottom = segment.top  + $measureStart.height();
+                segment.right  = segment.left;
+                segment.left   = $last.offset().left;
+            }
+
+            segments[2] = $.extend({}, segment);
+
+            // Compute segment 2 (if it exists)
+            segment.top = segment.bottom = segment.right = segment.left = 0;
+            if (segments[0].bottom < segments[2].top)
+            {
+                // There is something between.  Construct a non-empty segment
+                segment.top    = segments[0].bottom;
+                segment.right  = segments[0].right;
+                segment.bottom = segments[2].top;
+                segment.left   = segments[2].left;
+            }
+            segments[1] = $.extend({}, segment);
+
+            // Cache the segments
+            self._boundingSegments = segments;
+
+            //console.log(segments);
+
+            return segments;
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+
+        /** @brief  Handle click events on our control element.
+         *  @param  e       The triggering event which SHOULD include an
+         *                  'originalEvent' that can be used to identify the
+         *                  originating target;
+         */
+        _controlClick: function(e) {
+            var self    = this;
+            var $el     = $(e.originalEvent.target);
+            var name    = $el.attr('name');
+
+            /*
+            console.log('View.'+ self.viewName +'::_controlClick(): '
+                        +   'name[ '+ name +' ]');
+            // */
+
+            switch (name)
+            {
+            case 'note-add':
+                // :TODO: Convert this Selection view to a Note view.
+                break;
+            }
+        },
+
+        /** @brief  Handle mouseenter/leave within the range control.
+         *  @param  e       The triggering event;
+         *
+         */
+        _controlMouse: function(e) {
+            var self    = this;
+
+            switch (e.type)
+            {
+            case 'mouseenter':
+                if (self._pendingLeave)
+                {
+                    // Cancel any pending leave
+                    clearTimeout( self._pendingLeave );
+                    self._pendingLeave = null;
+                }
+                break;
+
+            case 'mouseleave':
+                /* Wait a short time to see if _rangeMouse() is fired with
+                 * 'mouseenter'.
+                 */
+                self._pendingLeave = setTimeout(function() {
+                    // Hide the range controls
+                    self.$control.hide();
+                    self._pendingLeave = null;
+                }, 100);
+                break;
+            }
+        },
+
+        /** @brief  Handle mouseenter/leave within the associated ranges view.
+         *  @param  e       The triggering event;
+         *
+         */
+        _rangeMouse: function(e) {
+            var self    = this;
+
+            switch (e.type)
+            {
+            case 'mouseenter':
+                var $selected   = $(e.target);
+                if (self._pendingLeave)
+                {
+                    // Cancel any pending leave
+                    clearTimeout( self._pendingLeave );
+                    self._pendingLeave = null;
+                }
+
+                self._showControl( {x: e.pageX, y: e.pageY} );
+                break;
+
+            case 'mouseleave':
+                /* Wait a short time to see if _controlMouse() is fired with
+                 * 'mouseenter'.
+                 */
+                self._pendingLeave = setTimeout(function() {
+                    // Hide the range controls
+                    self.$control.hide();
+                    self._pendingLeave = null;
+                }, 100);
+                break;
+            }
+        },
+
+        /** @brief  Given x,y coordinates, determine if they fall within one of 
+         *          our bounding segments.  If so, show the control along the
+         *          edge of the nearest segment near the provided coordinates.
+         *  @param  coords      An object of { x: , y: } coordinates;
+         *
+         *  @return The offset, or null.
+         */
+        _showControl: function( coords ) {
+            var self    = this;
+            var segment = self._inSegment( coords );
+
+            if (! segment)  { return null; }
+
+            var offset  = {top:0, left:0};
+
+            // Find the nearest horizontal edge
+            if ((coords.y - segment.top) >
+                    ((segment.bottom - segment.top) / 2))
+            {
+                // Nearest the bottom of 'segment'
+                offset.top = segment.bottom;
+                self.$control.removeClass('ui-corner-top')
+                             .addClass('ui-corner-bottom');
+            }
+            else
+            {
+                // Nearest the top of 'segment'
+                offset.top = segment.top - self.$control.height();
+                self.$control.removeClass('ui-corner-bottom')
+                             .addClass('ui-corner-top');
+            }
+
+            // Find the nearest vertical edge
+            var cWidth  = self.$control.outerWidth();
+            offset.left = coords.x - (cWidth / 2);
+            if ((offset.left + cWidth) > segment.right)
+            {
+                offset.left = segment.right - cWidth;
+            }
+            else if (offset.left < segment.left)
+            {
+                offset.left = segment.left;
+            }
+
+            self.$control.show()
+                         .offset( offset );
+        },
+
+        /** @brief  Determine if the given x,y coordinates fall within one of
+         *          our bounding segments.  If so, return the segment.
+         *  @param  coords      An object of { x: , y: } coordinates;
+         *
+         *  @return The segment the contains { x: , y: } or null.
+         */
+        _inSegment: function( coords ) {
+            var self        = this,
+                segments    = self.boundingSegments(),
+                inSegment   = null;
+
+            /*
+            console.log('View:Selection:_inSegment( '
+                        + coords.x +', '+ coords.y +' )');
+            // */
+
+            $.each(segments, function(idex, segment) {
+
+                if ((coords.x >= segment.left) && (coords.x <= segment.right) &&
+                    (coords.y >= segment.top)  && (coords.y <= segment.bottom))
+                {
+                    // HIT
+                    inSegment = segment;
+                    return false;           // terminate iteration
+                }
+            });
+
+            return inSegment;
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
  *  Backbone View for a document.
  *
  *  Requires:
@@ -16558,7 +15635,8 @@ Backbone.sync = function(method, model, options, error) {
 
             rangy.init();
 
-            $(document).bind('mouseup.doc', _.bind(this.setSelection, this));
+            $(document).bind('mouseup.doc click.doc',
+                             _.bind(this.setSelection, this));
         },
 
         /** @brief  Override so we can unbind events bound in initialize().
@@ -16606,13 +15684,39 @@ Backbone.sync = function(method, model, options, error) {
         /** @brief  On mouseup, check to see if we have a rangy selection.
          *          If we do, generate a Model.Ranges instance representing the
          *          selection and instantiate a View.Selection to present it.
+         *  @param  e       The triggering event;
          */
-        setSelection: function() {
+        setSelection: function(e) {
             var self        = this;
             var opts        = self.options;
 
             if (! opts.$notes)
             {
+                return;
+            }
+
+            console.log('View::Doc:setSelection(): '
+                        +   'type[ '+ (e ? e.type : '--') +' ]');
+
+            if (e && e.type === 'mouseup')
+            {
+                /* Wait a short time to see if this will be part of a click
+                 * event
+                 */
+                self._mouseup = setTimeout(function() {
+                    // Re-invoke setSelection with no event
+                    self.setSelection();
+                    self._mouseup = null;
+                }, 100);
+                return;
+            }
+            else if (e && e.type === 'click')
+            {
+                if (self._mouseup)
+                {
+                    clearTimeout( self._mouseup );
+                    self._mouseup = null;
+                }
                 return;
             }
 

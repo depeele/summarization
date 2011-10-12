@@ -4,12 +4,12 @@ all: preloadImages.min.js summary-06-full.min.js summary-07-full.min.js	\
 	summary-08-full.min.js
 
 SHARED 	= jquery.js			\
-	  rangy.js			\
-	  rangy/serializer.js		\
-	  rangy/cssclassapplier.js	\
-	  jquery.utils.js
+	  jquery.utils.js		\
+	  rangy.js
 
-COMMON	= jquery.tmpl.js		\
+COMMON	= rangy/serializer.js		\
+	  rangy/cssclassapplier.js	\
+	  jquery.tmpl.js		\
 	  jquery.json.js		\
 	  jstorage.js			\
 	  jquery.hoverIntent.js		\
@@ -44,10 +44,11 @@ SRC_08	= underscore.js			\
 	  model/paragraph.js		\
 	  model/section.js		\
 	  model/doc.js			\
-	  helper/click.js		\
 	  view/sentence.js		\
 	  view/paragraph.js		\
 	  view/section.js		\
+	  view/range.js			\
+	  view/selection.js		\
 	  view/doc.js			\
 	  jquery-ui.js			\
 	  ui.checkbox.js		\

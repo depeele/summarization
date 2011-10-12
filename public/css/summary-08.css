@@ -793,12 +793,6 @@ a {
   margin: 0;
   border-top: 1px solid #eeeeee;
   border-bottom: 1px solid #eeeeee;
-  /* Make it unselectable */
-
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  user-select: none;
 }
 .content-pane article section p {
   display: block;
@@ -810,12 +804,6 @@ a {
   -moz-box-shadow: 1px -1px 1px #f4f4f4;
   -webkit-box-shadow: 1px -1px 1px #f4f4f4;
   cursor: pointer;
-  /* Make it unselectable */
-
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  user-select: none;
 }
 .content-pane article section p .controls {
   position: absolute;
@@ -826,7 +814,7 @@ a {
   left: -0.35em;
   color: #aaaaaa;
   visibility: hidden;
-  /* Make it unselectable */
+  /* Make controls unselectable */
 
   -moz-user-select: none;
   -webkit-user-select: none;
@@ -840,7 +828,7 @@ a {
   margin: 0;
   font-size: 1px;
   color: #dddddd;
-  /* Make it unselectable -- only expansions should be selectable*/
+  /* Make an unexpanded sentence unselectable */
 
   -moz-user-select: none;
   -webkit-user-select: none;
@@ -857,11 +845,6 @@ a {
   top: auto;
   left: auto;
 }
-.content-pane article section p .sentence .overlay .range .range-control, .content-pane article section p .sentence .overlay .selection .range-control, .content-pane article section p .sentence .overlay .note .range-control {
-  position: absolute;
-  padding: 2px;
-  cursor: pointer;
-}
 .content-pane article section p .sentence .overlay .range .before,
 .content-pane article section p .sentence .overlay .selection .before,
 .content-pane article section p .sentence .overlay .note .before,
@@ -873,15 +856,23 @@ a {
 .content-pane article section p .sentence .overlay .range .selected, .content-pane article section p .sentence .overlay .selection .selected, .content-pane article section p .sentence .overlay .note .selected {
   padding: 0.1em;
 }
+.content-pane article section p .sentence .overlay .range .selected .measure, .content-pane article section p .sentence .overlay .selection .selected .measure, .content-pane article section p .sentence .overlay .note .selected .measure {
+  display: -moz-inline-stack;
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+  width: 0px;
+  visibility: hidden;
+}
 .content-pane article section p .sentence .overlay .range .segment, .content-pane article section p .sentence .overlay .selection .segment, .content-pane article section p .sentence .overlay .note .segment {
   position: absolute;
   display: block;
 }
-.content-pane article section p .sentence .overlay .selection .range-control, .content-pane article section p .sentence .overlay .selection .selected {
+.content-pane article section p .sentence .overlay .selection .selected {
   background-color: #444444;
   color: #ffffff;
 }
-.content-pane article section p .sentence .overlay .note .range-control, .content-pane article section p .sentence .overlay .note .selected {
+.content-pane article section p .sentence .overlay .note .selected {
   background-color: #444444;
   color: #ffffff;
 }
@@ -897,7 +888,7 @@ a {
   -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=60);
   -o-opacity: 0.6;
   -khtml-opacity: 0.6;
-  /* Make it unselectable */
+  /* Make rank unselectable */
 
   -moz-user-select: none;
   -webkit-user-select: none;
@@ -915,7 +906,7 @@ a {
 .content-pane article section p .expanded, .content-pane article section p .expansion {
   font-size: 1em;
   line-height: 1.2em;
-  /* Make it selectable */
+  /* Make an expanded sentence selectable */
 
   -moz-user-select: text;
   -webkit-user-select: text;
@@ -1074,6 +1065,7 @@ a {
 .notes-pane .range-control {
   position: absolute;
   padding: 2px;
+  cursor: pointer;
 }
 .notes-pane .selection .range-control {
   background-color: #444444;

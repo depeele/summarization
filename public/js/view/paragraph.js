@@ -17,14 +17,9 @@
     var $               = jQuery.noConflict();
 
     // Mix the click helper into this view
-    var viewPrototype   = $.extend(true, {}, app.Helper.click, {
+    app.View.Paragraph  = Backbone.View.extend( {
         tagName:    'p',
         template:   _.template($('#template-paragraph').html()),
-
-        /* Set the name of the click event that will be fired by
-         * app.Helper.click
-         */
-        clickEvent: 'paragraph:click',
 
         events: {
             'paragraph:collapseCheck':              'collapseCheck',
@@ -33,7 +28,7 @@
             'sentence:expansionExpanded .sentence': 'collapseCheck',
             'sentence:expansionCollapsed .sentence':'collapseCheck',
 
-            'paragraph:click':                      'toggle'
+            'click':                                'toggle'
         },
 
         initialize: function() {
@@ -97,7 +92,5 @@
             }
         }
     });
-
-    app.View.Paragraph  = Backbone.View.extend( viewPrototype );
 
  }).call(this);

@@ -28,6 +28,9 @@
             self.$s     = $( '#'+ self.model.get('sentenceId') );
 
             self.$el = $(this.el);
+
+            // ALWAYS include 'range' as a class
+            self.$el.addClass('range');
             self.$el.attr('id', self.model.cid);
             self.$el.empty();
 
@@ -65,6 +68,20 @@
                                 .addClass('after')
                                 .text( strFull.substr(end) )
                                 .appendTo( self.$el );
+
+            /* Add measurement elements to the beginning and end of $selected
+             * to make it easier for others to determine the edges of this
+             * range.  The CSS for .measure should set the display to
+             * 'inline-block' and width to '0px'.
+             */
+            $('<span />')
+                .addClass('measure measure-start')
+                .text('|')
+                .prependTo( $selected );
+            $('<span />')
+                .addClass('measure measure-end')
+                .text('|')
+                .appendTo( $selected );
 
             return self;
         }
