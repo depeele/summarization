@@ -91,6 +91,8 @@
                                     .hide();
 
             self.rangeViews  = [];
+            var events       = [ 'mouseenter.'+ self.viewName,
+                                 'mouseleave.'+ self.viewName ].join(' ');
             self.model.each(function(model) {
                 var view    = new app.View.Range( {
                                     parentView: self,
@@ -100,8 +102,7 @@
                 view.render();
 
                 // Bind to mouse events on this range view
-                $(view.el).delegate('.selected',  'mouseenter.'+ self.viewName
-                                                + 'mouseleave.'+ self.viewName,
+                $(view.el).delegate('.selected',  events,
                                     _.bind(self._rangeMouse, self));
 
                 self.rangeViews.push( view );
