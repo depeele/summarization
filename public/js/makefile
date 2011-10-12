@@ -49,6 +49,7 @@ SRC_08	= underscore.js			\
 	  view/section.js		\
 	  view/range.js			\
 	  view/selection.js		\
+	  view/note.js			\
 	  view/doc.js			\
 	  jquery-ui.js			\
 	  ui.checkbox.js		\

@@ -873,8 +873,8 @@ a {
   color: #ffffff;
 }
 .content-pane article section p .sentence .overlay .note .selected {
-  background-color: #444444;
-  color: #ffffff;
+  background-color: #d7ebf9;
+  color: #2779aa;
 }
 .content-pane article section p .sentence .rank {
   position: absolute;
@@ -1061,6 +1061,16 @@ a {
 .notes-pane {
   position: absolute;
   top: 7em;
+  /*******************
+   * Note
+   *
+   */
+
+  /*******************
+   * Note (active)
+   *
+   */
+
 }
 .notes-pane .range-control {
   position: absolute;
@@ -1071,11 +1081,11 @@ a {
   background-color: #444444;
   color: #ffffff;
 }
-/*******************
- * Note
- *
- */
-.note {
+.notes-pane .note .range-control {
+  background-color: #d7ebf9;
+  color: #2779aa;
+}
+.notes-pane .note {
   display: block;
   position: absolute;
   left: 10px;
@@ -1092,59 +1102,55 @@ a {
   z-index: 10;
   cursor: pointer;
 }
-.note .arrow-outer,
-.note .arrow-inner,
-.note .note-input-pane,
-.note .note-body .comment .buttons,
-.note .note-body .comment .edit {
+.notes-pane .note .arrow-outer,
+.notes-pane .note .arrow-inner,
+.notes-pane .note .note-input-pane,
+.notes-pane .note .note-body .comment .buttons,
+.notes-pane .note .note-body .comment .edit {
   display: none;
 }
-.note .note-body .comment {
+.notes-pane .note .note-body .comment {
   position: relative;
   padding: 0.5em;
   border-top: 1px dashed #d5d5d5;
 }
-.note .note-body .comment:first-child {
+.notes-pane .note .note-body .comment:first-child {
   border-top: none;
 }
-.note .note-body .comment .avatar {
+.notes-pane .note .note-body .comment .avatar {
   position: absolute;
   left: 0.5em;
   top: 0.5em;
   width: 24px;
   height: 24px;
 }
-.note .note-body .comment .author, .note .note-body .comment .created {
+.notes-pane .note .note-body .comment .author, .notes-pane .note .note-body .comment .created {
   margin-left: 32px;
 }
-.note .note-body .comment .author {
+.notes-pane .note .note-body .comment .author {
   font-weight: bold;
 }
-.note .note-body .comment .created {
+.notes-pane .note .note-body .comment .created {
   font-size: 0.8em;
 }
-.note .note-body .comment .text, .note .note-body .comment .edit {
+.notes-pane .note .note-body .comment .text, .notes-pane .note .note-body .comment .edit {
   margin-top: 0.5em;
 }
-.note .note-body .comment .buttons, .note .note-input-pane .buttons {
+.notes-pane .note .note-body .comment .buttons, .notes-pane .note .note-input-pane .buttons {
   text-align: right;
   padding-top: 0.5em;
   font-size: 0.8em;
 }
-.note .note-body .comment .buttons .ui-button-text, .note .note-input-pane .buttons .ui-button-text {
+.notes-pane .note .note-body .comment .buttons .ui-button-text, .notes-pane .note .note-input-pane .buttons .ui-button-text {
   padding: 0.2em 0.5em;
 }
-.note textarea {
+.notes-pane .note textarea {
   width: 194px;
 }
-.note .note-input-pane .hint {
+.notes-pane .note .note-input-pane .hint {
   color: #aaaaaa;
 }
-/*******************
- * Note (active)
- *
- */
-.note-active {
+.notes-pane .note-active {
   left: -10px;
   border: 1px solid #ffee83;
   background-color: #fffce9;
@@ -1153,21 +1159,21 @@ a {
   -webkit-box-shadow: 2px 2px 8px #d5d5d5;
   z-index: 11;
 }
-.note-active .note-body .comment {
+.notes-pane .note-active .note-body .comment {
   border-top: 1px dashed #ffee83;
 }
-.note-active .note-body .comment:first-child {
+.notes-pane .note-active .note-body .comment:first-child {
   border-top: none;
 }
-.note-active .note-body .comment .buttons, .note-active .note-input-pane {
+.notes-pane .note-active .note-body .comment .buttons, .notes-pane .note-active .note-input-pane {
   display: block;
 }
-.note-active .note-input-pane {
+.notes-pane .note-active .note-input-pane {
   border-top: 1px dashed #ffee83;
   padding: 0.5em;
   text-align: right;
 }
-.note-active .arrow-outer {
+.notes-pane .note-active .arrow-outer {
   display: block;
   position: absolute;
   left: -15px;
@@ -1179,7 +1185,7 @@ a {
   border-left: none;
   border-right: 14px solid #ffee83;
 }
-.note-active .arrow-inner {
+.notes-pane .note-active .arrow-inner {
   display: block;
   position: absolute;
   left: -13px;

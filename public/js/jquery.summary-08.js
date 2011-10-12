@@ -133,6 +133,19 @@ $.Summary = Backbone.View.extend({
         self.$paneContent.removeClass('loading');
     },
 
+    /** @brief  Add a new Model.Note instance to the collection associated with
+     *          the current document.
+     *  @param  note    The Model.Note instance to add.
+     */
+    addNote: function(note) {
+        var self    = this;
+        var opts    = self.options;
+
+        if (! (opts.doc instanceof app.Model.Doc))  { return; }
+
+        return opts.doc.addNote( note );
+    },
+
     /** @brief  Change the rank threshold.
      *  @param  min     The minimum threshold.
      *  @param  max     The maximum threshold.

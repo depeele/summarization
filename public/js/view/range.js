@@ -22,6 +22,18 @@
         initialize: function() {
         },
 
+        /** @brief  Override so we can destroy the range model since it isn't
+         *          needed without the view.
+         *  @param  keepModel   if true, do NOT destroy the underlying model;
+         */
+        remove: function(keepModel) {
+            var self    = this;
+
+            if (keepModel !== true) { self.model.destroy(); }
+
+            return Backbone.View.prototype.remove.call(this);
+        },
+
         /** @brief  (Re)render the contents of the range item. */
         render:     function() {
             var self    = this;

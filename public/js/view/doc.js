@@ -22,8 +22,15 @@
         initialize: function() {
             this.$el = $(this.el);
 
+            // Bind to changes to our underlying model
+            var notes   = this.model.get('notes');
+
+            notes.bind('add',    _.bind(this._noteAdded,   this));
+            notes.bind('remove', _.bind(this._noteRemoved, this));
+
             rangy.init();
 
+            // Bind to mouseup and click at the document level.
             $(document).bind('mouseup.doc click.doc',
                              _.bind(this.setSelection, this));
         },
@@ -84,8 +91,10 @@
                 return;
             }
 
+            /*
             console.log('View::Doc:setSelection(): '
                         +   'type[ '+ (e ? e.type : '--') +' ]');
+            // */
 
             if (e && e.type === 'mouseup')
             {
@@ -267,14 +276,46 @@
                 /* Create a new Selection View using the generated ranges
                  * model.
                  */
-                self.selection = new app.View.Selection( {model: ranges} );
+                self.selection = new app.View.Selection( {ranges: ranges} );
                 opts.$notes.append( self.selection.render().el );
             }
 
-            // /*
-            console.log('view.doc::setSelection(): '
+            /*
+            console.log('View.Doc::setSelection(): '
                         + ranges.length +' ranges');
             // */
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+
+        /** @brief  A note has been added to our underlying model.
+         *  @param  note    The Model.Note instance being added;
+         *  @param  notes   The containing collection (Model.Notes);
+         *  @param  options Any options used with add();
+         */
+        _noteAdded: function(note, notes, options) {
+            var self    = this;
+            var opts    = self.options;
+
+            // Create a new View.Note to associate with this new model
+            var view    = new app.View.Note({model: note});
+            opts.$notes.append( view.render().el );
+        },
+
+        /** @brief  A note has been removed from our underlying model.
+         *  @param  note    The Model.Note instance being removed;
+         *  @param  notes   The containing collection (Model.Notes);
+         *  @param  options Any options used with remove();
+         */
+        _noteRemoved: function(note, notes, options) {
+            var self    = this;
+
+            /* The associated View.Note instance should notice the deletion of
+             * it's underlying model and remove itself.
+             */
         }
     });
 

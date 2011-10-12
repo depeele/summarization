@@ -15,7 +15,13 @@
 
     var $           = jQuery.noConflict();
 
-    /** @brief  A View for a app.Model.Ranges instance. */
+    /** @brief  A View for a app.Model.Ranges instance.
+     *
+     *  Set 'ranges' in the constructor options to establish the Model.Ranges
+     *  collection to use to render this selection.  Each model in the provide
+     *  Model.Ranges instance will be used to generate a View.Range to
+     *  represent that range.
+     */
     app.View.Selection = Backbone.View.extend({
         viewName:   'Selection',
 
@@ -30,7 +36,11 @@
             'click .range-control':         '_controlClick'
         },
 
+        /** @brief  Initialize this instance. */
         initialize: function() {
+            // Cache the options.ranges value
+            this.ranges     = this.options.ranges;
+            this.rangeViews = this.options.rangeViews;
         },
 
         /** @brief  Override so we can properly remove component range views.
@@ -40,14 +50,16 @@
 
             if (self.rangeViews)
             {
-                // Remove all component View.Range elements
+                /* Remove all component View.Range elements, which will also
+                 * destroy the underlying models (Model.Range).
+                 */
                 $.each(self.rangeViews, function() {
                     var view    = this;
 
                     // Un-bind event handlers
                     $(view.el).undelegate('.selected', '.'+ self.viewName);
 
-                    view.remove();
+                    view.remove( (self.ranges === null) );
                 });
             }
 
@@ -59,12 +71,15 @@
             return Backbone.View.prototype.remove.call(this);
         },
 
+        /** @brief  Render this view. */
         render: function() {
             var self    = this;
 
             self.$el = $(self.el);
-            self.$el.attr('id', self.model.cid);
-            self.$el.html( self.template( self.model.toJSON() ) );
+            //self.$el.attr('id', self.ranges.cid);
+            self.$el.html( self.template( (self.model
+                                            ? self.model.toJSON()
+                                            : null) ) );
 
             // Store a reference to this view instance
             self.$el.data('View:'+ self.viewName, self);
@@ -73,117 +88,74 @@
             self.$control = self.$el.find('.range-control')
                                     .hide();
 
-            self.rangeViews  = [];
             var events       = [ 'mouseenter.'+ self.viewName,
                                  'mouseleave.'+ self.viewName ].join(' ');
-            self.model.each(function(model) {
-                var view    = new app.View.Range( {
-                                    parentView: self,
-                                    model:      model,
-                                    className:  self.className
-                              });
-                view.render();
-
-                // Bind to mouse events on this range view
-                $(view.el).delegate('.selected',  events,
-                                    _.bind(self._rangeMouse, self));
-
-                self.rangeViews.push( view );
-
-                /* The Range view inserts itself in the proper sentence
-                 * overlay.  Do NOT move it by appending it to our own element.
-                 * Instead, we maintain the 'views' array to contain a list of
-                 * our component views.
-                 *
-                 * self.$el.append( view.render().el );
+            if ($.isArray(self.rangeViews))
+            {
+                /* We're inheriting a "collection" of range views so we need to
+                 * delegate events.
                  */
-            });
+                $.each(self.rangeViews, function(idex, view) {
+                    // Bind to mouse events on this range view
+                    $(view.el).delegate('.selected',  events,
+                                        _.bind(self._rangeMouse, self));
+                });
+            }
+            else
+            {
+                /* Create a "collection" of range views based upon the attached
+                 * ranges (Model.Ranges).
+                 */
+                self.rangeViews  = [];
+                self.ranges.each(function(range) {
+                    var view    = new app.View.Range( {
+                                        parentView: self,
+                                        model:      range,
+                                        className:  self.className
+                                  });
+                    view.render();
+
+                    // Delegate events for this range view
+                    $(view.el).delegate('.selected',  events,
+                                        _.bind(self._rangeMouse, self));
+
+                    self.rangeViews.push( view );
+
+                    /* The Range view inserts itself in the proper sentence
+                     * overlay.  Do NOT move it by appending it to our own
+                     * element.
+                     *
+                     * Instead, we maintain the 'rangeViews' array to contain a
+                     * list of our component views.
+                     *
+                     * self.$el.append( view.render().el );
+                     */
+                });
+            }
 
             return self;
         },
 
-        /** @brief  Retrieve the bounding segments of the selection.
-         *  @param  force   If true, force a re-computation, otherwise, if we
-         *                  have cached values, return them;
+        /** @brief  Generate a Model.Note instance with our ranges,
+         *          disconnecting the ranges from this instance.
          *
-         *  The bounds of any selection can be defined by 3 contiguous
-         *  segments:
-         *      +------------------------------------------+
-         *      |                                          |
-         *      |          +-----------------------------+ |
-         *      |          | 1                           | |
-         *      | +--------+-----------------------------+ |
-         *      | |          2                           | |
-         *      | +-------------------------+------------+ |
-         *      | |          3              |              |
-         *      | +-------------------------+              |
-         *      |                                          |
-         *      +------------------------------------------+
-         *
-         *  @return The bounding segments, each in the form:
-         *              { top:, right:, bottom:, left: }
+         *  @return The new Model.Note instance.
          */
-        boundingSegments: function(force) {
-            var self            = this;
+        toNote: function() {
+            var self        = this;
 
-            if ( (force !== true) && self._boundingSegments)
-            {
-                return self._boundingSegments;
-            }
+            // Create a note view to take over our ranges.
+            var note    = new app.Model.Note({ranges:   self.ranges});
 
-            var $first          = $( _.first(self.rangeViews).el )
-                                                        .find('.selected'),
-                $last           = $( _.last(self.rangeViews).el )
-                                                        .find('.selected'),
-                $measureStart   = $first.find('.measure-start'),
-                $measureEnd     = $last.find('.measure-end'),
-                segments        = [],
-                segment;
+            /* Set our 'ranges' to null so we can destroy the existing range
+             * views without destroying the underlying models (see remove()).
+             */
+            self.ranges = null;
 
-            // Compute segment 1
-            segment         = $measureStart.offset();
-            // Account for padding
-            segment.left   -= ($first.outerWidth() - $first.width()) / 2;
-            segment.bottom  = segment.top  + $measureStart.height();
-            segment.right   = (segment.left + $first.outerWidth()) -
-                             (segment.left - $first.offset().left);
+            // Schedule our demise
+            setTimeout(function() { self.remove(); }, 10);
 
-            segments[0] = $.extend({}, segment);
-
-            // Compute segment 3
-            segment = $measureEnd.offset();
-            if (segments[0].top === segment.top)
-            {
-                // Segment 3 === Segment 1 (single segment)
-                segment = segments[0];
-            }
-            else
-            {
-                segment.bottom = segment.top  + $measureStart.height();
-                segment.right  = segment.left;
-                segment.left   = $last.offset().left;
-            }
-
-            segments[2] = $.extend({}, segment);
-
-            // Compute segment 2 (if it exists)
-            segment.top = segment.bottom = segment.right = segment.left = 0;
-            if (segments[0].bottom < segments[2].top)
-            {
-                // There is something between.  Construct a non-empty segment
-                segment.top    = segments[0].bottom;
-                segment.right  = segments[0].right;
-                segment.bottom = segments[2].top;
-                segment.left   = segments[2].left;
-            }
-            segments[1] = $.extend({}, segment);
-
-            // Cache the segments
-            self._boundingSegments = segments;
-
-            //console.log(segments);
-
-            return segments;
+            return note;
         },
 
         /**********************************************************************
@@ -209,7 +181,8 @@
             switch (name)
             {
             case 'note-add':
-                // :TODO: Convert this Selection view to a Note view.
+                // :TODO: Convert this Selection view to a Note Model.
+                app.main.addNote( self.toNote() );
                 break;
             }
         },
@@ -327,6 +300,90 @@
                          .offset( offset );
         },
 
+        /** @brief  Retrieve the bounding segments of the selection.
+         *  @param  force   If true, force a re-computation, otherwise, if we
+         *                  have cached values, return them;
+         *
+         *  The bounds of any selection can be defined by 3 contiguous
+         *  segments:
+         *      +------------------------------------------+
+         *      |                                          |
+         *      |          +-----------------------------+ |
+         *      |          | 1                           | |
+         *      | +--------+-----------------------------+ |
+         *      | |          2                           | |
+         *      | +-------------------------+------------+ |
+         *      | |          3              |              |
+         *      | +-------------------------+              |
+         *      |                                          |
+         *      +------------------------------------------+
+         *
+         *  @return The bounding segments, each in the form:
+         *              { top:, right:, bottom:, left: }
+         */
+        _boundingSegments: function(force) {
+            var self            = this;
+
+            if ( (force !== true) && self._cacheSegments)
+            {
+                return self._cacheSegments;
+            }
+
+            var $first          = $( _.first(self.rangeViews).el )
+                                                        .find('.selected'),
+                $last           = $( _.last(self.rangeViews).el )
+                                                        .find('.selected'),
+                $measureStart   = $first.find('.measure-start'),
+                $measureEnd     = $last.find('.measure-end'),
+                segments        = [],
+                segment;
+
+            // Compute segment 1
+            segment         = $measureStart.offset();
+            // Account for padding
+            segment.left   -= ($first.outerWidth() - $first.width()) / 2;
+            segment.bottom  = segment.top  + $measureStart.height();
+            segment.right   = (segment.left + $first.outerWidth()) -
+                             (segment.left - $first.offset().left);
+
+            segments[0] = $.extend({}, segment);
+
+            // Compute segment 3
+            segment = $measureEnd.offset();
+            if (segments[0].top === segment.top)
+            {
+                // Segment 3 === Segment 1 (single segment)
+                segment = segments[0];
+            }
+            else
+            {
+                segment.bottom = segment.top  + $measureStart.height();
+                segment.right  = segment.left;
+                segment.left   = $last.offset().left;
+            }
+
+            segments[2] = $.extend({}, segment);
+
+            // Compute segment 2 (if it exists)
+            segment.top = segment.bottom = segment.right = segment.left = 0;
+            if (segments[0].bottom < segments[2].top)
+            {
+                // There is something between.  Construct a non-empty segment
+                segment.top    = segments[0].bottom;
+                segment.right  = segments[0].right;
+                segment.bottom = segments[2].top;
+                segment.left   = segments[2].left;
+            }
+            segments[1] = $.extend({}, segment);
+
+            // Cache the segments
+            self._cacheSegments = segments;
+
+            //console.log(segments);
+
+            return segments;
+        },
+
         /** @brief  Determine if the given x,y coordinates fall within one of
          *          our bounding segments.  If so, return the segment.
          *  @param  coords      An object of { x: , y: } coordinates;
@@ -335,7 +392,7 @@
          */
         _inSegment: function( coords ) {
             var self        = this,
-                segments    = self.boundingSegments(),
+                segments    = self._boundingSegments(),
                 inSegment   = null;
 
             /*

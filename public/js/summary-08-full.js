@@ -14831,27 +14831,38 @@ Backbone.sync = function(method, model, options, error) {
         },
 
         initialize: function(spec) {
-            var published   = this.get('published');
-            var sections    = this.get('sections');
-            var notes       = this.get('notes');
+            var self        = this;
+            var published   = self.get('published');
+            var sections    = self.get('sections');
+            var notes       = self.get('notes');
             if ((! published) || ! (published instanceof Date) )
             {
                 published = (published
                             ? new Date(published)
                             : new Date());
 
-                this.set({published: published});
+                self.set({published: published});
             }
 
             if ((! sections) || ! (sections instanceof app.Model.Sections))
             {
-                this.set({sections: new app.Model.Sections(sections)});
+                self.set({sections: new app.Model.Sections(sections)});
             }
 
             if ((! notes) || ! (notes instanceof app.Model.Notes))
             {
-                this.set({notes: new app.Model.Notes(notes)});
+                self.set({notes: new app.Model.Notes(notes)});
             }
+        },
+
+        /** @brief  Add a new Model.Note instance to the notes collection.
+         *  @param  note    The Model.Note instance to add;
+         */
+        addNote: function(note) {
+            var self    = this;
+            var notes   = self.get('notes');
+
+            notes.add( note );
         }
     });
 
@@ -15182,6 +15193,18 @@ Backbone.sync = function(method, model, options, error) {
         initialize: function() {
         },
 
+        /** @brief  Override so we can destroy the range model since it isn't
+         *          needed without the view.
+         *  @param  keepModel   if true, do NOT destroy the underlying model;
+         */
+        remove: function(keepModel) {
+            var self    = this;
+
+            if (keepModel !== true) { self.model.destroy(); }
+
+            return Backbone.View.prototype.remove.call(this);
+        },
+
         /** @brief  (Re)render the contents of the range item. */
         render:     function() {
             var self    = this;
@@ -15265,7 +15288,13 @@ Backbone.sync = function(method, model, options, error) {
 
     var $           = jQuery.noConflict();
 
-    /** @brief  A View for a app.Model.Ranges instance. */
+    /** @brief  A View for a app.Model.Ranges instance.
+     *
+     *  Set 'ranges' in the constructor options to establish the Model.Ranges
+     *  collection to use to render this selection.  Each model in the provide
+     *  Model.Ranges instance will be used to generate a View.Range to
+     *  represent that range.
+     */
     app.View.Selection = Backbone.View.extend({
         viewName:   'Selection',
 
@@ -15280,7 +15309,11 @@ Backbone.sync = function(method, model, options, error) {
             'click .range-control':         '_controlClick'
         },
 
+        /** @brief  Initialize this instance. */
         initialize: function() {
+            // Cache the options.ranges value
+            this.ranges     = this.options.ranges;
+            this.rangeViews = this.options.rangeViews;
         },
 
         /** @brief  Override so we can properly remove component range views.
@@ -15290,14 +15323,16 @@ Backbone.sync = function(method, model, options, error) {
 
             if (self.rangeViews)
             {
-                // Remove all component View.Range elements
+                /* Remove all component View.Range elements, which will also
+                 * destroy the underlying models (Model.Range).
+                 */
                 $.each(self.rangeViews, function() {
                     var view    = this;
 
                     // Un-bind event handlers
                     $(view.el).undelegate('.selected', '.'+ self.viewName);
 
-                    view.remove();
+                    view.remove( (self.ranges === null) );
                 });
             }
 
@@ -15309,12 +15344,15 @@ Backbone.sync = function(method, model, options, error) {
             return Backbone.View.prototype.remove.call(this);
         },
 
+        /** @brief  Render this view. */
         render: function() {
             var self    = this;
 
             self.$el = $(self.el);
-            self.$el.attr('id', self.model.cid);
-            self.$el.html( self.template( self.model.toJSON() ) );
+            //self.$el.attr('id', self.ranges.cid);
+            self.$el.html( self.template( (self.model
+                                            ? self.model.toJSON()
+                                            : null) ) );
 
             // Store a reference to this view instance
             self.$el.data('View:'+ self.viewName, self);
@@ -15323,117 +15361,74 @@ Backbone.sync = function(method, model, options, error) {
             self.$control = self.$el.find('.range-control')
                                     .hide();
 
-            self.rangeViews  = [];
             var events       = [ 'mouseenter.'+ self.viewName,
                                  'mouseleave.'+ self.viewName ].join(' ');
-            self.model.each(function(model) {
-                var view    = new app.View.Range( {
-                                    parentView: self,
-                                    model:      model,
-                                    className:  self.className
-                              });
-                view.render();
-
-                // Bind to mouse events on this range view
-                $(view.el).delegate('.selected',  events,
-                                    _.bind(self._rangeMouse, self));
-
-                self.rangeViews.push( view );
-
-                /* The Range view inserts itself in the proper sentence
-                 * overlay.  Do NOT move it by appending it to our own element.
-                 * Instead, we maintain the 'views' array to contain a list of
-                 * our component views.
-                 *
-                 * self.$el.append( view.render().el );
+            if ($.isArray(self.rangeViews))
+            {
+                /* We're inheriting a "collection" of range views so we need to
+                 * delegate events.
                  */
-            });
+                $.each(self.rangeViews, function(idex, view) {
+                    // Bind to mouse events on this range view
+                    $(view.el).delegate('.selected',  events,
+                                        _.bind(self._rangeMouse, self));
+                });
+            }
+            else
+            {
+                /* Create a "collection" of range views based upon the attached
+                 * ranges (Model.Ranges).
+                 */
+                self.rangeViews  = [];
+                self.ranges.each(function(range) {
+                    var view    = new app.View.Range( {
+                                        parentView: self,
+                                        model:      range,
+                                        className:  self.className
+                                  });
+                    view.render();
+
+                    // Delegate events for this range view
+                    $(view.el).delegate('.selected',  events,
+                                        _.bind(self._rangeMouse, self));
+
+                    self.rangeViews.push( view );
+
+                    /* The Range view inserts itself in the proper sentence
+                     * overlay.  Do NOT move it by appending it to our own
+                     * element.
+                     *
+                     * Instead, we maintain the 'rangeViews' array to contain a
+                     * list of our component views.
+                     *
+                     * self.$el.append( view.render().el );
+                     */
+                });
+            }
 
             return self;
         },
 
-        /** @brief  Retrieve the bounding segments of the selection.
-         *  @param  force   If true, force a re-computation, otherwise, if we
-         *                  have cached values, return them;
+        /** @brief  Generate a Model.Note instance with our ranges,
+         *          disconnecting the ranges from this instance.
          *
-         *  The bounds of any selection can be defined by 3 contiguous
-         *  segments:
-         *      +------------------------------------------+
-         *      |                                          |
-         *      |          +-----------------------------+ |
-         *      |          | 1                           | |
-         *      | +--------+-----------------------------+ |
-         *      | |          2                           | |
-         *      | +-------------------------+------------+ |
-         *      | |          3              |              |
-         *      | +-------------------------+              |
-         *      |                                          |
-         *      +------------------------------------------+
-         *
-         *  @return The bounding segments, each in the form:
-         *              { top:, right:, bottom:, left: }
+         *  @return The new Model.Note instance.
          */
-        boundingSegments: function(force) {
-            var self            = this;
+        toNote: function() {
+            var self        = this;
 
-            if ( (force !== true) && self._boundingSegments)
-            {
-                return self._boundingSegments;
-            }
+            // Create a note view to take over our ranges.
+            var note    = new app.Model.Note({ranges:   self.ranges});
 
-            var $first          = $( _.first(self.rangeViews).el )
-                                                        .find('.selected'),
-                $last           = $( _.last(self.rangeViews).el )
-                                                        .find('.selected'),
-                $measureStart   = $first.find('.measure-start'),
-                $measureEnd     = $last.find('.measure-end'),
-                segments        = [],
-                segment;
+            /* Set our 'ranges' to null so we can destroy the existing range
+             * views without destroying the underlying models (see remove()).
+             */
+            self.ranges = null;
 
-            // Compute segment 1
-            segment         = $measureStart.offset();
-            // Account for padding
-            segment.left   -= ($first.outerWidth() - $first.width()) / 2;
-            segment.bottom  = segment.top  + $measureStart.height();
-            segment.right   = (segment.left + $first.outerWidth()) -
-                             (segment.left - $first.offset().left);
+            // Schedule our demise
+            setTimeout(function() { self.remove(); }, 10);
 
-            segments[0] = $.extend({}, segment);
-
-            // Compute segment 3
-            segment = $measureEnd.offset();
-            if (segments[0].top === segment.top)
-            {
-                // Segment 3 === Segment 1 (single segment)
-                segment = segments[0];
-            }
-            else
-            {
-                segment.bottom = segment.top  + $measureStart.height();
-                segment.right  = segment.left;
-                segment.left   = $last.offset().left;
-            }
-
-            segments[2] = $.extend({}, segment);
-
-            // Compute segment 2 (if it exists)
-            segment.top = segment.bottom = segment.right = segment.left = 0;
-            if (segments[0].bottom < segments[2].top)
-            {
-                // There is something between.  Construct a non-empty segment
-                segment.top    = segments[0].bottom;
-                segment.right  = segments[0].right;
-                segment.bottom = segments[2].top;
-                segment.left   = segments[2].left;
-            }
-            segments[1] = $.extend({}, segment);
-
-            // Cache the segments
-            self._boundingSegments = segments;
-
-            //console.log(segments);
-
-            return segments;
+            return note;
         },
 
         /**********************************************************************
@@ -15459,7 +15454,8 @@ Backbone.sync = function(method, model, options, error) {
             switch (name)
             {
             case 'note-add':
-                // :TODO: Convert this Selection view to a Note view.
+                // :TODO: Convert this Selection view to a Note Model.
+                app.main.addNote( self.toNote() );
                 break;
             }
         },
@@ -15577,6 +15573,90 @@ Backbone.sync = function(method, model, options, error) {
                          .offset( offset );
         },
 
+        /** @brief  Retrieve the bounding segments of the selection.
+         *  @param  force   If true, force a re-computation, otherwise, if we
+         *                  have cached values, return them;
+         *
+         *  The bounds of any selection can be defined by 3 contiguous
+         *  segments:
+         *      +------------------------------------------+
+         *      |                                          |
+         *      |          +-----------------------------+ |
+         *      |          | 1                           | |
+         *      | +--------+-----------------------------+ |
+         *      | |          2                           | |
+         *      | +-------------------------+------------+ |
+         *      | |          3              |              |
+         *      | +-------------------------+              |
+         *      |                                          |
+         *      +------------------------------------------+
+         *
+         *  @return The bounding segments, each in the form:
+         *              { top:, right:, bottom:, left: }
+         */
+        _boundingSegments: function(force) {
+            var self            = this;
+
+            if ( (force !== true) && self._cacheSegments)
+            {
+                return self._cacheSegments;
+            }
+
+            var $first          = $( _.first(self.rangeViews).el )
+                                                        .find('.selected'),
+                $last           = $( _.last(self.rangeViews).el )
+                                                        .find('.selected'),
+                $measureStart   = $first.find('.measure-start'),
+                $measureEnd     = $last.find('.measure-end'),
+                segments        = [],
+                segment;
+
+            // Compute segment 1
+            segment         = $measureStart.offset();
+            // Account for padding
+            segment.left   -= ($first.outerWidth() - $first.width()) / 2;
+            segment.bottom  = segment.top  + $measureStart.height();
+            segment.right   = (segment.left + $first.outerWidth()) -
+                             (segment.left - $first.offset().left);
+
+            segments[0] = $.extend({}, segment);
+
+            // Compute segment 3
+            segment = $measureEnd.offset();
+            if (segments[0].top === segment.top)
+            {
+                // Segment 3 === Segment 1 (single segment)
+                segment = segments[0];
+            }
+            else
+            {
+                segment.bottom = segment.top  + $measureStart.height();
+                segment.right  = segment.left;
+                segment.left   = $last.offset().left;
+            }
+
+            segments[2] = $.extend({}, segment);
+
+            // Compute segment 2 (if it exists)
+            segment.top = segment.bottom = segment.right = segment.left = 0;
+            if (segments[0].bottom < segments[2].top)
+            {
+                // There is something between.  Construct a non-empty segment
+                segment.top    = segments[0].bottom;
+                segment.right  = segments[0].right;
+                segment.bottom = segments[2].top;
+                segment.left   = segments[2].left;
+            }
+            segments[1] = $.extend({}, segment);
+
+            // Cache the segments
+            self._cacheSegments = segments;
+
+            //console.log(segments);
+
+            return segments;
+        },
+
         /** @brief  Determine if the given x,y coordinates fall within one of
          *          our bounding segments.  If so, return the segment.
          *  @param  coords      An object of { x: , y: } coordinates;
@@ -15585,7 +15665,7 @@ Backbone.sync = function(method, model, options, error) {
          */
         _inSegment: function( coords ) {
             var self        = this,
-                segments    = self.boundingSegments(),
+                segments    = self._boundingSegments(),
                 inSegment   = null;
 
             /*
@@ -15605,6 +15685,109 @@ Backbone.sync = function(method, model, options, error) {
             });
 
             return inSegment;
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
+ *  An extension of app.View.Selection that provides a view for a single note.
+ *
+ *  Requires:
+ *      jquery.js
+ *      backbone.js
+ *      view/selection.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
+    var $           = jQuery.noConflict();
+
+    /** @brief  A View for a combination of app.Model.Ranges and app.Model.Note
+     *          instances.
+     *
+     *  This View inherits from app.View.Selection.
+     *
+     *  Set 'model' in the constructor options to establish the Model.Note
+     *  instance to use for this view.
+     */
+    app.View.Note = app.View.Selection.extend({
+        viewName:   'Note',
+        className:  'note',
+        template:   _.template($('#template-note').html()),
+
+        /** @brief  Initialize this view. */
+        initialize: function() {
+            // Cache the ranges from our model.
+            this.ranges     = this.model.get('ranges');
+            this.rangeViews = null;
+
+            // Bind to changes to our underlying model
+            this.model.bind('destroy', _.bind(this.remove,  this));
+            this.model.bind('change',  _.bind(this.refresh, this));
+        },
+
+        /** @brief  Render this view. */
+        render: function() {
+            var self    = this;
+
+            /* Allow View.Selection to render our template as well as any range
+             * views.
+             */
+            app.View.Selection.prototype.render.call( self );
+
+            /* Now, perform any additional rendering needed to fully present
+             * this not and all associated comments.
+             */
+
+            return self;
+        },
+
+        /** @brief  Refresh our view due to a change to the underlying model.
+         */
+        refresh: function() {
+            var self    = this;
+
+            return self;
+        },
+
+        /** @brief  Return the underlying Model.Note instance.
+         *
+         *  @return The underlying Model.Note instance.
+         */
+        getNote: function() {
+            var self    = this;
+
+            return self.model;
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+
+        /** @brief  Handle click events on our control element.
+         *  @param  e       The triggering event which SHOULD include an
+         *                  'originalEvent' that can be used to identify the
+         *                  originating target;
+         */
+        _controlClick: function(e) {
+            var self    = this;
+            var $el     = $(e.originalEvent.target);
+            var name    = $el.attr('name');
+
+            console.log('View.Note::_controlClick(): '
+                        +   'name[ '+ name +' ]');
+
+            switch (name)
+            {
+            case 'note-remove':
+                // :TODO: Destroy the underlying note
+                break;
+            }
         }
     });
 
@@ -15633,8 +15816,15 @@ Backbone.sync = function(method, model, options, error) {
         initialize: function() {
             this.$el = $(this.el);
 
+            // Bind to changes to our underlying model
+            var notes   = this.model.get('notes');
+
+            notes.bind('add',    _.bind(this._noteAdded,   this));
+            notes.bind('remove', _.bind(this._noteRemoved, this));
+
             rangy.init();
 
+            // Bind to mouseup and click at the document level.
             $(document).bind('mouseup.doc click.doc',
                              _.bind(this.setSelection, this));
         },
@@ -15695,8 +15885,10 @@ Backbone.sync = function(method, model, options, error) {
                 return;
             }
 
+            /*
             console.log('View::Doc:setSelection(): '
                         +   'type[ '+ (e ? e.type : '--') +' ]');
+            // */
 
             if (e && e.type === 'mouseup')
             {
@@ -15878,14 +16070,46 @@ Backbone.sync = function(method, model, options, error) {
                 /* Create a new Selection View using the generated ranges
                  * model.
                  */
-                self.selection = new app.View.Selection( {model: ranges} );
+                self.selection = new app.View.Selection( {ranges: ranges} );
                 opts.$notes.append( self.selection.render().el );
             }
 
-            // /*
-            console.log('view.doc::setSelection(): '
+            /*
+            console.log('View.Doc::setSelection(): '
                         + ranges.length +' ranges');
             // */
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+
+        /** @brief  A note has been added to our underlying model.
+         *  @param  note    The Model.Note instance being added;
+         *  @param  notes   The containing collection (Model.Notes);
+         *  @param  options Any options used with add();
+         */
+        _noteAdded: function(note, notes, options) {
+            var self    = this;
+            var opts    = self.options;
+
+            // Create a new View.Note to associate with this new model
+            var view    = new app.View.Note({model: note});
+            opts.$notes.append( view.render().el );
+        },
+
+        /** @brief  A note has been removed from our underlying model.
+         *  @param  note    The Model.Note instance being removed;
+         *  @param  notes   The containing collection (Model.Notes);
+         *  @param  options Any options used with remove();
+         */
+        _noteRemoved: function(note, notes, options) {
+            var self    = this;
+
+            /* The associated View.Note instance should notice the deletion of
+             * it's underlying model and remove itself.
+             */
         }
     });
 
@@ -18499,6 +18723,19 @@ $.Summary = Backbone.View.extend({
         self.$paneContent.removeClass('loading');
     },
 
+    /** @brief  Add a new Model.Note instance to the collection associated with
+     *          the current document.
+     *  @param  note    The Model.Note instance to add.
+     */
+    addNote: function(note) {
+        var self    = this;
+        var opts    = self.options;
+
+        if (! (opts.doc instanceof app.Model.Doc))  { return; }
+
+        return opts.doc.addNote( note );
+    },
+
     /** @brief  Change the rank threshold.
      *  @param  min     The minimum threshold.
      *  @param  max     The maximum threshold.
@@ -18966,6 +19203,19 @@ $.Summary = Backbone.View.extend({
         }
 
         self.$paneContent.removeClass('loading');
+    },
+
+    /** @brief  Add a new Model.Note instance to the collection associated with
+     *          the current document.
+     *  @param  note    The Model.Note instance to add.
+     */
+    addNote: function(note) {
+        var self    = this;
+        var opts    = self.options;
+
+        if (! (opts.doc instanceof app.Model.Doc))  { return; }
+
+        return opts.doc.addNote( note );
     },
 
     /** @brief  Change the rank threshold.

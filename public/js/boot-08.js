@@ -98,24 +98,23 @@ if (app.Option.mode === 'development')
         'model.doc':    { src: 'js/model/doc.js',     req:['model.section']},
 
         // Backbone views
-        'view.sentence':{ src: 'js/view/sentence.js',
-                          req: ['backbone', 'model.sentence', 'jquery']},
+        'view.sentence':{ src: 'js/view/sentence.js', req: ['model.sentence']},
         'view.paragraph':
                         { src: 'js/view/paragraph.js',
-                          req: ['model.paragraph', 'view.sentence', 'jquery']},
+                          req: ['model.paragraph', 'view.sentence']},
         'view.section': { src: 'js/view/section.js',
-                          req: ['model.section', 'view.paragraph', 'jquery']},
+                          req: ['model.section', 'view.paragraph']},
 
         'view.range':   { src: 'js/view/range.js',
-                          req: ['model.range', 'jquery', 'rangy']},
+                          req: ['model.range', 'rangy']},
         'view.selection':
-                        { src: 'js/view/selection.js',
-                          req: ['view.range', 'jquery']},
+                        { src: 'js/view/selection.js', req: ['view.range']},
+        'view.note':    { src: 'js/view/note.js',
+                          req: ['view.selection', 'model.note']},
 
         'view.doc':     { src: 'js/view/doc.js',
                           req: ['model.doc',
-                                'view.section', 'view.selection',
-                                'jquery']},
+                                'view.section', 'view.selection', 'view.note']},
 
         // jQuery-ui and widgets
         'jquery-ui':    { src: 'js/jquery-ui.js',       req: ['jquery'] },
@@ -127,8 +126,8 @@ if (app.Option.mode === 'development')
                           req: [ 'jquery', 'utils',
                                  'rangy',
                                  'ui.checkbox',
-                                 'model.user', 'model.note',
-                                 'view.doc'
+                                 'model.user',
+                                 'view.note', 'view.doc'
                           ] }
     };
 }
