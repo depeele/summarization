@@ -51,6 +51,24 @@
             {
                 this.set({ranges: new app.Model.Ranges(ranges)});
             }
+        },
+
+        /** @brief  Retrieve the count of comments.
+         *  
+         *  @return The count of comments.
+         */
+        commentCount: function() {
+            return this.get('comments').length;
+        },
+
+        /** @brief  Add a new comment to this note.
+         *  @param  comment     The new Model.Comment instance to add.
+         */
+        addComment: function(comment) {
+            var self        = this;
+            var comments    = self.get('comments');
+
+            comments.add( comment );
         }
     });
 

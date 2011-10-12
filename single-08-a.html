@@ -148,7 +148,7 @@
    <div class='arrow-outer'></div>
    <div class='arrow-inner'></div>
    <div class='note-body'>
-    <!-- comments will be placed here -->
+    <!-- View.Comment renderings go here -->
    </div>
    <div class='note-input-pane'>
     <textarea class='note-reply' title="Reply to this comment..."></textarea>
@@ -158,6 +158,25 @@
     </div>
   </div>
  </script>
+
+ <script id='template-comment' type='text/template'>
+   <img class='avatar' src='<%= author.get('avatarUrl') %>' />
+   <div class='author'><%= author.get('fullName') %></div>
+   <div class='created'><%= jQuery.prettyDate(created)  %></div>
+   <div class='text'><%= text %></div>
+   <div class='edit'>
+    <textarea class='edit-comment'></textarea>
+    <div class='buttons'>
+     <button name='save'>save</button>
+     <button name='cancel-edit'>cancel</button>
+    </div>
+   </div>
+   <div class='buttons'>
+    <button name='edit'>edit</button>
+    <button name='delete'>delete</button>
+   </div>
+ </script>
+
 
  <!-- Templates } -->
 </html>

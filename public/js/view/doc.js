@@ -71,7 +71,10 @@
             });
 
             self.model.get('notes').each(function(model) {
-                // :TODO: Render this note
+                /* Invoke the routing that is normally triggered when a new
+                 * note is added.
+                 */
+                self._noteAdded(model, self.model);
             });
 
             return self;

@@ -109,8 +109,11 @@ if (app.Option.mode === 'development')
                           req: ['model.range', 'rangy']},
         'view.selection':
                         { src: 'js/view/selection.js', req: ['view.range']},
+        'view.comment': { src: 'js/view/comment.js',
+                          req: ['model.comment']},
         'view.note':    { src: 'js/view/note.js',
-                          req: ['view.selection', 'model.note']},
+                          req: ['view.selection', 'view.comment',
+                                'model.note']},
 
         'view.doc':     { src: 'js/view/doc.js',
                           req: ['model.doc',

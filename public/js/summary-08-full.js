@@ -14631,6 +14631,24 @@ Backbone.sync = function(method, model, options, error) {
             {
                 this.set({ranges: new app.Model.Ranges(ranges)});
             }
+        },
+
+        /** @brief  Retrieve the count of comments.
+         *  
+         *  @return The count of comments.
+         */
+        commentCount: function() {
+            return this.get('comments').length;
+        },
+
+        /** @brief  Add a new comment to this note.
+         *  @param  comment     The new Model.Comment instance to add.
+         */
+        addComment: function(comment) {
+            var self        = this;
+            var comments    = self.get('comments');
+
+            comments.add( comment );
         }
     });
 
@@ -14861,6 +14879,12 @@ Backbone.sync = function(method, model, options, error) {
         addNote: function(note) {
             var self    = this;
             var notes   = self.get('notes');
+
+            // If this note has no comments, add a single, empty comment now.
+            if (note.commentCount() < 1)
+            {
+                note.addComment( new app.Model.Comment() );
+            }
 
             notes.add( note );
         }
@@ -15691,6 +15715,70 @@ Backbone.sync = function(method, model, options, error) {
  }).call(this);
 /** @file
  *
+ *  Backbone View for a single comment.
+ *
+ *  Requires:
+ *      jquery.js
+ *      backbone.js
+ *      view/comment.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.View)     { app.View  = {}; }
+
+    var $           = jQuery.noConflict();
+
+    /** @brief  A View for a single app.Model.Comment instance.
+     *
+     *  Set 'model' in the constructor options to establish the Model.Comment
+     *  instance to use for this view.
+     */
+    app.View.Comment = app.View.Selection.extend({
+        viewName:   'Comment',
+        className:  'comment',
+        template:   _.template($('#template-comment').html()),
+
+        /** @brief  Initialize this view. */
+        initialize: function() {
+            // Bind to changes to our underlying model
+            this.model.bind('destroy', _.bind(this.remove,  this));
+            this.model.bind('change',  _.bind(this.refresh, this));
+        },
+
+        /** @brief  Render this view. */
+        render: function() {
+            var self    = this;
+
+            self.$el = $(self.el);
+            self.$el.attr('id', self.model.cid);
+            self.$el.html( self.template( self.model.toJSON() ) );
+
+            // Store a reference to this view instance
+            self.$el.data('View:Doc', self);
+
+            return self;
+        },
+
+        /** @brief  Refresh our view due to a change to the underlying model.
+         */
+        refresh: function() {
+            var self    = this;
+
+            return self;
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+    });
+
+ }).call(this);
+
+/** @file
+ *
  *  An extension of app.View.Selection that provides a view for a single note.
  *
  *  Requires:
@@ -15728,11 +15816,18 @@ Backbone.sync = function(method, model, options, error) {
             // Bind to changes to our underlying model
             this.model.bind('destroy', _.bind(this.remove,  this));
             this.model.bind('change',  _.bind(this.refresh, this));
+
+            var comments    = this.model.get('comments');
+
+            comments.bind('add',    _.bind(this._commentAdded,   this));
+            comments.bind('remove', _.bind(this._commentRemoved, this));
         },
 
         /** @brief  Render this view. */
         render: function() {
             var self    = this;
+
+            self.$el = $(self.el);
 
             /* Allow View.Selection to render our template as well as any range
              * views.
@@ -15742,6 +15837,14 @@ Backbone.sync = function(method, model, options, error) {
             /* Now, perform any additional rendering needed to fully present
              * this not and all associated comments.
              */
+            self.$comments = self.$el.find('.note-body');
+
+            self.model.get('comments').each(function(model) {
+                /* Invoke the routing that is normally triggered when a new
+                 * comment is added.
+                 */
+                self._commentAdded(model, self.model);
+            });
 
             return self;
         },
@@ -15752,16 +15855,6 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
 
             return self;
-        },
-
-        /** @brief  Return the underlying Model.Note instance.
-         *
-         *  @return The underlying Model.Note instance.
-         */
-        getNote: function() {
-            var self    = this;
-
-            return self.model;
         },
 
         /**********************************************************************
@@ -15785,9 +15878,41 @@ Backbone.sync = function(method, model, options, error) {
             switch (name)
             {
             case 'note-remove':
-                // :TODO: Destroy the underlying note
+                /* Destroy the underlying note which will trigger a 'destroy'
+                 * event on our model (which we're monitoring -- see
+                 * initialize()).  This event will cause the invocation of our
+                 * remove() method, essentially causing this view to remove
+                 * itself.
+                 */
+                self.model.destroy();
                 break;
             }
+        },
+
+        /** @brief  A comment has been added to our underlying model.
+         *  @param  comment     The Model.Comment instance being added;
+         *  @param  comments    The containing collection (Model.Comments);
+         *  @param  options Any options used with add();
+         */
+        _commentAdded: function(comment, comments, options) {
+            var self    = this;
+
+            // Create a new View.Comment to associate with this new model
+            var view    = new app.View.Comment({model: comment});
+            self.$comments.append( view.render().el );
+        },
+
+        /** @brief  A comment has been removed from our underlying model.
+         *  @param  comment    The Model.Comment instance being removed;
+         *  @param  comments   The containing collection (Model.Comments);
+         *  @param  options Any options used with remove();
+         */
+        _commentRemoved: function(comment, comments, options) {
+            var self    = this;
+
+            /* The associated View.Comment instance should notice the deletion
+             * of it's underlying model and remove itself.
+             */
         }
     });
 
@@ -15865,7 +15990,10 @@ Backbone.sync = function(method, model, options, error) {
             });
 
             self.model.get('notes').each(function(model) {
-                // :TODO: Render this note
+                /* Invoke the routing that is normally triggered when a new
+                 * note is added.
+                 */
+                self._noteAdded(model, self.model);
             });
 
             return self;

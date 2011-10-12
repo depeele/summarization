@@ -37,11 +37,18 @@
             // Bind to changes to our underlying model
             this.model.bind('destroy', _.bind(this.remove,  this));
             this.model.bind('change',  _.bind(this.refresh, this));
+
+            var comments    = this.model.get('comments');
+
+            comments.bind('add',    _.bind(this._commentAdded,   this));
+            comments.bind('remove', _.bind(this._commentRemoved, this));
         },
 
         /** @brief  Render this view. */
         render: function() {
             var self    = this;
+
+            self.$el = $(self.el);
 
             /* Allow View.Selection to render our template as well as any range
              * views.
@@ -51,6 +58,14 @@
             /* Now, perform any additional rendering needed to fully present
              * this not and all associated comments.
              */
+            self.$comments = self.$el.find('.note-body');
+
+            self.model.get('comments').each(function(model) {
+                /* Invoke the routing that is normally triggered when a new
+                 * comment is added.
+                 */
+                self._commentAdded(model, self.model);
+            });
 
             return self;
         },
@@ -84,9 +99,41 @@
             switch (name)
             {
             case 'note-remove':
-                // :TODO: Destroy the underlying note
+                /* Destroy the underlying note which will trigger a 'destroy'
+                 * event on our model (which we're monitoring -- see
+                 * initialize()).  This event will cause the invocation of our
+                 * remove() method, essentially causing this view to remove
+                 * itself.
+                 */
+                self.model.destroy();
                 break;
             }
+        },
+
+        /** @brief  A comment has been added to our underlying model.
+         *  @param  comment     The Model.Comment instance being added;
+         *  @param  comments    The containing collection (Model.Comments);
+         *  @param  options Any options used with add();
+         */
+        _commentAdded: function(comment, comments, options) {
+            var self    = this;
+
+            // Create a new View.Comment to associate with this new model
+            var view    = new app.View.Comment({model: comment});
+            self.$comments.append( view.render().el );
+        },
+
+        /** @brief  A comment has been removed from our underlying model.
+         *  @param  comment    The Model.Comment instance being removed;
+         *  @param  comments   The containing collection (Model.Comments);
+         *  @param  options Any options used with remove();
+         */
+        _commentRemoved: function(comment, comments, options) {
+            var self    = this;
+
+            /* The associated View.Comment instance should notice the deletion
+             * of it's underlying model and remove itself.
+             */
         }
     });
 

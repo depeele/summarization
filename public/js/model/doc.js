@@ -76,6 +76,12 @@
             var self    = this;
             var notes   = self.get('notes');
 
+            // If this note has no comments, add a single, empty comment now.
+            if (note.commentCount() < 1)
+            {
+                note.addComment( new app.Model.Comment() );
+            }
+
             notes.add( note );
         }
     });
