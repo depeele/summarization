@@ -53,11 +53,13 @@
                 /* Remove all component View.Range elements, which will also
                  * destroy the underlying models (Model.Range).
                  */
+                var events  = '.'+ self.viewName;
                 $.each(self.rangeViews, function() {
                     var view    = this;
 
                     // Un-bind event handlers
-                    $(view.el).undelegate('.selected', '.'+ self.viewName);
+                    $(view.el).undelegate('.selected', events,
+                                          self.__rangeMouse);
 
                     view.remove( (self.ranges === null) );
                 });
@@ -90,6 +92,8 @@
 
             var events       = [ 'mouseenter.'+ self.viewName,
                                  'mouseleave.'+ self.viewName ].join(' ');
+
+            self.__rangeMouse = _.bind(self._rangeMouse, self);
             if ($.isArray(self.rangeViews))
             {
                 /* We're inheriting a "collection" of range views so we need to
@@ -98,7 +102,7 @@
                 $.each(self.rangeViews, function(idex, view) {
                     // Bind to mouse events on this range view
                     $(view.el).delegate('.selected',  events,
-                                        _.bind(self._rangeMouse, self));
+                                        self.__rangeMouse);
                 });
             }
             else
@@ -117,7 +121,7 @@
 
                     // Delegate events for this range view
                     $(view.el).delegate('.selected',  events,
-                                        _.bind(self._rangeMouse, self));
+                                        self.__rangeMouse);
 
                     self.rangeViews.push( view );
 
@@ -152,8 +156,9 @@
              */
             self.ranges = null;
 
-            // Schedule our demise
-            setTimeout(function() { self.remove(); }, 10);
+            // Self-destruct and return the constructed Model.Note
+            //setTimeout(function() { self.remove(); }, 10);
+            self.remove();
 
             return note;
         },
@@ -194,6 +199,9 @@
         _controlMouse: function(e) {
             var self    = this;
 
+            console.log('View.Selection::_controlMouse(): '
+                        + 'type[ '+ e.type +' ]');
+
             switch (e.type)
             {
             case 'mouseenter':
@@ -225,6 +233,9 @@
         _rangeMouse: function(e) {
             var self    = this;
 
+            console.log('View.Selection::_rangeMouse(): '
+                        + 'type[ '+ e.type +' ]');
+
             switch (e.type)
             {
             case 'mouseenter':
@@ -245,7 +256,7 @@
                  */
                 self._pendingLeave = setTimeout(function() {
                     // Hide the range controls
-                    self.$control.hide();
+                    self._hideControl();
                     self._pendingLeave = null;
                 }, 100);
                 break;
@@ -298,6 +309,20 @@
 
             self.$control.show()
                          .offset( offset );
+
+            return self;
+        },
+
+        /** @brief  Hide the control.
+         *
+         *  This is a method so sub-classes can override.
+         */
+        _hideControl: function( ) {
+            var self    = this;
+
+            self.$control.hide();
+
+            return self;
         },
 
         /** @brief  Retrieve the bounding segments of the selection.
@@ -340,8 +365,11 @@
 
             // Compute segment 1
             segment         = $measureStart.offset();
+
             // Account for padding
-            segment.left   -= ($first.outerWidth() - $first.width()) / 2;
+            segment.top    -= ($first.outerHeight() - $first.height()) / 2;
+            segment.left   -= ($first.outerWidth()  - $first.width())  / 2;
+
             segment.bottom  = segment.top  + $measureStart.height();
             segment.right   = (segment.left + $first.outerWidth()) -
                              (segment.left - $first.offset().left);

@@ -101,7 +101,9 @@
          *
          */
 
-        /** @brief  Expand this sentence as an expansion. */
+        /** @brief  Expand this sentence as an expansion.
+         *  @param  e   The triggering event;
+         */
         expansionExpand: function(e) {
             var self    = this;
             if (! this.$el.hasClass('expansion'))
@@ -111,12 +113,14 @@
                     self.$el.trigger('sentence:expansionExpanded');
                 });
 
-                // Mark this event as "handled" by stopping its propagation
-                if (e)  { e.stopPropagation(); }
+                // Mark this event as "handled"
+                if (e) { e.stopPropagation(); }
             }
         },
 
-        /** @brief  Collapse this sentence expansion. */
+        /** @brief  Collapse this sentence expansion.
+         *  @param  e   The triggering event;
+         */
         expansionCollapse: function(e) {
             var self    = this;
             if (this.$el.hasClass('expansion'))
@@ -126,18 +130,20 @@
                     self.$el.trigger('sentence:expansionCollapsed');
                 });
 
-                // Mark this event as "handled" by stopping its propagation
-                if (e)  { e.stopPropagation(); }
+                // Mark this event as "handled"
+                if (e) { e.stopPropagation(); }
             }
         },
 
-        /** @brief  Toggle this sentence iff collapsed to use 'expansion'. */
+        /** @brief  Toggle this sentence iff collapsed to use 'expansion'.
+         *  @param  e   The triggering event;
+         */
         expansionToggle: function(e) {
-            // Mark this event as "handled" by stopping its propagation
-            if (e)  { e.stopPropagation(); }
-
             if (this.$el.hasClass('expanded'))
             {
+                // Mark this event as "handled"
+                if (e) { e.stopPropagation(); }
+
                 return;
             }
 

@@ -31,14 +31,14 @@
             rangy.init();
 
             // Bind to mouseup and click at the document level.
-            $(document).bind('mouseup.doc click.doc',
+            $(document).bind('mouseup.viewDoc click.viewDoc',
                              _.bind(this.setSelection, this));
         },
 
         /** @brief  Override so we can unbind events bound in initialize().
          */
         remove: function() {
-            $(document).unbind('.doc');
+            $(document).unbind('.viewDoc');
 
             return Backbone.View.prototype.remove.call(this);
         },
@@ -122,6 +122,11 @@
             }
 
             var sel         = rangy.getSelection();
+            if (sel.rangeCount < 1)
+            {
+                return;
+            }
+
             var range       = sel.getRangeAt(0);        // rangy range
             var $start      = $(range.startContainer);
             var $end        = $(range.endContainer);
@@ -304,8 +309,10 @@
             var opts    = self.options;
 
             // Create a new View.Note to associate with this new model
-            var view    = new app.View.Note({model: note});
+            var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
+
+            setTimeout(function() { view.show(); }, 100);
         },
 
         /** @brief  A note has been removed from our underlying model.

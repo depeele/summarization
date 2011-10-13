@@ -1077,6 +1077,9 @@ a {
   padding: 2px;
   cursor: pointer;
 }
+.notes-pane .range-control .su-icon {
+  border: none;
+}
 .notes-pane .selection .range-control {
   background-color: #444444;
   color: #ffffff;

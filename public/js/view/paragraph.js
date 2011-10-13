@@ -16,7 +16,6 @@
 
     var $               = jQuery.noConflict();
 
-    // Mix the click helper into this view
     app.View.Paragraph  = Backbone.View.extend( {
         tagName:    'p',
         template:   _.template($('#template-paragraph').html()),
@@ -59,10 +58,12 @@
             return self;
         },
 
-        /** @brief  Toggle un-expanded sentences as expansions. */
-        toggle: function() {
-            var self    = this;
-            var $s      = self.$el.find('.sentence:not(.expanded)');
+        /** @brief  Toggle un-expanded sentences as expansions.
+         *  @param  e   The triggering event;
+         */
+        toggle: function(e) {
+            var self    = this,
+                $s      = self.$el.find('.sentence:not(.expanded)');
             if ($s.filter('.expansion').length > 0)
             {
                 // Some are expansions, collapse all
