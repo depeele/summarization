@@ -90,52 +90,38 @@
             self.$control = self.$el.find('.range-control')
                                     .hide();
 
+            /* Create a "collection" of range views based upon the attached
+             * ranges (Model.Ranges).
+             */
             var events       = [ 'mouseenter.'+ self.viewName,
                                  'mouseleave.'+ self.viewName ].join(' ');
 
             self.__rangeMouse = _.bind(self._rangeMouse, self);
-            if ($.isArray(self.rangeViews))
-            {
-                /* We're inheriting a "collection" of range views so we need to
-                 * delegate events.
+            self.rangeViews   = [];
+            self.ranges.each(function(range) {
+                var view    = new app.View.Range( {
+                                    parentView: self,
+                                    model:      range,
+                                    className:  self.className
+                              });
+                view.render();
+
+                // Delegate events for this range view
+                $(view.el).delegate('.selected',  events,
+                                    self.__rangeMouse);
+
+                self.rangeViews.push( view );
+
+                /* The Range view inserts itself in the proper sentence
+                 * overlay.  Do NOT move it by appending it to our own
+                 * element.
+                 *
+                 * Instead, we maintain the 'rangeViews' array to contain a
+                 * list of our component views.
+                 *
+                 * self.$el.append( view.render().el );
                  */
-                $.each(self.rangeViews, function(idex, view) {
-                    // Bind to mouse events on this range view
-                    $(view.el).delegate('.selected',  events,
-                                        self.__rangeMouse);
-                });
-            }
-            else
-            {
-                /* Create a "collection" of range views based upon the attached
-                 * ranges (Model.Ranges).
-                 */
-                self.rangeViews  = [];
-                self.ranges.each(function(range) {
-                    var view    = new app.View.Range( {
-                                        parentView: self,
-                                        model:      range,
-                                        className:  self.className
-                                  });
-                    view.render();
-
-                    // Delegate events for this range view
-                    $(view.el).delegate('.selected',  events,
-                                        self.__rangeMouse);
-
-                    self.rangeViews.push( view );
-
-                    /* The Range view inserts itself in the proper sentence
-                     * overlay.  Do NOT move it by appending it to our own
-                     * element.
-                     *
-                     * Instead, we maintain the 'rangeViews' array to contain a
-                     * list of our component views.
-                     *
-                     * self.$el.append( view.render().el );
-                     */
-                });
-            }
+            });
 
             return self;
         },

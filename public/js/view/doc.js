@@ -20,7 +20,12 @@
         template:   _.template($('#template-doc').html()),
 
         events: {
-            'doc:ready':    '_renderNotes'
+            'doc:ready':                            '_renderNotes',
+
+            'sentence:expanded .sentence':          '_adjustPositions',
+            'sentence:collapsed .sentence':         '_adjustPositions',
+            'sentence:expansionExpanded .sentence': '_adjustPositions',
+            'sentence:expansionCollapsed .sentence':'_adjustPositions'
         },
 
         initialize: function() {
@@ -300,7 +305,7 @@
          *  @param  e       The triggering event;
          *
          */
-        _renderNotes: function() {
+        _renderNotes: function(e) {
             var self    = this,
                 opts    = self.options,
                 notes   = self.model.get('notes');
@@ -310,6 +315,30 @@
                  */
                 self._noteAdded(note, notes);
             });
+
+            return self;
+        },
+
+        /** @brief  Rendering has changed in such a way that overlays MAY need
+         *          to be repositioned.  Find all overlays that FOLLOW the
+         *          triggering element and notify them.
+         *  @param  e       The triggering event;
+         *
+         */
+        _adjustPositions: function(e) {
+            var self    = this,
+                opts    = self.options,
+                $s      = $(e.target),
+                fromDex = self.$s.index( $s ),
+                // .overlay .range elements from all FOLLOWING sentences
+                $ranges = self.$s.filter( function(idex) {
+                                            return (idex >= fromDex); })
+                                    .find('.overlay .range');
+
+            if ($ranges.length > 0)
+            {
+                $ranges.trigger('overlay:position');
+            }
 
             return self;
         },
@@ -333,11 +362,11 @@
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
-            setTimeout(function() {
+            //setTimeout(function() {
                 view.show( (app.options.get('quickTag') !== true
                                 ? function() {  view.editComment(); }
                                 : undefined) );
-            }, 100);
+            //}, 100);
         },
 
         /** @brief  A note has been removed from our underlying model.

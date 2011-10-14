@@ -15582,52 +15582,38 @@ _.extend(LocalStore.prototype, {
             self.$control = self.$el.find('.range-control')
                                     .hide();
 
+            /* Create a "collection" of range views based upon the attached
+             * ranges (Model.Ranges).
+             */
             var events       = [ 'mouseenter.'+ self.viewName,
                                  'mouseleave.'+ self.viewName ].join(' ');
 
             self.__rangeMouse = _.bind(self._rangeMouse, self);
-            if ($.isArray(self.rangeViews))
-            {
-                /* We're inheriting a "collection" of range views so we need to
-                 * delegate events.
+            self.rangeViews   = [];
+            self.ranges.each(function(range) {
+                var view    = new app.View.Range( {
+                                    parentView: self,
+                                    model:      range,
+                                    className:  self.className
+                              });
+                view.render();
+
+                // Delegate events for this range view
+                $(view.el).delegate('.selected',  events,
+                                    self.__rangeMouse);
+
+                self.rangeViews.push( view );
+
+                /* The Range view inserts itself in the proper sentence
+                 * overlay.  Do NOT move it by appending it to our own
+                 * element.
+                 *
+                 * Instead, we maintain the 'rangeViews' array to contain a
+                 * list of our component views.
+                 *
+                 * self.$el.append( view.render().el );
                  */
-                $.each(self.rangeViews, function(idex, view) {
-                    // Bind to mouse events on this range view
-                    $(view.el).delegate('.selected',  events,
-                                        self.__rangeMouse);
-                });
-            }
-            else
-            {
-                /* Create a "collection" of range views based upon the attached
-                 * ranges (Model.Ranges).
-                 */
-                self.rangeViews  = [];
-                self.ranges.each(function(range) {
-                    var view    = new app.View.Range( {
-                                        parentView: self,
-                                        model:      range,
-                                        className:  self.className
-                                  });
-                    view.render();
-
-                    // Delegate events for this range view
-                    $(view.el).delegate('.selected',  events,
-                                        self.__rangeMouse);
-
-                    self.rangeViews.push( view );
-
-                    /* The Range view inserts itself in the proper sentence
-                     * overlay.  Do NOT move it by appending it to our own
-                     * element.
-                     *
-                     * Instead, we maintain the 'rangeViews' array to contain a
-                     * list of our component views.
-                     *
-                     * self.$el.append( view.render().el );
-                     */
-                });
-            }
+            });
 
             return self;
         },
@@ -16219,7 +16205,9 @@ _.extend(LocalStore.prototype, {
             'focus .note-reply':        '_focusChange',
             'blur  .note-reply':        '_focusChange',
 
-            'click .buttons button':    '_buttonClick'
+            'click .buttons button':    '_buttonClick',
+
+            'overlay:position':         'reposition'
         }),
 
         /** @brief  Initialize this view. */
@@ -16304,7 +16292,8 @@ _.extend(LocalStore.prototype, {
             });
 
             // Add click handlers for the range views to set focus 
-            self.__focus = _.bind(self.focus, self);
+            self.__focus      = _.bind(self.focus,      self);
+            self.__reposition = _.bind(self.reposition, self);
             if ($.isArray(self.rangeViews))
             {
                 // Add a click delegate for all range views.
@@ -16313,6 +16302,8 @@ _.extend(LocalStore.prototype, {
                     // Bind to mouse events on this range view
                     $(view.el).delegate('.selected',  events,
                                         self.__focus);
+
+                    $(view.el).bind('overlay:position', self.__reposition);
                 });
             }
 
@@ -16346,6 +16337,7 @@ _.extend(LocalStore.prototype, {
                     // Bind to mouse events on this range view
                     $(view.el).undelegate('.selected',  events,
                                           self.__focus);
+                    $(view.el).unbind('overlay:position', self.__reposition);
                 });
             }
 
@@ -16458,8 +16450,12 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeIn( app.options.get('animSpeed'), cb )
-                    .position( opts.position );
+            self.$el.fadeIn( app.options.get('animSpeed'), function() {
+                self._isVisible = true;
+                self.reposition();
+
+                if ($.isFunction(cb))   { cb.apply(self); }
+            });
 
             return self;
         },
@@ -16474,7 +16470,11 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeOut( app.options.get('animSpeed'), cb );
+            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+                self._isVisible = false;
+
+                if ($.isFunction(cb))   { cb.apply(self); }
+            });
 
             return self;
         },
@@ -16488,6 +16488,19 @@ _.extend(LocalStore.prototype, {
                 opts    = self.options;
 
             self.$reply.trigger('focus');
+
+            return self;
+        },
+
+        /** @brief  Adjust our position.
+         *
+         *  @return this    for a fluent interface
+         */
+        reposition: function() {
+            var self    = this,
+                opts    = self.options;
+            
+            self.$el.position( opts.position );
 
             return self;
         },
@@ -16583,6 +16596,8 @@ _.extend(LocalStore.prototype, {
                 newBot      = newTop + self.$el.height(),
                 myId        = self.$el.attr('id');
 
+            if (self._isVisible !== true)   { return; }
+
             self.$el.parent().find('.note').each(function() {
                 var $note   = $(this);
                 if (myId === $note.attr('id'))  { return; }
@@ -16607,7 +16622,16 @@ _.extend(LocalStore.prototype, {
             }
             else
             {
-                self.$el.animate( {top: to.top}, app.options.get('animSpeed') );
+                // Only allow one positioning to be in-progress at a time.
+                if (self._isPositioning !== true)
+                {
+                    self._isPositioning = true;
+                    self.$el.animate( {top: to.top},
+                                      {duration: app.options.get('animSpeed'),
+                                       complete: function() {
+                                        self._isPositioning = false;
+                                       }} );
+                }
             }
         },
 
@@ -16808,7 +16832,12 @@ _.extend(LocalStore.prototype, {
         template:   _.template($('#template-doc').html()),
 
         events: {
-            'doc:ready':    '_renderNotes'
+            'doc:ready':                            '_renderNotes',
+
+            'sentence:expanded .sentence':          '_adjustPositions',
+            'sentence:collapsed .sentence':         '_adjustPositions',
+            'sentence:expansionExpanded .sentence': '_adjustPositions',
+            'sentence:expansionCollapsed .sentence':'_adjustPositions'
         },
 
         initialize: function() {
@@ -16838,6 +16867,8 @@ _.extend(LocalStore.prototype, {
         /** @brief  (Re)render the contents of the document item. */
         render:     function() {
             var self    = this;
+
+            self._notesRendered = false;
 
             self.$el.attr('id', self.model.cid);
             self.$el.html( self.template( self.model.toJSON() ) );
@@ -17088,7 +17119,7 @@ _.extend(LocalStore.prototype, {
          *  @param  e       The triggering event;
          *
          */
-        _renderNotes: function() {
+        _renderNotes: function(e) {
             var self    = this,
                 opts    = self.options,
                 notes   = self.model.get('notes');
@@ -17098,6 +17129,32 @@ _.extend(LocalStore.prototype, {
                  */
                 self._noteAdded(note, notes);
             });
+
+            self._notesRendered = true;
+
+            return self;
+        },
+
+        /** @brief  Rendering has changed in such a way that overlays MAY need
+         *          to be repositioned.  Find all overlays that FOLLOW the
+         *          triggering element and notify them.
+         *  @param  e       The triggering event;
+         *
+         */
+        _adjustPositions: function(e) {
+            var self    = this,
+                opts    = self.options,
+                $s      = $(e.target),
+                fromDex = self.$s.index( $s ),
+                // .overlay .range elements from all FOLLOWING sentences
+                $ranges = self.$s.filter( function(idex) {
+                                            return (idex >= fromDex); })
+                                    .find('.overlay .range');
+
+            if ($ranges.length > 0)
+            {
+                $ranges.trigger('overlay:position');
+            }
 
             return self;
         },
@@ -17121,11 +17178,11 @@ _.extend(LocalStore.prototype, {
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
-            setTimeout(function() {
+            //setTimeout(function() {
                 view.show( (app.options.get('quickTag') !== true
                                 ? function() {  view.editComment(); }
                                 : undefined) );
-            }, 100);
+            //}, 100);
         },
 
         /** @brief  A note has been removed from our underlying model.

@@ -57,7 +57,9 @@
             'focus .note-reply':        '_focusChange',
             'blur  .note-reply':        '_focusChange',
 
-            'click .buttons button':    '_buttonClick'
+            'click .buttons button':    '_buttonClick',
+
+            'overlay:position':         'reposition'
         }),
 
         /** @brief  Initialize this view. */
@@ -142,7 +144,8 @@
             });
 
             // Add click handlers for the range views to set focus 
-            self.__focus = _.bind(self.focus, self);
+            self.__focus      = _.bind(self.focus,      self);
+            self.__reposition = _.bind(self.reposition, self);
             if ($.isArray(self.rangeViews))
             {
                 // Add a click delegate for all range views.
@@ -151,6 +154,8 @@
                     // Bind to mouse events on this range view
                     $(view.el).delegate('.selected',  events,
                                         self.__focus);
+
+                    $(view.el).bind('overlay:position', self.__reposition);
                 });
             }
 
@@ -184,6 +189,7 @@
                     // Bind to mouse events on this range view
                     $(view.el).undelegate('.selected',  events,
                                           self.__focus);
+                    $(view.el).unbind('overlay:position', self.__reposition);
                 });
             }
 
@@ -296,8 +302,12 @@
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeIn( app.options.get('animSpeed'), cb )
-                    .position( opts.position );
+            self.$el.fadeIn( app.options.get('animSpeed'), function() {
+                self._isVisible = true;
+                self.reposition();
+
+                if ($.isFunction(cb))   { cb.apply(self); }
+            });
 
             return self;
         },
@@ -312,7 +322,11 @@
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeOut( app.options.get('animSpeed'), cb );
+            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+                self._isVisible = false;
+
+                if ($.isFunction(cb))   { cb.apply(self); }
+            });
 
             return self;
         },
@@ -326,6 +340,19 @@
                 opts    = self.options;
 
             self.$reply.trigger('focus');
+
+            return self;
+        },
+
+        /** @brief  Adjust our position.
+         *
+         *  @return this    for a fluent interface
+         */
+        reposition: function() {
+            var self    = this,
+                opts    = self.options;
+            
+            self.$el.position( opts.position );
 
             return self;
         },
@@ -421,6 +448,8 @@
                 newBot      = newTop + self.$el.height(),
                 myId        = self.$el.attr('id');
 
+            if (self._isVisible !== true)   { return; }
+
             self.$el.parent().find('.note').each(function() {
                 var $note   = $(this);
                 if (myId === $note.attr('id'))  { return; }
@@ -445,7 +474,16 @@
             }
             else
             {
-                self.$el.animate( {top: to.top}, app.options.get('animSpeed') );
+                // Only allow one positioning to be in-progress at a time.
+                if (self._isPositioning !== true)
+                {
+                    self._isPositioning = true;
+                    self.$el.animate( {top: to.top},
+                                      {duration: app.options.get('animSpeed'),
+                                       complete: function() {
+                                        self._isPositioning = false;
+                                       }} );
+                }
             }
         },
 
