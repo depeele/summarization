@@ -145,9 +145,7 @@
             self.__focus = _.bind(self.focus, self);
             if ($.isArray(self.rangeViews))
             {
-                /* We're inheriting a "collection" of range views so we need to
-                 * delegate events.
-                 */
+                // Add a click delegate for all range views.
                 var events  = 'click.'+ self.viewName;
                 $.each(self.rangeViews, function(idex, view) {
                     // Bind to mouse events on this range view
@@ -180,9 +178,7 @@
 
             if ($.isArray(self.rangeViews))
             {
-                /* We're inheriting a "collection" of range views so we need to
-                 * delegate events.
-                 */
+                // undelegate events we've bound to the range views.
                 var events  = 'click.'+ self.viewName;
                 $.each(self.rangeViews, function(idex, view) {
                     // Bind to mouse events on this range view
@@ -191,9 +187,12 @@
                 });
             }
 
-            self.$buttons.button('destroy');
+            self.$el.slideUp( app.options.get('animSpeed'), function() {
+                self.$buttons.button('destroy');
+                app.View.Selection.prototype.remove.call(self);
+            });
 
-            return app.View.Selection.prototype.remove.call(this);
+            return self;
         },
 
         /** @brief  Refresh our view due to a change to the underlying model.
@@ -241,7 +240,7 @@
             var zIndex  = parseInt(self.$el.css('z-index'), 10);
             self.$el
                     .css('z-index', zIndex + 1) // pop to the top immediately...
-                    .addClass('note-active', app.Option.animSpeed,
+                    .addClass('note-active', app.options.get('animSpeed'),
                               function() {
                                 // ...then remove the hard z-index and let
                                 //    the CSS take over.
@@ -278,7 +277,7 @@
             self.$body.find('.comment').trigger('cancel');
 
             // And close ourselves up
-            self.$el.removeClass('note-active', app.Option.animSpeed,
+            self.$el.removeClass('note-active', app.options.get('animSpeed'),
                                  function() {
                                     self.deactivating = false;
                                     if ($.isFunction(cb))   { cb.call(self); }
@@ -297,7 +296,7 @@
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeIn( app.Option.animSpeed, cb )
+            self.$el.fadeIn( app.options.get('animSpeed'), cb )
                     .position( opts.position );
 
             return self;
@@ -313,7 +312,7 @@
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeOut( app.Option.animSpeed, cb );
+            self.$el.fadeOut( app.options.get('animSpeed'), cb );
 
             return self;
         },
@@ -446,7 +445,7 @@
             }
             else
             {
-                self.$el.animate( {top: to.top}, app.Option.animSpeed );
+                self.$el.animate( {top: to.top}, app.options.get('animSpeed') );
             }
         },
 
@@ -556,7 +555,7 @@
                 // If there are no (more) comments, self-destruct!
                 if (self.model.commentCount() < 1)
                 {
-                    self.remove();
+                    self.model.destroy();
                 }
                 break;
             }
@@ -619,7 +618,7 @@
              */
             if (self.model.commentCount() < 1)
             {
-                self.remove();
+                self.model.destroy();
             }
         }
     });

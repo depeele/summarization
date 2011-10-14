@@ -19,6 +19,10 @@
         tagName:    'article',
         template:   _.template($('#template-doc').html()),
 
+        events: {
+            'doc:ready':    '_renderNotes'
+        },
+
         initialize: function() {
             this.$el = $(this.el);
 
@@ -70,13 +74,6 @@
                 $s.attr('id', 'sentence-'+ idex);
             });
 
-            self.model.get('notes').each(function(model) {
-                /* Invoke the routing that is normally triggered when a new
-                 * note is added.
-                 */
-                self._noteAdded(model, self.model);
-            });
-
             return self;
         },
 
@@ -86,8 +83,8 @@
          *  @param  e       The triggering event;
          */
         setSelection: function(e) {
-            var self        = this;
-            var opts        = self.options;
+            var self        = this,
+                opts        = self.options;
 
             if (! opts.$notes)
             {
@@ -127,12 +124,12 @@
                 return;
             }
 
-            var range       = sel.getRangeAt(0);        // rangy range
-            var $start      = $(range.startContainer);
-            var $end        = $(range.endContainer);
-            var $startS     = $start.parents('.sentence');
-            var $endS       = $end.parents('.sentence');
-            var ranges      = new app.Model.Ranges();
+            var range       = sel.getRangeAt(0),        // rangy range
+                $start      = $(range.startContainer),
+                $end        = $(range.endContainer),
+                $startS     = $start.parents('.sentence'),
+                $endS       = $end.parents('.sentence'),
+                ranges      = new app.Model.Ranges();
 
             if (($startS.length > 0) || ($endS.length > 0))
             {
@@ -186,9 +183,9 @@
                      * need to contract the start or end of the range.
                      */
 
-                    var $newStart   = _.first($selectable);
-                    var $newEnd     = _.last($selectable);
-                    var $content;
+                    var $newStart   = _.first($selectable),
+                        $newEnd     = _.last($selectable),
+                        $content;
 
                     /* If we have a new start, contract the beginning of the
                      * range to the first character of the first selectable
@@ -218,9 +215,9 @@
                      */
                     var last    = $selectable.length;
                     $.each($selectable, function(idex, s) {
-                        var $s          = $(s);
-                        var $content    = $s.find('.content');
-                        var rangeModel  = new app.Model.Range({
+                        var $s          = $(s),
+                            $content    = $s.find('.content'),
+                            rangeModel  = new app.Model.Range({
                                             sentenceId: $s.attr('id')
                                           });
 
@@ -299,27 +296,45 @@
          *
          */
 
+        /** @brief  Render any notes associated with this document.
+         *  @param  e       The triggering event;
+         *
+         */
+        _renderNotes: function() {
+            var self    = this,
+                opts    = self.options,
+                notes   = self.model.get('notes');
+            notes.each(function(note) {
+                /* Invoke the routing that is normally triggered when a new
+                 * note is added.
+                 */
+                self._noteAdded(note, notes);
+            });
+
+            return self;
+        },
+
         /** @brief  A note has been added to our underlying model.
          *  @param  note    The Model.Note instance being added;
          *  @param  notes   The containing collection (Model.Notes);
          *  @param  options Any options used with add();
          */
         _noteAdded: function(note, notes, options) {
-            var self    = this;
-            var opts    = self.options;
+            var self    = this,
+                opts    = self.options;
 
             /* Create a new View.Note to associate with this new model
              *
              * This should only occur when a user clicks on the 'add-note'
              * range-control associated with an active selection.  In this
-             * case, we need to check the value of app.Option.quickTag.  If it
+             * case, we need to check the value of app.options.quickTag.  If it
              * is false, activate editing on the first comment of the new note.
              */
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
             setTimeout(function() {
-                view.show( (app.Option.quickTag !== true
+                view.show( (app.options.get('quickTag') !== true
                                 ? function() {  view.editComment(); }
                                 : undefined) );
             }, 100);

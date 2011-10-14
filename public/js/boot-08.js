@@ -10,17 +10,17 @@
 (function() {
 
 // Define the application object
-var app             = this.app = (this.app || {Option:{},   Model:{},
+var app             = this.app = (this.app || {options:{},  Model:{},
                                                View:{},     Controller:{},
                                                Helper:{}});
-app.Option.mode    = 'development';
+app.options.mode    = 'development';
 
 /** @brief  Boot the application once all dependencies are loaded. */
 function bootApp()
 {
     var $       = jQuery.noConflict();
 
-    app.Option.docId = (window.location.search
+    app.options.docId = (window.location.search
                             ? window.location.search
                                 .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.json|\.xml)?$/, '$1')
                             : '0001a');
@@ -31,7 +31,7 @@ function bootApp()
          */
         app.main = new $.Summary({
             el:     $('#app-Summary'),
-            doc:    'samples/'+ app.Option.docId +'.json'
+            doc:    'samples/'+ app.options.docId +'.json'
         });
     });
 }
@@ -40,7 +40,7 @@ function bootApp()
  * Load dependencies and, once loading is complete, invoke bootApp().
  *
  */
-if (app.Option.mode === 'development')
+if (app.options.mode === 'development')
 {
     // Development dependencies
     Req.assets = {
@@ -81,9 +81,12 @@ if (app.Option.mode === 'development')
         'backbone':     { src: 'js/backbone.js',
                           req: ['underscore', 'jquery']},
         'backbone.localStorage':
-                        { src: 'js/backbone.js',      req:['backbone']},
+                        { src: 'js/backbone.localStorage.js',
+                          req: ['backbone']},
 
         // Backbone models
+        'model.options':{ src: 'js/model/options.js',
+                          req: ['backbone.localStorage']},
         'model.user':   { src: 'js/model/user.js',    req:['backbone']},
         'model.comment':{ src: 'js/model/comment.js', req:['backbone']},
         'model.range':  { src: 'js/model/range.js',   req:['backbone']},
@@ -129,7 +132,7 @@ if (app.Option.mode === 'development')
                           req: [ 'jquery', 'utils',
                                  'rangy',
                                  'ui.checkbox',
-                                 'model.user',
+                                 'model.options', 'model.user',
                                  'view.note', 'view.doc'
                           ] }
     };

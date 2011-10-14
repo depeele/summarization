@@ -14372,9 +14372,12 @@ rangy.createModule("DomUtil", function(api, module) {
  * Date: Sun Aug 14 2011 09:53:55 -0400
  */
 
-// A simple module to replace `Backbone.sync` with *localStorage*-based
-// persistence. Models are given GUIDS, and saved into a JSON object. Simple
-// as that.
+(function(){
+
+/* A simple module to allow the use of *localStorage*-based persistence with
+ * any Model.  persistence. Models are given GUIDS, and saved into a JSON
+ * object. Simple as that.
+ */
 
 // Generate four random hex digits.
 function S4() {
@@ -14388,15 +14391,15 @@ function guid() {
 
 // Our Store is represented by a single JS object in *localStorage*. Create it
 // with a meaningful name, like the name you'd give a table.
-window.Store = function(name) {
+this.LocalStore = function(name) {
   this.name = name;
   var store = localStorage.getItem(this.name);
   this.records = (store && store.split(",")) || [];
 };
 
-_.extend(Store.prototype, {
+_.extend(LocalStore.prototype, {
 
-  // Save the current state of the **Store** to *localStorage*.
+  // Save the current state of the **LocalStore** to *localStorage*.
   save: function() {
     localStorage.setItem(this.name, this.records.join(","));
   },
@@ -14414,7 +14417,10 @@ _.extend(Store.prototype, {
   // Update a model by replacing its copy in `this.data`.
   update: function(model) {
     localStorage.setItem(this.name+"-"+model.id, JSON.stringify(model));
-    if (!_.include(this.records, model.id.toString())) this.records.push(model.id.toString()); this.save();
+    if (!_.include(this.records, model.id.toString())) {
+      this.records.push(model.id.toString());
+    }
+    this.save();
     return model;
   },
 
@@ -14425,47 +14431,117 @@ _.extend(Store.prototype, {
 
   // Return the array of all models currently in storage.
   findAll: function() {
-    return _.map(this.records, function(id){return JSON.parse(localStorage.getItem(this.name+"-"+id));}, this);
+    return _.map(this.records, function(id) {
+        return JSON.parse(localStorage.getItem(this.name+"-"+id));
+    }, this);
   },
 
   // Delete a model from `this.data`, returning it.
   destroy: function(model) {
     localStorage.removeItem(this.name+"-"+model.id);
-    this.records = _.reject(this.records, function(record_id){return record_id == model.id.toString();});
+    this.records = _.reject(this.records, function(record_id) {
+        return record_id == model.id.toString();
+    });
     this.save();
     return model;
-  }
+  },
 
+  /************************************************************************
+   * Include a sync method that SHOULD be applied to any model that uses
+   * this adapter:
+   *
+   *    var model = Backbone.Model.extend({
+   *        ...
+   *        localStorage:   new LocalStore( 'storeName' ),
+   *        sync:           LocalStore.prototype.sync
+   *    });
+   *
+   * You may also want to include an initialize() method to ensure that the
+   * underlying record is actually retrieved if an id is provided.
+   *        initialize: function() {
+   *            var id  = this.get('id');
+   *            // Make sure we fetch the actual record if it exists.
+   *            if (id !== null)
+   *            {
+   *                this.fetch({id:id});
+   *            }
+   *        }
+   */
+  sync: function(method, model, options, error) {
+
+    // Backwards compatibility with Backbone <= 0.3.3
+    if (typeof options == 'function') {
+      options = {
+        success: options,
+        error: error
+      };
+    }
+
+    var resp;
+    var store = model.localStorage || model.collection.localStorage;
+
+    switch (method) {
+      case "read":    resp = model.id
+                              ? store.find(model)
+                              : store.findAll();    break;
+      case "create":  resp = store.create(model);   break;
+      case "update":  resp = store.update(model);   break;
+      case "delete":  resp = store.destroy(model);  break;
+    }
+
+    if (resp) {
+      options.success(resp);
+    } else {
+      options.error("Record not found");
+    }
+  }
 });
 
-// Override `Backbone.sync` to use delegate to the model or collection's
-// *localStorage* property, which should be an instance of `Store`.
-Backbone.sync = function(method, model, options, error) {
+}).call(this);
+/** @file
+ *
+ *  Backbone Model for user options.
+ *
+ *  Requires:
+ *      backbone.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
 
-  // Backwards compatibility with Backbone <= 0.3.3
-  if (typeof options == 'function') {
-    options = {
-      success: options,
-      error: error
-    };
-  }
+    var Backbone    = this.Backbone;
+    if (!Backbone && (typeof require !== 'undefined'))
+    {
+        Backbone = require('../backbone.js');
+    }
 
-  var resp;
-  var store = model.localStorage || model.collection.localStorage;
+    app.Model.Options  = Backbone.Model.extend({
+        defaults:   {
+            id:         null,
+            mode:       'production',   // 'production' | 'development'
+            animSpeed:  200,            // Global animation speed
+            quickTag:   true            // Quick tagging?
+        },
 
-  switch (method) {
-    case "read":    resp = model.id ? store.find(model) : store.findAll(); break;
-    case "create":  resp = store.create(model);                            break;
-    case "update":  resp = store.update(model);                            break;
-    case "delete":  resp = store.destroy(model);                           break;
-  }
+        localStorage:   new this.LocalStore('app.options'),
+        sync:           this.LocalStore.prototype.sync,
 
-  if (resp) {
-    options.success(resp);
-  } else {
-    options.error("Record not found");
-  }
-};/** @file
+        initialize: function() {
+            var self    = this,
+                id      = self.get('id');
+            
+            // Make sure we fetch the actual record if it exists.
+            if (id !== null)
+            {
+                self.fetch({id: id});
+            }
+        }
+    });
+
+ }).call(this);
+/** @file
  *
  *  Backbone Model for a user or collection of users.
  *
@@ -14699,23 +14775,38 @@ Backbone.sync = function(method, model, options, error) {
     app.Model.Note  = Backbone.Model.extend({
         defaults: {
             id:         null,
+            docId:      null,   /* The url of the document with which this note
+                                 * is associated.
+                                 */
             ranges:     null,
 
             // Comments associated with this note
             comments:   null
         },
 
+        localStorage:   new this.LocalStore('app.notes'),
+        sync:           this.LocalStore.prototype.sync,
+
         initialize: function(spec) {
-            var comments    = this.get('comments');
-            var ranges      = this.get('ranges');
-            if ((! comments) || ! (comments instanceof app.Model.Comments) )
+            var self    = this,
+                id      = self.get('id');
+            
+            // Make sure we fetch the actual record if it exists.
+            if (id !== null)
             {
-                this.set({comments: new app.Model.Comments(comments)});
+                self.fetch({id: id});
             }
 
-            if ((! ranges) || ! (ranges instanceof app.Model.Ranges) )
+            var comments    = self.get('comments');
+            var ranges      = self.get('ranges');
+            if ((! comments) || ! (comments instanceof app.Model.Comments))
             {
-                this.set({ranges: new app.Model.Ranges(ranges)});
+                self.set({comments: new app.Model.Comments(comments)});
+            }
+
+            if ((! ranges) || ! (ranges instanceof app.Model.Ranges))
+            {
+                self.set({ranges: new app.Model.Ranges(ranges)});
             }
         },
 
@@ -14739,10 +14830,9 @@ Backbone.sync = function(method, model, options, error) {
     });
 
     app.Model.Notes = Backbone.Collection.extend({
-        model:  app.Model.Note,
-
-        initialize: function() {
-        }
+        model:          app.Model.Note,
+        localStorage:   app.Model.Note.prototype.localStorage,
+        sync:           app.Model.Note.prototype.sync
     });
 
  }).call(this);
@@ -14955,7 +15045,11 @@ Backbone.sync = function(method, model, options, error) {
 
             if ((! notes) || ! (notes instanceof app.Model.Notes))
             {
-                self.set({notes: new app.Model.Notes(notes)});
+                var notes   = new app.Model.Notes();
+                notes.fetch({docId: self.get('url')});
+
+                //self.set({notes: new app.Model.Notes(notes)});
+                self.set({notes: notes}, {silent: true});
             }
         },
 
@@ -14972,7 +15066,11 @@ Backbone.sync = function(method, model, options, error) {
                 note.addComment( new app.Model.Comment() );
             }
 
+            note.set({docId: self.get('url')});
+
             notes.add( note );
+            
+            note.save();
         }
     });
 
@@ -15057,7 +15155,7 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             if (! this.$el.hasClass('expanded'))
             {
-                this.$el.addClass('expanded', app.Option.animSpeed,
+                this.$el.addClass('expanded', app.options.get('animSpeed'),
                                   function() {
                     self.$el.trigger('sentence:expanded');
                 });
@@ -15069,7 +15167,7 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             if (this.$el.hasClass('expanded'))
             {
-                this.$el.removeClass('expanded', app.Option.animSpeed,
+                this.$el.removeClass('expanded', app.options.get('animSpeed'),
                                      function() {
                     self.$el.trigger('sentence:collapsed');
                 });
@@ -15094,7 +15192,7 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             if (! this.$el.hasClass('expansion'))
             {
-                this.$el.addClass('expansion', app.Option.animSpeed,
+                this.$el.addClass('expansion', app.options.get('animSpeed'),
                                   function() {
                     self.$el.trigger('sentence:expansionExpanded');
                 });
@@ -15111,7 +15209,7 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             if (this.$el.hasClass('expansion'))
             {
-                this.$el.removeClass('expansion', app.Option.animSpeed,
+                this.$el.removeClass('expansion', app.options.get('animSpeed'),
                                      function() {
                     self.$el.trigger('sentence:expansionCollapsed');
                 });
@@ -15319,7 +15417,11 @@ Backbone.sync = function(method, model, options, error) {
 
             if (keepModel !== true) { self.model.destroy(); }
 
-            return Backbone.View.prototype.remove.call(this);
+            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+                Backbone.View.prototype.remove.call(self);
+            });
+
+            return self;
         },
 
         /** @brief  (Re)render the contents of the range item. */
@@ -16205,9 +16307,7 @@ Backbone.sync = function(method, model, options, error) {
             self.__focus = _.bind(self.focus, self);
             if ($.isArray(self.rangeViews))
             {
-                /* We're inheriting a "collection" of range views so we need to
-                 * delegate events.
-                 */
+                // Add a click delegate for all range views.
                 var events  = 'click.'+ self.viewName;
                 $.each(self.rangeViews, function(idex, view) {
                     // Bind to mouse events on this range view
@@ -16240,9 +16340,7 @@ Backbone.sync = function(method, model, options, error) {
 
             if ($.isArray(self.rangeViews))
             {
-                /* We're inheriting a "collection" of range views so we need to
-                 * delegate events.
-                 */
+                // undelegate events we've bound to the range views.
                 var events  = 'click.'+ self.viewName;
                 $.each(self.rangeViews, function(idex, view) {
                     // Bind to mouse events on this range view
@@ -16251,9 +16349,12 @@ Backbone.sync = function(method, model, options, error) {
                 });
             }
 
-            self.$buttons.button('destroy');
+            self.$el.slideUp( app.options.get('animSpeed'), function() {
+                self.$buttons.button('destroy');
+                app.View.Selection.prototype.remove.call(self);
+            });
 
-            return app.View.Selection.prototype.remove.call(this);
+            return self;
         },
 
         /** @brief  Refresh our view due to a change to the underlying model.
@@ -16301,7 +16402,7 @@ Backbone.sync = function(method, model, options, error) {
             var zIndex  = parseInt(self.$el.css('z-index'), 10);
             self.$el
                     .css('z-index', zIndex + 1) // pop to the top immediately...
-                    .addClass('note-active', app.Option.animSpeed,
+                    .addClass('note-active', app.options.get('animSpeed'),
                               function() {
                                 // ...then remove the hard z-index and let
                                 //    the CSS take over.
@@ -16338,7 +16439,7 @@ Backbone.sync = function(method, model, options, error) {
             self.$body.find('.comment').trigger('cancel');
 
             // And close ourselves up
-            self.$el.removeClass('note-active', app.Option.animSpeed,
+            self.$el.removeClass('note-active', app.options.get('animSpeed'),
                                  function() {
                                     self.deactivating = false;
                                     if ($.isFunction(cb))   { cb.call(self); }
@@ -16357,7 +16458,7 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeIn( app.Option.animSpeed, cb )
+            self.$el.fadeIn( app.options.get('animSpeed'), cb )
                     .position( opts.position );
 
             return self;
@@ -16373,7 +16474,7 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeOut( app.Option.animSpeed, cb );
+            self.$el.fadeOut( app.options.get('animSpeed'), cb );
 
             return self;
         },
@@ -16506,7 +16607,7 @@ Backbone.sync = function(method, model, options, error) {
             }
             else
             {
-                self.$el.animate( {top: to.top}, app.Option.animSpeed );
+                self.$el.animate( {top: to.top}, app.options.get('animSpeed') );
             }
         },
 
@@ -16616,7 +16717,7 @@ Backbone.sync = function(method, model, options, error) {
                 // If there are no (more) comments, self-destruct!
                 if (self.model.commentCount() < 1)
                 {
-                    self.remove();
+                    self.model.destroy();
                 }
                 break;
             }
@@ -16679,7 +16780,7 @@ Backbone.sync = function(method, model, options, error) {
              */
             if (self.model.commentCount() < 1)
             {
-                self.remove();
+                self.model.destroy();
             }
         }
     });
@@ -16705,6 +16806,10 @@ Backbone.sync = function(method, model, options, error) {
     app.View.Doc    = Backbone.View.extend({
         tagName:    'article',
         template:   _.template($('#template-doc').html()),
+
+        events: {
+            'doc:ready':    '_renderNotes'
+        },
 
         initialize: function() {
             this.$el = $(this.el);
@@ -16757,13 +16862,6 @@ Backbone.sync = function(method, model, options, error) {
                 $s.attr('id', 'sentence-'+ idex);
             });
 
-            self.model.get('notes').each(function(model) {
-                /* Invoke the routing that is normally triggered when a new
-                 * note is added.
-                 */
-                self._noteAdded(model, self.model);
-            });
-
             return self;
         },
 
@@ -16773,8 +16871,8 @@ Backbone.sync = function(method, model, options, error) {
          *  @param  e       The triggering event;
          */
         setSelection: function(e) {
-            var self        = this;
-            var opts        = self.options;
+            var self        = this,
+                opts        = self.options;
 
             if (! opts.$notes)
             {
@@ -16814,12 +16912,12 @@ Backbone.sync = function(method, model, options, error) {
                 return;
             }
 
-            var range       = sel.getRangeAt(0);        // rangy range
-            var $start      = $(range.startContainer);
-            var $end        = $(range.endContainer);
-            var $startS     = $start.parents('.sentence');
-            var $endS       = $end.parents('.sentence');
-            var ranges      = new app.Model.Ranges();
+            var range       = sel.getRangeAt(0),        // rangy range
+                $start      = $(range.startContainer),
+                $end        = $(range.endContainer),
+                $startS     = $start.parents('.sentence'),
+                $endS       = $end.parents('.sentence'),
+                ranges      = new app.Model.Ranges();
 
             if (($startS.length > 0) || ($endS.length > 0))
             {
@@ -16873,9 +16971,9 @@ Backbone.sync = function(method, model, options, error) {
                      * need to contract the start or end of the range.
                      */
 
-                    var $newStart   = _.first($selectable);
-                    var $newEnd     = _.last($selectable);
-                    var $content;
+                    var $newStart   = _.first($selectable),
+                        $newEnd     = _.last($selectable),
+                        $content;
 
                     /* If we have a new start, contract the beginning of the
                      * range to the first character of the first selectable
@@ -16905,9 +17003,9 @@ Backbone.sync = function(method, model, options, error) {
                      */
                     var last    = $selectable.length;
                     $.each($selectable, function(idex, s) {
-                        var $s          = $(s);
-                        var $content    = $s.find('.content');
-                        var rangeModel  = new app.Model.Range({
+                        var $s          = $(s),
+                            $content    = $s.find('.content'),
+                            rangeModel  = new app.Model.Range({
                                             sentenceId: $s.attr('id')
                                           });
 
@@ -16986,27 +17084,45 @@ Backbone.sync = function(method, model, options, error) {
          *
          */
 
+        /** @brief  Render any notes associated with this document.
+         *  @param  e       The triggering event;
+         *
+         */
+        _renderNotes: function() {
+            var self    = this,
+                opts    = self.options,
+                notes   = self.model.get('notes');
+            notes.each(function(note) {
+                /* Invoke the routing that is normally triggered when a new
+                 * note is added.
+                 */
+                self._noteAdded(note, notes);
+            });
+
+            return self;
+        },
+
         /** @brief  A note has been added to our underlying model.
          *  @param  note    The Model.Note instance being added;
          *  @param  notes   The containing collection (Model.Notes);
          *  @param  options Any options used with add();
          */
         _noteAdded: function(note, notes, options) {
-            var self    = this;
-            var opts    = self.options;
+            var self    = this,
+                opts    = self.options;
 
             /* Create a new View.Note to associate with this new model
              *
              * This should only occur when a user clicks on the 'add-note'
              * range-control associated with an active selection.  In this
-             * case, we need to check the value of app.Option.quickTag.  If it
+             * case, we need to check the value of app.options.quickTag.  If it
              * is false, activate editing on the first comment of the new note.
              */
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
             setTimeout(function() {
-                view.show( (app.Option.quickTag !== true
+                view.show( (app.options.get('quickTag') !== true
                                 ? function() {  view.editComment(); }
                                 : undefined) );
             }, 100);
@@ -19513,17 +19629,16 @@ $.widget("ui.checkbox", {
  *      jquery.js
  */
 (function($) {
-var app = window.app = (this.app || {Model:{},      View:{},
-                                     Controller:{}, Helper:{}});
+var app     = window.app;   // From boot-08.js
 
-// Application-wide defaults
-app = _.extend(app, {
-    Option: {
-        quickTag:       true,       // Using quick tag?
-        animSpeed:      200     // Speed (in ms) of animations
-    }
-});
-
+// Retrieve application-wide options
+var options = new app.Model.Options({id: 'mine'});
+if (options.get('mode') !== app.options.mode)
+{
+    // Mix-in any mode override set in boot-08.js
+    options.set({'mode': app.options.mode}).save();
+}
+app.options = options;
 
 /** @brief  The Summary class */
 $.Summary = Backbone.View.extend({
@@ -19631,6 +19746,11 @@ $.Summary = Backbone.View.extend({
 
             // Apply the threshold
             self.threshold( threshold.min, threshold.max );
+
+            /* Now that the document is fully rendered, signal it to render any
+             * associated notes.
+             */
+            $(view.el).trigger('doc:ready');
         }
 
         self.$paneContent.removeClass('loading');
@@ -19802,7 +19922,7 @@ $.Summary = Backbone.View.extend({
              * is a little backwards.  If the checkbox is NOT checked,
              * we're in 'quick' mode, otherwise, 'normal' mode.
              */
-            app.Option.quickTag = (! $el.checkbox('val') );
+            app.options.set({quickTag: (! $el.checkbox('val') )}).save();
             break;
         }
     },
@@ -19863,7 +19983,7 @@ $.Summary = Backbone.View.extend({
              * little backwards.  If the checkbox is NOT checked, we're in
              * 'quick' mode, otherwise, 'normal' mode.
              */
-            checked:    (! app.Option.quickTag )
+            checked:    (! app.options.get('quickTag') )
         });
 
         self.$paneControls.show();
@@ -19995,17 +20115,16 @@ $.Summary = Backbone.View.extend({
  *      jquery.js
  */
 (function($) {
-var app = window.app = (this.app || {Model:{},      View:{},
-                                     Controller:{}, Helper:{}});
+var app     = window.app;   // From boot-08.js
 
-// Application-wide defaults
-app = _.extend(app, {
-    Option: {
-        quickTag:       true,       // Using quick tag?
-        animSpeed:      200     // Speed (in ms) of animations
-    }
-});
-
+// Retrieve application-wide options
+var options = new app.Model.Options({id: 'mine'});
+if (options.get('mode') !== app.options.mode)
+{
+    // Mix-in any mode override set in boot-08.js
+    options.set({'mode': app.options.mode}).save();
+}
+app.options = options;
 
 /** @brief  The Summary class */
 $.Summary = Backbone.View.extend({
@@ -20113,6 +20232,11 @@ $.Summary = Backbone.View.extend({
 
             // Apply the threshold
             self.threshold( threshold.min, threshold.max );
+
+            /* Now that the document is fully rendered, signal it to render any
+             * associated notes.
+             */
+            $(view.el).trigger('doc:ready');
         }
 
         self.$paneContent.removeClass('loading');
@@ -20284,7 +20408,7 @@ $.Summary = Backbone.View.extend({
              * is a little backwards.  If the checkbox is NOT checked,
              * we're in 'quick' mode, otherwise, 'normal' mode.
              */
-            app.Option.quickTag = (! $el.checkbox('val') );
+            app.options.set({quickTag: (! $el.checkbox('val') )}).save();
             break;
         }
     },
@@ -20345,7 +20469,7 @@ $.Summary = Backbone.View.extend({
              * little backwards.  If the checkbox is NOT checked, we're in
              * 'quick' mode, otherwise, 'normal' mode.
              */
-            checked:    (! app.Option.quickTag )
+            checked:    (! app.options.get('quickTag') )
         });
 
         self.$paneControls.show();

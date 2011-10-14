@@ -65,7 +65,11 @@
 
             if ((! notes) || ! (notes instanceof app.Model.Notes))
             {
-                self.set({notes: new app.Model.Notes(notes)});
+                var notes   = new app.Model.Notes();
+                notes.fetch({docId: self.get('url')});
+
+                //self.set({notes: new app.Model.Notes(notes)});
+                self.set({notes: notes}, {silent: true});
             }
         },
 
@@ -82,7 +86,11 @@
                 note.addComment( new app.Model.Comment() );
             }
 
+            note.set({docId: self.get('url')});
+
             notes.add( note );
+            
+            note.save();
         }
     });
 

@@ -36,6 +36,7 @@ SRC_08	= underscore.js			\
 	  $(SHARED)			\
 	  backbone.js			\
 	  backbone.localStorage.js	\
+	  model/options.js		\
 	  model/user.js			\
 	  model/comment.js		\
 	  model/range.js		\

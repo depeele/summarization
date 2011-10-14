@@ -33,23 +33,38 @@
     app.Model.Note  = Backbone.Model.extend({
         defaults: {
             id:         null,
+            docId:      null,   /* The url of the document with which this note
+                                 * is associated.
+                                 */
             ranges:     null,
 
             // Comments associated with this note
             comments:   null
         },
 
+        localStorage:   new this.LocalStore('app.notes'),
+        sync:           this.LocalStore.prototype.sync,
+
         initialize: function(spec) {
-            var comments    = this.get('comments');
-            var ranges      = this.get('ranges');
-            if ((! comments) || ! (comments instanceof app.Model.Comments) )
+            var self    = this,
+                id      = self.get('id');
+            
+            // Make sure we fetch the actual record if it exists.
+            if (id !== null)
             {
-                this.set({comments: new app.Model.Comments(comments)});
+                self.fetch({id: id});
             }
 
-            if ((! ranges) || ! (ranges instanceof app.Model.Ranges) )
+            var comments    = self.get('comments');
+            var ranges      = self.get('ranges');
+            if ((! comments) || ! (comments instanceof app.Model.Comments))
             {
-                this.set({ranges: new app.Model.Ranges(ranges)});
+                self.set({comments: new app.Model.Comments(comments)});
+            }
+
+            if ((! ranges) || ! (ranges instanceof app.Model.Ranges))
+            {
+                self.set({ranges: new app.Model.Ranges(ranges)});
             }
         },
 
@@ -73,10 +88,9 @@
     });
 
     app.Model.Notes = Backbone.Collection.extend({
-        model:  app.Model.Note,
-
-        initialize: function() {
-        }
+        model:          app.Model.Note,
+        localStorage:   app.Model.Note.prototype.localStorage,
+        sync:           app.Model.Note.prototype.sync
     });
 
  }).call(this);

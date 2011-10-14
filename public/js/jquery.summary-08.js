@@ -10,17 +10,16 @@
  *      jquery.js
  */
 (function($) {
-var app = window.app = (this.app || {Model:{},      View:{},
-                                     Controller:{}, Helper:{}});
+var app     = window.app;   // From boot-08.js
 
-// Application-wide defaults
-app = _.extend(app, {
-    Option: {
-        quickTag:       true,       // Using quick tag?
-        animSpeed:      200     // Speed (in ms) of animations
-    }
-});
-
+// Retrieve application-wide options
+var options = new app.Model.Options({id: 'mine'});
+if (options.get('mode') !== app.options.mode)
+{
+    // Mix-in any mode override set in boot-08.js
+    options.set({'mode': app.options.mode}).save();
+}
+app.options = options;
 
 /** @brief  The Summary class */
 $.Summary = Backbone.View.extend({
@@ -128,6 +127,11 @@ $.Summary = Backbone.View.extend({
 
             // Apply the threshold
             self.threshold( threshold.min, threshold.max );
+
+            /* Now that the document is fully rendered, signal it to render any
+             * associated notes.
+             */
+            $(view.el).trigger('doc:ready');
         }
 
         self.$paneContent.removeClass('loading');
@@ -299,7 +303,7 @@ $.Summary = Backbone.View.extend({
              * is a little backwards.  If the checkbox is NOT checked,
              * we're in 'quick' mode, otherwise, 'normal' mode.
              */
-            app.Option.quickTag = (! $el.checkbox('val') );
+            app.options.set({quickTag: (! $el.checkbox('val') )}).save();
             break;
         }
     },
@@ -360,7 +364,7 @@ $.Summary = Backbone.View.extend({
              * little backwards.  If the checkbox is NOT checked, we're in
              * 'quick' mode, otherwise, 'normal' mode.
              */
-            checked:    (! app.Option.quickTag )
+            checked:    (! app.options.get('quickTag') )
         });
 
         self.$paneControls.show();

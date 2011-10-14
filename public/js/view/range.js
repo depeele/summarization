@@ -31,7 +31,11 @@
 
             if (keepModel !== true) { self.model.destroy(); }
 
-            return Backbone.View.prototype.remove.call(this);
+            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+                Backbone.View.prototype.remove.call(self);
+            });
+
+            return self;
         },
 
         /** @brief  (Re)render the contents of the range item. */
