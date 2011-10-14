@@ -1137,7 +1137,7 @@ a {
   font-size: 0.8em;
 }
 .notes-pane .note .note-body .comment .text, .notes-pane .note .note-body .comment .edit {
-  margin-top: 0.5em;
+  margin-top: 0.75em;
 }
 .notes-pane .note .note-body .comment .buttons, .notes-pane .note .note-input-pane .buttons {
   text-align: right;
@@ -1148,7 +1148,7 @@ a {
   padding: 0.2em 0.5em;
 }
 .notes-pane .note textarea {
-  width: 194px;
+  width: 186px;
 }
 .notes-pane .note .note-input-pane .hint {
   color: #aaaaaa;

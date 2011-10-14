@@ -104,7 +104,10 @@
             $(document).bind('click.viewNote', self._docClick);
         },
 
-        /** @brief  Render this view. */
+        /** @brief  Render this view.
+         *
+         *  @return this    for a fluent interface
+         */
         render: function() {
             var self    = this,
                 opts    = self.options;
@@ -194,6 +197,8 @@
         },
 
         /** @brief  Refresh our view due to a change to the underlying model.
+         *
+         *  @return this    for a fluent interface
          */
         refresh: function() {
             var self    = this,
@@ -204,8 +209,12 @@
 
         /** @brief  Mark this instance as 'active'
          *  @param  e       The triggering event.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully activated;
+         *
+         *  @return this    for a fluent interface
          */
-        activate: function(e) {
+        activate: function(e, cb) {
             var self    = this,
                 opts    = self.options;
 
@@ -218,7 +227,8 @@
             if (self.$el.hasClass('note-active'))
             {
                 // Already actived
-                return;
+                if ($.isFunction(cb))   { cb.call(self); }
+                return self;
             }
 
             // Ensure proper reply input/button state by initially blurring
@@ -236,13 +246,21 @@
                                 // ...then remove the hard z-index and let
                                 //    the CSS take over.
                                 self.$el.css('z-index', '');
+
+                                if ($.isFunction(cb))   { cb.call(self); }
                     });
+
+            return self;
         },
 
         /** @brief  Mark this instance as 'inactive'
          *  @param  e       The triggering event.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully deactivated;
+         *
+         *  @return this    for a fluent interface
          */
-        deactivate: function(e) {
+        deactivate: function(e, cb) {
             var self    = this,
                 opts    = self.options;
 
@@ -251,7 +269,8 @@
                 self.hasFocus())
             {
                 // Already deactived (or has active focus)
-                return;
+                if ($.isFunction(cb))   { cb.call(self); }
+                return self;
             }
             self.deactivating = true;
 
@@ -261,36 +280,55 @@
             // And close ourselves up
             self.$el.removeClass('note-active', app.Option.animSpeed,
                                  function() {
-                self.deactivating = false;
+                                    self.deactivating = false;
+                                    if ($.isFunction(cb))   { cb.call(self); }
             });
+
+            return self;
         },
 
         /** @brief  Show this note container.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully presented;
+         *
+         *  @return this    for a fluent interface
          */
-        show: function() {
+        show: function(cb) {
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeIn( app.Option.animSpeed )
+            self.$el.fadeIn( app.Option.animSpeed, cb )
                     .position( opts.position );
+
+            return self;
         },
 
         /** @brief  Hide this note container.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully hidden;
+         *
+         *  @return this    for a fluent interface
          */
-        hide: function() {
+        hide: function(cb) {
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeOut( app.Option.animSpeed );
+            self.$el.fadeOut( app.Option.animSpeed, cb );
+
+            return self;
         },
 
         /** @brief  Focus on the input area.
+         *
+         *  @return this    for a fluent interface
          */
         focus: function() {
             var self    = this,
                 opts    = self.options;
 
             self.$reply.trigger('focus');
+
+            return self;
         },
 
         /** @brief  Does this note currently have focus?
@@ -306,6 +344,27 @@
              */
             return ( self.$input.is(':hidden') ||
                      self.$reply.is(':focus') );
+        },
+
+        /** @brief  Activate editing on the targeted comment.
+         *  @param  comment     The desired comment (by index) [ 0 ];
+         *
+         *  @return this    for a fluent interface
+         */
+        editComment: function(comment) {
+            var self        = this,
+                opts        = self.options;
+                $comment    = self.$body.find('.comment')
+                                    .eq( (comment ? comment : 0) );
+
+            if ($comment.length > 0)
+            {
+                self.activate(undefined, function() {
+                    $comment.trigger('comment:edit');
+                });
+            }
+
+            return self;
         },
 
         /**********************************************************************

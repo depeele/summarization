@@ -1,4 +1,4 @@
-//     Underscore.js 1.1.7
+//     Underscore.js 1.2.0
 //     (c) 2011 Jeremy Ashkenas, DocumentCloud Inc.
 //     Underscore is freely distributable under the MIT license.
 //     Portions of Underscore are inspired or borrowed from Prototype,
@@ -60,7 +60,7 @@
   }
 
   // Current version.
-  _.VERSION = '1.1.7';
+  _.VERSION = '1.2.0';
 
   // Collection Functions
   // --------------------
@@ -220,6 +220,7 @@
   // Return the maximum element or (element-based computation).
   _.max = function(obj, iterator, context) {
     if (!iterator && _.isArray(obj)) return Math.max.apply(Math, obj);
+    if (!iterator && _.isEmpty(obj)) return -Infinity;
     var result = {computed : -Infinity};
     each(obj, function(value, index, list) {
       var computed = iterator ? iterator.call(context, value, index, list) : value;
@@ -231,12 +232,28 @@
   // Return the minimum element (or element-based computation).
   _.min = function(obj, iterator, context) {
     if (!iterator && _.isArray(obj)) return Math.min.apply(Math, obj);
+    if (!iterator && _.isEmpty(obj)) return Infinity;
     var result = {computed : Infinity};
     each(obj, function(value, index, list) {
       var computed = iterator ? iterator.call(context, value, index, list) : value;
       computed < result.computed && (result = {value : value, computed : computed});
     });
     return result.value;
+  };
+
+  // Shuffle an array.
+  _.shuffle = function(obj) {
+    var shuffled = [], rand;
+    each(obj, function(value, index, list) {
+      if (index == 0) {
+        shuffled[0] = value;
+      } else {
+        rand = Math.floor(Math.random() * (index + 1));
+        shuffled[index] = shuffled[rand];
+        shuffled[rand] = value;
+      }
+    });
+    return shuffled;
   };
 
   // Sort the object's values by a criterion produced by an iterator.
@@ -298,17 +315,26 @@
     return (n != null) && !guard ? slice.call(array, 0, n) : array[0];
   };
 
+  // Returns everything but the last entry of the array. Especcialy useful on
+  // the arguments object. Passing **n** will return all the values in
+  // the array, excluding the last N. The **guard** check allows it to work with
+  // `_.map`.
+  _.initial = function(array, n, guard) {
+    return slice.call(array, 0, array.length - ((n == null) || guard ? 1 : n));
+  };
+
+  // Get the last element of an array. Passing **n** will return the last N
+  // values in the array. The **guard** check allows it to work with `_.map`.
+  _.last = function(array, n, guard) {
+    return (n != null) && !guard ? slice.call(array, array.length - n) : array[array.length - 1];
+  };
+
   // Returns everything but the first entry of the array. Aliased as `tail`.
   // Especially useful on the arguments object. Passing an **index** will return
   // the rest of the values in the array from that index onward. The **guard**
   // check allows it to work with `_.map`.
   _.rest = _.tail = function(array, index, guard) {
     return slice.call(array, (index == null) || guard ? 1 : index);
-  };
-
-  // Get the last element of an array.
-  _.last = function(array) {
-    return array[array.length - 1];
   };
 
   // Trim out all falsy values from an array.
@@ -396,7 +422,6 @@
     for (i = 0, l = array.length; i < l; i++) if (array[i] === item) return i;
     return -1;
   };
-
 
   // Delegates to **ECMAScript 5**'s native `lastIndexOf` if available.
   _.lastIndexOf = function(array, item) {
@@ -544,7 +569,6 @@
     };
   };
 
-
   // Object Functions
   // ----------------
 
@@ -605,44 +629,97 @@
     return obj;
   };
 
-  // Perform a deep comparison to check if two objects are equal.
-  _.isEqual = function(a, b) {
-    // Check object identity.
-    if (a === b) return true;
-    // Different types?
-    var atype = typeof(a), btype = typeof(b);
-    if (atype != btype) return false;
-    // Basic equality test (watch out for coercions).
-    if (a == b) return true;
-    // One is falsy and the other truthy.
-    if ((!a && b) || (a && !b)) return false;
+  // Internal recursive comparison function.
+  function eq(a, b, stack) {
+    // Identical objects are equal. `0 === -0`, but they aren't identical.
+    // See the Harmony `egal` proposal: http://wiki.ecmascript.org/doku.php?id=harmony:egal.
+    if (a === b) return a !== 0 || 1 / a == 1 / b;
+    // A strict comparison is necessary because `null == undefined`.
+    if (a == null) return a === b;
+    // Compare object types.
+    var typeA = typeof a;
+    if (typeA != typeof b) return false;
+    // Optimization; ensure that both values are truthy or falsy.
+    if (!a != !b) return false;
+    // `NaN` values are equal.
+    if (_.isNaN(a)) return _.isNaN(b);
+    // Compare string objects by value.
+    var isStringA = _.isString(a), isStringB = _.isString(b);
+    if (isStringA || isStringB) return isStringA && isStringB && String(a) == String(b);
+    // Compare number objects by value.
+    var isNumberA = _.isNumber(a), isNumberB = _.isNumber(b);
+    if (isNumberA || isNumberB) return isNumberA && isNumberB && +a == +b;
+    // Compare boolean objects by value. The value of `true` is 1; the value of `false` is 0.
+    var isBooleanA = _.isBoolean(a), isBooleanB = _.isBoolean(b);
+    if (isBooleanA || isBooleanB) return isBooleanA && isBooleanB && +a == +b;
+    // Compare dates by their millisecond values.
+    var isDateA = _.isDate(a), isDateB = _.isDate(b);
+    if (isDateA || isDateB) return isDateA && isDateB && a.getTime() == b.getTime();
+    // Compare RegExps by their source patterns and flags.
+    var isRegExpA = _.isRegExp(a), isRegExpB = _.isRegExp(b);
+    if (isRegExpA || isRegExpB) {
+      // Ensure commutative equality for RegExps.
+      return isRegExpA && isRegExpB &&
+             a.source == b.source &&
+             a.global == b.global &&
+             a.multiline == b.multiline &&
+             a.ignoreCase == b.ignoreCase;
+    }
+    // Ensure that both values are objects.
+    if (typeA != 'object') return false;
     // Unwrap any wrapped objects.
     if (a._chain) a = a._wrapped;
     if (b._chain) b = b._wrapped;
-    // One of them implements an isEqual()?
-    if (a.isEqual) return a.isEqual(b);
-    if (b.isEqual) return b.isEqual(a);
-    // Check dates' integer values.
-    if (_.isDate(a) && _.isDate(b)) return a.getTime() === b.getTime();
-    // Both are NaN?
-    if (_.isNaN(a) && _.isNaN(b)) return false;
-    // Compare regular expressions.
-    if (_.isRegExp(a) && _.isRegExp(b))
-      return a.source     === b.source &&
-             a.global     === b.global &&
-             a.ignoreCase === b.ignoreCase &&
-             a.multiline  === b.multiline;
-    // If a is not an object by this point, we can't handle it.
-    if (atype !== 'object') return false;
-    // Check for different array lengths before comparing contents.
-    if (a.length && (a.length !== b.length)) return false;
-    // Nothing else worked, deep compare the contents.
-    var aKeys = _.keys(a), bKeys = _.keys(b);
-    // Different object sizes?
-    if (aKeys.length != bKeys.length) return false;
-    // Recursive comparison of contents.
-    for (var key in a) if (!(key in b) || !_.isEqual(a[key], b[key])) return false;
-    return true;
+    // Invoke a custom `isEqual` method if one is provided.
+    if (_.isFunction(a.isEqual)) return a.isEqual(b);
+    // Assume equality for cyclic structures. The algorithm for detecting cyclic structures is
+    // adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+    var length = stack.length;
+    while (length--) {
+      // Linear search. Performance is inversely proportional to the number of unique nested
+      // structures.
+      if (stack[length] == a) return true;
+    }
+    // Add the first object to the stack of traversed objects.
+    stack.push(a);
+    var size = 0, result = true;
+    if (a.length === +a.length || b.length === +b.length) {
+      // Compare object lengths to determine if a deep comparison is necessary.
+      size = a.length;
+      result = size == b.length;
+      if (result) {
+        // Deep compare array-like object contents, ignoring non-numeric properties.
+        while (size--) {
+          // Ensure commutative equality for sparse arrays.
+          if (!(result = size in a == size in b && eq(a[size], b[size], stack))) break;
+        }
+      }
+    } else {
+      // Deep compare objects.
+      for (var key in a) {
+        if (hasOwnProperty.call(a, key)) {
+          // Count the expected number of properties.
+          size++;
+          // Deep compare each member.
+          if (!(result = hasOwnProperty.call(b, key) && eq(a[key], b[key], stack))) break;
+        }
+      }
+      // Ensure that both objects contain the same number of properties.
+      if (result) {
+        for (key in b) {
+          if (hasOwnProperty.call(b, key) && !size--) break;
+        }
+        result = !size;
+      }
+    }
+    // Remove the first object from the stack of traversed objects.
+    stack.pop();
+    return result;
+  }
+
+  // Perform a deep comparison to check if two objects are equal.
+  _.isEqual = function(a, b) {
+    return eq(a, b, []);
   };
 
   // Is a given array or object empty?
@@ -696,7 +773,7 @@
 
   // Is a given value a boolean?
   _.isBoolean = function(obj) {
-    return obj === true || obj === false;
+    return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
   };
 
   // Is a given value a date?
@@ -739,6 +816,11 @@
     for (var i = 0; i < n; i++) iterator.call(context, i);
   };
 
+  // Escape a string for HTML interpolation.
+  _.escape = function(string) {
+    return (''+string).replace(/&(?!\w+;|#\d+;|#x[\da-f]+;)/gi, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g,'&#x2F;');
+  };
+
   // Add your own custom functions to the Underscore object, ensuring that
   // they're correctly added to the OOP wrapper as well.
   _.mixin = function(obj) {
@@ -759,7 +841,8 @@
   // following template settings to use alternative delimiters.
   _.templateSettings = {
     evaluate    : /<%([\s\S]+?)%>/g,
-    interpolate : /<%=([\s\S]+?)%>/g
+    interpolate : /<%=([\s\S]+?)%>/g,
+    escape      : /<%-([\s\S]+?)%>/g
   };
 
   // JavaScript micro-templating, similar to John Resig's implementation.
@@ -771,6 +854,9 @@
       'with(obj||{}){__p.push(\'' +
       str.replace(/\\/g, '\\\\')
          .replace(/'/g, "\\'")
+         .replace(c.escape, function(match, code) {
+           return "',_.escape(" + code.replace(/\\'/g, "'") + "),'";
+         })
          .replace(c.interpolate, function(match, code) {
            return "'," + code.replace(/\\'/g, "'") + ",'";
          })
@@ -15778,7 +15864,12 @@ Backbone.sync = function(method, model, options, error) {
             'cancel':                   '_cancelEdit',
 
             'keyup .edit':              '_keyup',
-            'click .buttons button':    '_buttonClick'
+            'click .buttons button':    '_buttonClick',
+
+            'comment:edit':             '_edit',
+            'comment:delete':           '_destroy',
+            'comment:save':             '_save',
+            'comment:cancel':           '_cancelEdit'
         },
 
         /** @brief  Initialize this view. */
@@ -15853,11 +15944,26 @@ Backbone.sync = function(method, model, options, error) {
             if (self.editing)   { return self; }
             self.editing = true;
 
+            self.$text.hide( );
+            self.$mainButtons.hide( );
+
             self.$edit.val( self.$text.text() );
-            self.$text.hide( app.Option.animSpeed );
-            self.$mainButtons.hide( app.Option.animSpeed );
             self.$editArea.show();
             self.$edit.focus();
+
+            return self;
+        },
+
+        /** @brief  Destroy the underlying model (and thus this instance).
+         *  @param  e   The triggering event;
+         *
+         *  @return this    for a fluent interface;
+         */
+        _destroy: function(e) {
+            var self    = this,
+                opts    = self.options;
+
+            self.model.destroy();
 
             return self;
         },
@@ -15865,6 +15971,7 @@ Backbone.sync = function(method, model, options, error) {
         /** @brief  Save any changes and cancel edit mode.
          *  @param  e   The triggering event;
          *
+         *  @return this    for a fluent interface;
          */
         _save: function(e) {
             var self    = this,
@@ -15881,6 +15988,7 @@ Backbone.sync = function(method, model, options, error) {
         /** @brief  If we're in edit mode, cancel the edit.
          *  @param  e   The triggering event;
          *
+         *  @return this    for a fluent interface;
          */
         _cancelEdit: function(e) {
             var self    = this,
@@ -15889,7 +15997,7 @@ Backbone.sync = function(method, model, options, error) {
             if (! self.editing) { return self; }
             self.editing = false;
 
-            self.$editArea.hide( );
+            self.$editArea.hide();
             self.$text.show( );
 
             /* Note: Do NOT use show() -- it will add a direct style setting
@@ -15898,6 +16006,8 @@ Backbone.sync = function(method, model, options, error) {
              *       edit().
              */
             self.$mainButtons.css('display', '');
+
+            return self;
         },
 
         /** @brief  Handle 'keyup' within the edit area.
@@ -15931,7 +16041,7 @@ Backbone.sync = function(method, model, options, error) {
                 break;
 
             case 'delete':
-                self.model.destroy();
+                self._destroy();
                 break;
 
             case 'save':
@@ -16054,7 +16164,10 @@ Backbone.sync = function(method, model, options, error) {
             $(document).bind('click.viewNote', self._docClick);
         },
 
-        /** @brief  Render this view. */
+        /** @brief  Render this view.
+         *
+         *  @return this    for a fluent interface
+         */
         render: function() {
             var self    = this,
                 opts    = self.options;
@@ -16144,6 +16257,8 @@ Backbone.sync = function(method, model, options, error) {
         },
 
         /** @brief  Refresh our view due to a change to the underlying model.
+         *
+         *  @return this    for a fluent interface
          */
         refresh: function() {
             var self    = this,
@@ -16154,8 +16269,12 @@ Backbone.sync = function(method, model, options, error) {
 
         /** @brief  Mark this instance as 'active'
          *  @param  e       The triggering event.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully activated;
+         *
+         *  @return this    for a fluent interface
          */
-        activate: function(e) {
+        activate: function(e, cb) {
             var self    = this,
                 opts    = self.options;
 
@@ -16168,7 +16287,8 @@ Backbone.sync = function(method, model, options, error) {
             if (self.$el.hasClass('note-active'))
             {
                 // Already actived
-                return;
+                if ($.isFunction(cb))   { cb.call(self); }
+                return self;
             }
 
             // Ensure proper reply input/button state by initially blurring
@@ -16186,13 +16306,21 @@ Backbone.sync = function(method, model, options, error) {
                                 // ...then remove the hard z-index and let
                                 //    the CSS take over.
                                 self.$el.css('z-index', '');
+
+                                if ($.isFunction(cb))   { cb.call(self); }
                     });
+
+            return self;
         },
 
         /** @brief  Mark this instance as 'inactive'
          *  @param  e       The triggering event.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully deactivated;
+         *
+         *  @return this    for a fluent interface
          */
-        deactivate: function(e) {
+        deactivate: function(e, cb) {
             var self    = this,
                 opts    = self.options;
 
@@ -16201,7 +16329,8 @@ Backbone.sync = function(method, model, options, error) {
                 self.hasFocus())
             {
                 // Already deactived (or has active focus)
-                return;
+                if ($.isFunction(cb))   { cb.call(self); }
+                return self;
             }
             self.deactivating = true;
 
@@ -16211,36 +16340,55 @@ Backbone.sync = function(method, model, options, error) {
             // And close ourselves up
             self.$el.removeClass('note-active', app.Option.animSpeed,
                                  function() {
-                self.deactivating = false;
+                                    self.deactivating = false;
+                                    if ($.isFunction(cb))   { cb.call(self); }
             });
+
+            return self;
         },
 
         /** @brief  Show this note container.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully presented;
+         *
+         *  @return this    for a fluent interface
          */
-        show: function() {
+        show: function(cb) {
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeIn( app.Option.animSpeed )
+            self.$el.fadeIn( app.Option.animSpeed, cb )
                     .position( opts.position );
+
+            return self;
         },
 
         /** @brief  Hide this note container.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully hidden;
+         *
+         *  @return this    for a fluent interface
          */
-        hide: function() {
+        hide: function(cb) {
             var self    = this,
                 opts    = self.options;
 
-            self.$el.fadeOut( app.Option.animSpeed );
+            self.$el.fadeOut( app.Option.animSpeed, cb );
+
+            return self;
         },
 
         /** @brief  Focus on the input area.
+         *
+         *  @return this    for a fluent interface
          */
         focus: function() {
             var self    = this,
                 opts    = self.options;
 
             self.$reply.trigger('focus');
+
+            return self;
         },
 
         /** @brief  Does this note currently have focus?
@@ -16256,6 +16404,27 @@ Backbone.sync = function(method, model, options, error) {
              */
             return ( self.$input.is(':hidden') ||
                      self.$reply.is(':focus') );
+        },
+
+        /** @brief  Activate editing on the targeted comment.
+         *  @param  comment     The desired comment (by index) [ 0 ];
+         *
+         *  @return this    for a fluent interface
+         */
+        editComment: function(comment) {
+            var self        = this,
+                opts        = self.options;
+                $comment    = self.$body.find('.comment')
+                                    .eq( (comment ? comment : 0) );
+
+            if ($comment.length > 0)
+            {
+                self.activate(undefined, function() {
+                    $comment.trigger('comment:edit');
+                });
+            }
+
+            return self;
         },
 
         /**********************************************************************
@@ -16826,11 +16995,21 @@ Backbone.sync = function(method, model, options, error) {
             var self    = this;
             var opts    = self.options;
 
-            // Create a new View.Note to associate with this new model
+            /* Create a new View.Note to associate with this new model
+             *
+             * This should only occur when a user clicks on the 'add-note'
+             * range-control associated with an active selection.  In this
+             * case, we need to check the value of app.Option.quickTag.  If it
+             * is false, activate editing on the first comment of the new note.
+             */
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
-            setTimeout(function() { view.show(); }, 100);
+            setTimeout(function() {
+                view.show( (app.Option.quickTag !== true
+                                ? function() {  view.editComment(); }
+                                : undefined) );
+            }, 100);
         },
 
         /** @brief  A note has been removed from our underlying model.

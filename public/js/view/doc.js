@@ -308,11 +308,21 @@
             var self    = this;
             var opts    = self.options;
 
-            // Create a new View.Note to associate with this new model
+            /* Create a new View.Note to associate with this new model
+             *
+             * This should only occur when a user clicks on the 'add-note'
+             * range-control associated with an active selection.  In this
+             * case, we need to check the value of app.Option.quickTag.  If it
+             * is false, activate editing on the first comment of the new note.
+             */
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
-            setTimeout(function() { view.show(); }, 100);
+            setTimeout(function() {
+                view.show( (app.Option.quickTag !== true
+                                ? function() {  view.editComment(); }
+                                : undefined) );
+            }, 100);
         },
 
         /** @brief  A note has been removed from our underlying model.

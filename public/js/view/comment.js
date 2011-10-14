@@ -28,7 +28,12 @@
             'cancel':                   '_cancelEdit',
 
             'keyup .edit':              '_keyup',
-            'click .buttons button':    '_buttonClick'
+            'click .buttons button':    '_buttonClick',
+
+            'comment:edit':             '_edit',
+            'comment:delete':           '_destroy',
+            'comment:save':             '_save',
+            'comment:cancel':           '_cancelEdit'
         },
 
         /** @brief  Initialize this view. */
@@ -103,11 +108,26 @@
             if (self.editing)   { return self; }
             self.editing = true;
 
+            self.$text.hide( );
+            self.$mainButtons.hide( );
+
             self.$edit.val( self.$text.text() );
-            self.$text.hide( app.Option.animSpeed );
-            self.$mainButtons.hide( app.Option.animSpeed );
             self.$editArea.show();
             self.$edit.focus();
+
+            return self;
+        },
+
+        /** @brief  Destroy the underlying model (and thus this instance).
+         *  @param  e   The triggering event;
+         *
+         *  @return this    for a fluent interface;
+         */
+        _destroy: function(e) {
+            var self    = this,
+                opts    = self.options;
+
+            self.model.destroy();
 
             return self;
         },
@@ -115,6 +135,7 @@
         /** @brief  Save any changes and cancel edit mode.
          *  @param  e   The triggering event;
          *
+         *  @return this    for a fluent interface;
          */
         _save: function(e) {
             var self    = this,
@@ -131,6 +152,7 @@
         /** @brief  If we're in edit mode, cancel the edit.
          *  @param  e   The triggering event;
          *
+         *  @return this    for a fluent interface;
          */
         _cancelEdit: function(e) {
             var self    = this,
@@ -139,7 +161,7 @@
             if (! self.editing) { return self; }
             self.editing = false;
 
-            self.$editArea.hide( );
+            self.$editArea.hide();
             self.$text.show( );
 
             /* Note: Do NOT use show() -- it will add a direct style setting
@@ -148,6 +170,8 @@
              *       edit().
              */
             self.$mainButtons.css('display', '');
+
+            return self;
         },
 
         /** @brief  Handle 'keyup' within the edit area.
@@ -181,7 +205,7 @@
                 break;
 
             case 'delete':
-                self.model.destroy();
+                self._destroy();
                 break;
 
             case 'save':
