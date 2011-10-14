@@ -16868,8 +16868,6 @@ _.extend(LocalStore.prototype, {
         render:     function() {
             var self    = this;
 
-            self._notesRendered = false;
-
             self.$el.attr('id', self.model.cid);
             self.$el.html( self.template( self.model.toJSON() ) );
 
@@ -17129,8 +17127,6 @@ _.extend(LocalStore.prototype, {
                  */
                 self._noteAdded(note, notes);
             });
-
-            self._notesRendered = true;
 
             return self;
         },
