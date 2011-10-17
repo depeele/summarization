@@ -40,10 +40,12 @@
 
         /** @brief  (Re)render the contents of the range item. */
         render:     function() {
-            var self    = this;
-            self.$s     = $( '#'+ self.model.get('sentenceId') );
+            var self    = this,
+                opts    = self.options;
 
-            self.$el = $(this.el);
+            // Locate the target sentence.
+            self.$s     = $( '#'+ self.model.get('sentenceId') );
+            self.$el    = $(this.el);
 
             // ALWAYS include 'range' as a class
             self.$el.addClass('range');
@@ -80,10 +82,12 @@
                                 .addClass('selected')
                                 .text( strFull.substr(start, end - start ) )
                                 .appendTo( self.$el );
+            /*
             var $after      = $('<span />')
                                 .addClass('after')
                                 .text( strFull.substr(end) )
                                 .appendTo( self.$el );
+            // */
 
             /* Add measurement elements to the beginning and end of $selected
              * to make it easier for others to determine the edges of this

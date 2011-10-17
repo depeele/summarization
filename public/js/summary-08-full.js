@@ -15223,11 +15223,21 @@ _.extend(LocalStore.prototype, {
          *  @param  e   The triggering event;
          */
         expansionToggle: function(e) {
+            if (e && (e.type === 'click'))
+            {
+                /* Stop propagation of THIS event to ensure our parent
+                 * paragraph doesn't expand the paragraph due to this "click".
+                 */
+                e.stopPropagation();
+
+                /* To ensure others respond properly to this click, trigger a
+                 * secondary "click" event at the document level.
+                 */
+                $(document).trigger('click');
+            }
+
             if (this.$el.hasClass('expanded'))
             {
-                // Mark this event as "handled"
-                if (e) { e.stopPropagation(); }
-
                 return;
             }
 
@@ -15426,10 +15436,12 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  (Re)render the contents of the range item. */
         render:     function() {
-            var self    = this;
-            self.$s     = $( '#'+ self.model.get('sentenceId') );
+            var self    = this,
+                opts    = self.options;
 
-            self.$el = $(this.el);
+            // Locate the target sentence.
+            self.$s     = $( '#'+ self.model.get('sentenceId') );
+            self.$el    = $(this.el);
 
             // ALWAYS include 'range' as a class
             self.$el.addClass('range');
@@ -15466,10 +15478,12 @@ _.extend(LocalStore.prototype, {
                                 .addClass('selected')
                                 .text( strFull.substr(start, end - start ) )
                                 .appendTo( self.$el );
+            /*
             var $after      = $('<span />')
                                 .addClass('after')
                                 .text( strFull.substr(end) )
                                 .appendTo( self.$el );
+            // */
 
             /* Add measurement elements to the beginning and end of $selected
              * to make it easier for others to determine the edges of this
@@ -15711,8 +15725,10 @@ _.extend(LocalStore.prototype, {
         _rangeMouse: function(e) {
             var self    = this;
 
+            /*
             console.log('View.Selection::_rangeMouse(): '
                         + 'type[ '+ e.type +' ]');
+            // */
 
             switch (e.type)
             {
@@ -16371,12 +16387,6 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
-            if (e && (e.type === 'click'))
-            {
-                // Mark this click as 'handled'
-                e.stopPropagation();
-            }
-
             if (self.$el.hasClass('note-active'))
             {
                 // Already actived
@@ -16415,7 +16425,19 @@ _.extend(LocalStore.prototype, {
          */
         deactivate: function(e, cb) {
             var self    = this,
-                opts    = self.options;
+                opts    = self.options,
+                $note   = ( e && (e.type === 'click')
+                              ? $(e.target).parents('.note')
+                              : [] );
+
+            if ($note[0] === self.$el[0])
+            {
+                /* This is from a click event that originated within THIS note
+                 * and has propagated up to our _docClick handler (established
+                 * in initialize()).  Ignore it.
+                 */
+                return;
+            }
 
             if ((! self.$el.hasClass('note-active')) ||
                 self.deactivating ||
@@ -16623,15 +16645,22 @@ _.extend(LocalStore.prototype, {
             else
             {
                 // Only allow one positioning to be in-progress at a time.
-                if (self._isPositioning !== true)
+                if (self._isPositioning)
                 {
-                    self._isPositioning = true;
-                    self.$el.animate( {top: to.top},
-                                      {duration: app.options.get('animSpeed'),
-                                       complete: function() {
-                                        self._isPositioning = false;
-                                       }} );
+                    // Terminate the previous animation.
+                    self.$el.stop();
+
+                    self._isPositioning = false;
                 }
+
+                // Mark a new position target and begin animation
+                self._isPositioning = true;
+                self.$el.animate( {top: to.top}, {
+                    duration: app.options.get('animSpeed'),
+                    complete: function() {
+                        self._isPositioning = false;
+                    }
+                });
             }
         },
 

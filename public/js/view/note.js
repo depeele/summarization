@@ -223,12 +223,6 @@
             var self    = this,
                 opts    = self.options;
 
-            if (e && (e.type === 'click'))
-            {
-                // Mark this click as 'handled'
-                e.stopPropagation();
-            }
-
             if (self.$el.hasClass('note-active'))
             {
                 // Already actived
@@ -267,7 +261,19 @@
          */
         deactivate: function(e, cb) {
             var self    = this,
-                opts    = self.options;
+                opts    = self.options,
+                $note   = ( e && (e.type === 'click')
+                              ? $(e.target).parents('.note')
+                              : [] );
+
+            if ($note[0] === self.$el[0])
+            {
+                /* This is from a click event that originated within THIS note
+                 * and has propagated up to our _docClick handler (established
+                 * in initialize()).  Ignore it.
+                 */
+                return;
+            }
 
             if ((! self.$el.hasClass('note-active')) ||
                 self.deactivating ||
@@ -475,15 +481,22 @@
             else
             {
                 // Only allow one positioning to be in-progress at a time.
-                if (self._isPositioning !== true)
+                if (self._isPositioning)
                 {
-                    self._isPositioning = true;
-                    self.$el.animate( {top: to.top},
-                                      {duration: app.options.get('animSpeed'),
-                                       complete: function() {
-                                        self._isPositioning = false;
-                                       }} );
+                    // Terminate the previous animation.
+                    self.$el.stop();
+
+                    self._isPositioning = false;
                 }
+
+                // Mark a new position target and begin animation
+                self._isPositioning = true;
+                self.$el.animate( {top: to.top}, {
+                    duration: app.options.get('animSpeed'),
+                    complete: function() {
+                        self._isPositioning = false;
+                    }
+                });
             }
         },
 

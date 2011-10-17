@@ -219,8 +219,10 @@
         _rangeMouse: function(e) {
             var self    = this;
 
+            /*
             console.log('View.Selection::_rangeMouse(): '
                         + 'type[ '+ e.type +' ]');
+            // */
 
             switch (e.type)
             {
