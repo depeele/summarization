@@ -456,6 +456,14 @@
 
             if (self._isVisible !== true)   { return; }
 
+            if (true)
+            {
+
+            // (Re)generate our segments.
+            var segments    = self._boundingSegments(true);
+
+            } else {
+
             self.$el.parent().find('.note').each(function() {
                 var $note   = $(this);
                 if (myId === $note.attr('id'))  { return; }
@@ -473,6 +481,8 @@
                     to.top += $note.height() + 4;
                 }
             });
+
+            }
 
             if (opts.noPositionAnimation === true)
             {
@@ -671,6 +681,121 @@
             {
                 self.model.destroy();
             }
+        },
+
+        /** @brief  Retrieve the bounding segments of the selection.
+         *  @param  force   If true, force a re-computation, otherwise, if we
+         *                  have cached values, return them;
+         *
+         *  The bounds of any selection can be defined by 3 contiguous
+         *  segments:
+         *      +------------------------------------------+
+         *      |                                          |
+         *      |          +-----------------------------+ |
+         *      |          | 1                           | |
+         *      | +--------+-----------------------------+ |
+         *      | |          2                           | |
+         *      | +-------------------------+------------+ |
+         *      | |          3              |              |
+         *      | +-------------------------+              |
+         *      |                                          |
+         *      +------------------------------------------+
+         *
+         *  @return The bounding segments, each in the form:
+         *              { top:, right:, bottom:, left: }
+         */
+        _boundingSegments: function(force) {
+            var self            = this;
+
+            if ( (force !== true) && self._cacheSegments)
+            {
+                return self._cacheSegments;
+            }
+
+            /* Wrap the children of our rangeView elements in '.segment'
+             * wrappers based upon which elements are within the same parent
+             * (and on the same line).
+             */
+            var segments    = [];
+            $.each(self.rangeViews, function() {
+                var $range      = $(this.el),
+                    $selected   = $range.find('.selected'),
+                    base        = $range.offset(),
+                    $segment    = $(),
+                    segment,
+                    lastOffset;
+
+                // Ensure that all our positioning elements are shown
+                $range.children().show();
+
+                // Compensate for any padding on '.selected'
+                base.top += $selected.position().top;
+
+                $selected.children().each(function() {
+                    var $el     = $(this),
+                        offset  = $el.offset();
+                    if ( (! lastOffset) || (offset.top !== lastOffset.top) )
+                    {
+                        // New segment
+                        if ( segment                &&
+                            (segment.width  < 1)    &&
+                            (segment.height < 1) )
+                        {
+                            /* Remove empty segments -- can happen if a
+                             * selection crosses a line boundry.
+                             */
+                            segments.pop();
+                        }
+
+                        // Begin a new segment
+                        segment = {
+                            top:        offset.top  - base.top,
+                            left:       offset.left - base.left,
+                            width:      $el.width(),
+                            height:     $el.height(),
+                            $container: $selected,
+                            $el:        $()
+                        };
+
+                        segments.push( segment );
+                    }
+                    else
+                    {
+                        // Same "line" -- add the width to the current segment
+                        segment.width += $el.width();
+                    }
+
+                    segment.$el = segment.$el.add( $el );
+
+                    lastOffset = offset;
+
+                });
+
+                /* Ensure that positioning elements other than '.selected' are
+                 * hidden.
+                 */
+                $range.find('.before,.after').hide();
+            });
+
+            // Now, wrap each segment in a positioned wrapper
+            $.each(segments, function() {
+                var segment = this;
+
+                $('<span />')
+                    .addClass('segment')
+                    .css({
+                        top:    segment.top,
+                        left:   segment.left,
+                        width:  segment.width,
+                        height: segment.height
+                    })
+                    .append( segment.$el )
+                    .appendTo( segment.$container );
+            });
+
+            self._cacheSegments = segments;
+
+            return segments;
         }
     });
 

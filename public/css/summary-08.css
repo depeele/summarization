@@ -854,26 +854,14 @@ a {
 .content-pane article section p .sentence .overlay .note .after {
   visibility: hidden;
 }
-.content-pane article section p .sentence .overlay .range .selected, .content-pane article section p .sentence .overlay .selection .selected, .content-pane article section p .sentence .overlay .note .selected {
-  padding: 0.1em;
-}
-.content-pane article section p .sentence .overlay .range .selected .measure, .content-pane article section p .sentence .overlay .selection .selected .measure, .content-pane article section p .sentence .overlay .note .selected .measure {
-  display: -moz-inline-stack;
-  display: inline-block;
-  zoom: 1;
-  *display: inline;
-  width: 0px;
-  visibility: hidden;
-}
-.content-pane article section p .sentence .overlay .range .segment, .content-pane article section p .sentence .overlay .selection .segment, .content-pane article section p .sentence .overlay .note .segment {
-  position: absolute;
-  display: block;
-}
 .content-pane article section p .sentence .overlay .selection .selected {
   background-color: #444444;
   color: #ffffff;
+  padding: 0.1em;
 }
-.content-pane article section p .sentence .overlay .note .selected {
+.content-pane article section p .sentence .overlay .note .selected .segment {
+  position: absolute;
+  display: block;
   background-color: #d7ebf9;
   color: #2779aa;
 }

@@ -15468,7 +15468,7 @@ _.extend(LocalStore.prototype, {
             var strFull     = self.$sContent.text();
             var start       = self.model.get('offsetStart');
             var end         = self.model.get('offsetEnd');
-            var strSelection= strFull.substr(start, end - start);
+            var strSel      = strFull.substr(start, end - start);
 
             var $before     = $('<span />')
                                 .addClass('before')
@@ -15476,7 +15476,6 @@ _.extend(LocalStore.prototype, {
                                 .appendTo( self.$el );
             var $selected   = $('<span />')
                                 .addClass('selected')
-                                .text( strFull.substr(start, end - start ) )
                                 .appendTo( self.$el );
             /*
             var $after      = $('<span />')
@@ -15485,19 +15484,41 @@ _.extend(LocalStore.prototype, {
                                 .appendTo( self.$el );
             // */
 
-            /* Add measurement elements to the beginning and end of $selected
-             * to make it easier for others to determine the edges of this
-             * range.  The CSS for .measure should set the display to
-             * 'inline-block' and width to '0px'.
+            /* Split the text of $selected into individual, measurable elements
+             * to enable others to determine the edges of this range and the
+             * presentation "lines" that comprise it.
              */
-            $('<span />')
-                .addClass('measure measure-start')
-                .text('|')
-                .prependTo( $selected );
-            $('<span />')
-                .addClass('measure measure-end')
-                .text('|')
-                .appendTo( $selected );
+            var re  = /([\w’']+)(\W+)?/i;
+            var parts;
+            while ( (parts = re.exec(strSel)) )
+            {
+                // Remove this word and word separator
+                strSel = strSel.substr(parts[1].length +
+                                       (parts[2] ? parts[2].length : 0));
+
+                // Create elements for the word and word separator.
+                $('<span />')
+                    .text(parts[1])
+                    .appendTo($selected);
+
+                if (parts[2])
+                {
+                    if ( (strSel.length < 1) && (parts[2] === ' ') )
+                    {
+                        /* The final character is a space.  If we use a space
+                         * the browser (chrome specifically) will NOT properly
+                         * position it.  To ensure positioning, include a
+                         * zero-width non-joiner entity within the final
+                         * element.
+                         */
+                        parts[2] += '&zwnj;';
+                    }
+
+                    $('<span />')
+                        .html(parts[2])
+                        .appendTo($selected);
+                }
+            }
 
             return self;
         }
@@ -15852,8 +15873,8 @@ _.extend(LocalStore.prototype, {
                                                         .find('.selected'),
                 $last           = $( _.last(self.rangeViews).el )
                                                         .find('.selected'),
-                $measureStart   = $first.find('.measure-start'),
-                $measureEnd     = $last.find('.measure-end'),
+                $measureStart   = $first.children(':first'),
+                $measureEnd     = $last.children(':last'),
                 segments        = [],
                 segment;
 
@@ -16620,6 +16641,14 @@ _.extend(LocalStore.prototype, {
 
             if (self._isVisible !== true)   { return; }
 
+            if (true)
+            {
+
+            // (Re)generate our segments.
+            var segments    = self._boundingSegments(true);
+
+            } else {
+
             self.$el.parent().find('.note').each(function() {
                 var $note   = $(this);
                 if (myId === $note.attr('id'))  { return; }
@@ -16637,6 +16666,8 @@ _.extend(LocalStore.prototype, {
                     to.top += $note.height() + 4;
                 }
             });
+
+            }
 
             if (opts.noPositionAnimation === true)
             {
@@ -16835,6 +16866,121 @@ _.extend(LocalStore.prototype, {
             {
                 self.model.destroy();
             }
+        },
+
+        /** @brief  Retrieve the bounding segments of the selection.
+         *  @param  force   If true, force a re-computation, otherwise, if we
+         *                  have cached values, return them;
+         *
+         *  The bounds of any selection can be defined by 3 contiguous
+         *  segments:
+         *      +------------------------------------------+
+         *      |                                          |
+         *      |          +-----------------------------+ |
+         *      |          | 1                           | |
+         *      | +--------+-----------------------------+ |
+         *      | |          2                           | |
+         *      | +-------------------------+------------+ |
+         *      | |          3              |              |
+         *      | +-------------------------+              |
+         *      |                                          |
+         *      +------------------------------------------+
+         *
+         *  @return The bounding segments, each in the form:
+         *              { top:, right:, bottom:, left: }
+         */
+        _boundingSegments: function(force) {
+            var self            = this;
+
+            if ( (force !== true) && self._cacheSegments)
+            {
+                return self._cacheSegments;
+            }
+
+            /* Wrap the children of our rangeView elements in '.segment'
+             * wrappers based upon which elements are within the same parent
+             * (and on the same line).
+             */
+            var segments    = [];
+            $.each(self.rangeViews, function() {
+                var $range      = $(this.el),
+                    $selected   = $range.find('.selected'),
+                    base        = $range.offset(),
+                    $segment    = $(),
+                    segment,
+                    lastOffset;
+
+                // Ensure that all our positioning elements are shown
+                $range.children().show();
+
+                // Compensate for any padding on '.selected'
+                base.top += $selected.position().top;
+
+                $selected.children().each(function() {
+                    var $el     = $(this),
+                        offset  = $el.offset();
+                    if ( (! lastOffset) || (offset.top !== lastOffset.top) )
+                    {
+                        // New segment
+                        if ( segment                &&
+                            (segment.width  < 1)    &&
+                            (segment.height < 1) )
+                        {
+                            /* Remove empty segments -- can happen if a
+                             * selection crosses a line boundry.
+                             */
+                            segments.pop();
+                        }
+
+                        // Begin a new segment
+                        segment = {
+                            top:        offset.top  - base.top,
+                            left:       offset.left - base.left,
+                            width:      $el.width(),
+                            height:     $el.height(),
+                            $container: $selected,
+                            $el:        $()
+                        };
+
+                        segments.push( segment );
+                    }
+                    else
+                    {
+                        // Same "line" -- add the width to the current segment
+                        segment.width += $el.width();
+                    }
+
+                    segment.$el = segment.$el.add( $el );
+
+                    lastOffset = offset;
+
+                });
+
+                /* Ensure that positioning elements other than '.selected' are
+                 * hidden.
+                 */
+                $range.find('.before,.after').hide();
+            });
+
+            // Now, wrap each segment in a positioned wrapper
+            $.each(segments, function() {
+                var segment = this;
+
+                $('<span />')
+                    .addClass('segment')
+                    .css({
+                        top:    segment.top,
+                        left:   segment.left,
+                        width:  segment.width,
+                        height: segment.height
+                    })
+                    .append( segment.$el )
+                    .appendTo( segment.$container );
+            });
+
+            self._cacheSegments = segments;
+
+            return segments;
         }
     });
 
@@ -16941,28 +17087,6 @@ _.extend(LocalStore.prototype, {
             console.log('View::Doc:setSelection(): '
                         +   'type[ '+ (e ? e.type : '--') +' ]');
             // */
-
-            if (e && e.type === 'mouseup')
-            {
-                /* Wait a short time to see if this will be part of a click
-                 * event
-                 */
-                self._mouseup = setTimeout(function() {
-                    // Re-invoke setSelection with no event
-                    self.setSelection();
-                    self._mouseup = null;
-                }, 100);
-                return;
-            }
-            else if (e && e.type === 'click')
-            {
-                if (self._mouseup)
-                {
-                    clearTimeout( self._mouseup );
-                    self._mouseup = null;
-                }
-                return;
-            }
 
             var sel         = rangy.getSelection();
             if (sel.rangeCount < 1)
@@ -17090,13 +17214,6 @@ _.extend(LocalStore.prototype, {
                         ranges.add(rangeModel);
                     });
                 }
-                else
-                {
-                    /* There are no selectable sentences in the range.
-                     * De-select all
-                     */
-                    sel.removeAllRanges();
-                }
             }
             // IFF we have start and end sentences...
             else if (($startS.length > 0) && ($endS.length > 0))
@@ -17130,6 +17247,9 @@ _.extend(LocalStore.prototype, {
                 self.selection = new app.View.Selection( {ranges: ranges} );
                 opts.$notes.append( self.selection.render().el );
             }
+
+            // De-select any rangy ranges
+            sel.removeAllRanges();
 
             /*
             console.log('View.Doc::setSelection(): '

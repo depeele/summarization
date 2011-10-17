@@ -251,18 +251,6 @@ a {
                     visibility: hidden;
                 }
                 .selected {
-                    padding:            0.1em;
-
-                    .measure {
-                      .inlineBlock();
-                      width:      0px;
-                      visibility: hidden;
-                    }
-                }
-
-                .segment {
-                    position:   absolute;
-                    display:    block;
                 }
             }
 
@@ -270,13 +258,18 @@ a {
                 .selected {
                     background-color:   @colorSelectedBackground;
                     color:              @colorSelection;
+                    padding:            0.1em;
                 }
             }
 
             .note {
                 .selected {
-                    background-color:   @colorTagBackground;
-                    color:              @colorTag;
+                    .segment {
+                      position:         absolute;
+                      display:          block;
+                      background-color: @colorTagBackground;
+                      color:            @colorTag;
+                    }
                 }
             }
           }

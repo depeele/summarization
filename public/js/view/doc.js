@@ -101,28 +101,6 @@
                         +   'type[ '+ (e ? e.type : '--') +' ]');
             // */
 
-            if (e && e.type === 'mouseup')
-            {
-                /* Wait a short time to see if this will be part of a click
-                 * event
-                 */
-                self._mouseup = setTimeout(function() {
-                    // Re-invoke setSelection with no event
-                    self.setSelection();
-                    self._mouseup = null;
-                }, 100);
-                return;
-            }
-            else if (e && e.type === 'click')
-            {
-                if (self._mouseup)
-                {
-                    clearTimeout( self._mouseup );
-                    self._mouseup = null;
-                }
-                return;
-            }
-
             var sel         = rangy.getSelection();
             if (sel.rangeCount < 1)
             {
@@ -249,13 +227,6 @@
                         ranges.add(rangeModel);
                     });
                 }
-                else
-                {
-                    /* There are no selectable sentences in the range.
-                     * De-select all
-                     */
-                    sel.removeAllRanges();
-                }
             }
             // IFF we have start and end sentences...
             else if (($startS.length > 0) && ($endS.length > 0))
@@ -289,6 +260,9 @@
                 self.selection = new app.View.Selection( {ranges: ranges} );
                 opts.$notes.append( self.selection.render().el );
             }
+
+            // De-select any rangy ranges
+            sel.removeAllRanges();
 
             /*
             console.log('View.Doc::setSelection(): '

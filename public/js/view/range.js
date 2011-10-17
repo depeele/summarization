@@ -72,7 +72,7 @@
             var strFull     = self.$sContent.text();
             var start       = self.model.get('offsetStart');
             var end         = self.model.get('offsetEnd');
-            var strSelection= strFull.substr(start, end - start);
+            var strSel      = strFull.substr(start, end - start);
 
             var $before     = $('<span />')
                                 .addClass('before')
@@ -80,7 +80,6 @@
                                 .appendTo( self.$el );
             var $selected   = $('<span />')
                                 .addClass('selected')
-                                .text( strFull.substr(start, end - start ) )
                                 .appendTo( self.$el );
             /*
             var $after      = $('<span />')
@@ -89,19 +88,41 @@
                                 .appendTo( self.$el );
             // */
 
-            /* Add measurement elements to the beginning and end of $selected
-             * to make it easier for others to determine the edges of this
-             * range.  The CSS for .measure should set the display to
-             * 'inline-block' and width to '0px'.
+            /* Split the text of $selected into individual, measurable elements
+             * to enable others to determine the edges of this range and the
+             * presentation "lines" that comprise it.
              */
-            $('<span />')
-                .addClass('measure measure-start')
-                .text('|')
-                .prependTo( $selected );
-            $('<span />')
-                .addClass('measure measure-end')
-                .text('|')
-                .appendTo( $selected );
+            var re  = /([\w’']+)(\W+)?/i;
+            var parts;
+            while ( (parts = re.exec(strSel)) )
+            {
+                // Remove this word and word separator
+                strSel = strSel.substr(parts[1].length +
+                                       (parts[2] ? parts[2].length : 0));
+
+                // Create elements for the word and word separator.
+                $('<span />')
+                    .text(parts[1])
+                    .appendTo($selected);
+
+                if (parts[2])
+                {
+                    if ( (strSel.length < 1) && (parts[2] === ' ') )
+                    {
+                        /* The final character is a space.  If we use a space
+                         * the browser (chrome specifically) will NOT properly
+                         * position it.  To ensure positioning, include a
+                         * zero-width non-joiner entity within the final
+                         * element.
+                         */
+                        parts[2] += '&zwnj;';
+                    }
+
+                    $('<span />')
+                        .html(parts[2])
+                        .appendTo($selected);
+                }
+            }
 
             return self;
         }

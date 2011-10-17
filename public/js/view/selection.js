@@ -346,8 +346,8 @@
                                                         .find('.selected'),
                 $last           = $( _.last(self.rangeViews).el )
                                                         .find('.selected'),
-                $measureStart   = $first.find('.measure-start'),
-                $measureEnd     = $last.find('.measure-end'),
+                $measureStart   = $first.children(':first'),
+                $measureEnd     = $last.children(':last'),
                 segments        = [],
                 segment;
 
