@@ -16,17 +16,24 @@ function processFile(data, hOut)
     var $sect   = $body.find('section');
     var $p      = $body.find('p');
     var $s      = $body.find('[data-type=sentence]');
-    var $w      = $body.find('[data-type=word]');
-    var $ws     = $body.find('[data-type=ws]');
-    var $punc   = $body.find('[data-type=punc]');
+    var $tokens = $body.find( [ '[data-type=word]',
+                                '[data-type=ws]',
+                                '[data-type=punc]'].join(','));
+    //var $w      = $body.find('[data-type=word]');
+    //var $ws     = $body.find('[data-type=ws]');
+    //var $punc   = $body.find('[data-type=punc]');
 
     // Assign unique identifiers for each level
-    $sect.each(function(idex) { $(this).attr('data-id', 'sect'+  idex); });
-    $p.each(function(idex)    { $(this).attr('data-id', 'p'+     idex); });
-    $s.each(function(idex)    { $(this).attr('data-id', 's'+     idex); });
+    $sect.each(function(idex)  { $(this).attr('data-id', 'sect'+  idex); });
+    $p.each(function(idex)     { $(this).attr('data-id', 'p'+     idex); });
+    $s.each(function(idex)     { $(this).attr('data-id', 's'+     idex); });
+    $tokens.each(function(idex){ $(this).attr('data-id', 't'+     idex); });
+
+    /*
     $w.each(function(idex)    { $(this).attr('data-id', 'w'+     idex); });
     $ws.each(function(idex)   { $(this).attr('data-id', 'ws'+   idex); });
     $punc.each(function(idex) { $(this).attr('data-id', 'punc'+ idex); });
+    // */
 
     fs.writeSync(hOut, $body.html(), 0);
 }
