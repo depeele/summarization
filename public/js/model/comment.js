@@ -32,12 +32,13 @@
             created:    null
         },
 
-        initialize: function(spec) {
+        initialize: function() {
             var author  = this.get('author');
             var created = this.get('created');
             if ( ! (author instanceof app.Model.User) )
             {
-                this.set({'author': new app.Model.User(author)});
+                author = new app.Model.User(author);
+                this.set({'author': author});
             }
 
             if ( ! (created instanceof Date) )
@@ -52,10 +53,7 @@
     });
 
     app.Model.Comments  = Backbone.Collection.extend({
-        model:  app.Model.Comment,
-
-        initialize: function() {
-        }
+        model:  app.Model.Comment
     });
 
  }).call(this);

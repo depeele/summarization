@@ -32,20 +32,18 @@
             sentences:  null
         },
 
-        initialize: function(spec) {
+        initialize: function() {
             var sentences   = this.get('sentences');
             if (! (sentences instanceof app.Model.Sentences))
             {
-                this.set({'sentences': new app.Model.Sentences(sentences)});
+                sentences = new app.Model.Sentences(sentences);
+                this.set({'sentences': sentences});
             }
         }
     });
 
     app.Model.Paragraphs    = Backbone.Collection.extend({
-        model:  app.Model.Paragraph,
-
-        initialize: function() {
-        }
+        model:  app.Model.Paragraph
     });
 
  }).call(this);

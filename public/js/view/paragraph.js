@@ -30,15 +30,12 @@
             'click':                                'toggle'
         },
 
-        initialize: function() {
-            this.$el        = $(this.el);
-        },
-
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this;
             var rank    = Math.floor( self.model.get('rank') * 100 );
 
+            self.$el    = $(this.el);
             self.$el.attr('id',   self.model.cid);
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );

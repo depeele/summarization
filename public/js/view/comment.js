@@ -72,8 +72,6 @@
             var self    = this,
                 opts    = self.options;
 
-            $(document).unbind('.viewNote');
-
             self.$el.slideUp(function() {
                 self.$buttons.button('destroy');
 
@@ -86,6 +84,11 @@
         refresh: function() {
             var self    = this;
 
+            /*
+            console.log("View:Comment::refresh()[%s]",
+                        self.model.cid);
+            // */
+
             self.$created.text( $.prettyDate(self.model.get('created')) );
             self.$text.text( self.model.get('text') );
 
@@ -97,6 +100,24 @@
          *
          */
 
+        /** @brief  Focus on the edit area.
+         *  @param  e   The triggering event;
+         *
+         */
+        _focus: function(e) {
+            var self    = this,
+                opts    = self.options;
+
+            if (! self.editing) { return self; }
+            
+            /*
+            console.log("View:Comment::_focus()[%s]",
+                        self.model.cid);
+            // */
+
+            self.$edit.focus();
+        },
+
         /** @brief  Put this comment in edit mode.
          *  @param  e   The triggering event;
          *
@@ -106,6 +127,12 @@
                 opts    = self.options;
 
             if (self.editing)   { return self; }
+
+            /*
+            console.log("View:Comment::_edit()[%s]",
+                        self.model.cid);
+            // */
+
             self.editing = true;
 
             self.$text.hide( );
@@ -113,9 +140,8 @@
 
             self.$edit.val( self.$text.text() );
             self.$editArea.show();
-            self.$edit.focus();
 
-            return self;
+            return self._focus(e);
         },
 
         /** @brief  Destroy the underlying model (and thus this instance).
@@ -126,6 +152,11 @@
         _destroy: function(e) {
             var self    = this,
                 opts    = self.options;
+
+            /*
+            console.log("View:Comment::_destroy()[%s]",
+                        self.model.cid);
+            // */
 
             self.model.destroy();
 
@@ -140,6 +171,11 @@
         _save: function(e) {
             var self    = this,
                 opts    = self.options;
+
+            /*
+            console.log("View:Comment::_save()[%s]",
+                        self.model.cid);
+            // */
 
             self.model.set( {text: self.$edit.val()} );
 
@@ -159,6 +195,12 @@
                 opts    = self.options;
 
             if (! self.editing) { return self; }
+
+            /*
+            console.log("View:Comment::_cancelEdit()[%s]",
+                        self.model.cid);
+            // */
+
             self.editing = false;
 
             self.$editArea.hide();
@@ -198,22 +240,28 @@
                 opts    = self.options,
                 $button = $(e.target).parent();
 
+            /*
+            console.log("View:Comment::_buttonClick()[%s]: button[ %s ]",
+                        self.model.cid,
+                        $button.attr('name'));
+            // */
+
             switch ($button.attr('name'))
             {
             case 'edit':
-                self._edit();
+                self._edit(e);
                 break;
 
             case 'delete':
-                self._destroy();
+                self._destroy(e);
                 break;
 
             case 'save':
-                self._save();
+                self._save(e);
                 break;
 
             case 'cancel-edit':
-                self._cancelEdit();
+                self._cancelEdit(e);
                 break;
             }
         },
@@ -221,4 +269,3 @@
     });
 
  }).call(this);
-

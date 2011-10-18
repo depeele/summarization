@@ -67,6 +67,11 @@
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View::Note:initialize()[%s]:",
+                        self.model.cid);
+            // */
+
             /* Backbone does NOT fully extend options since it uses _.extend()
              * which does NOT provide a deep copy, leaving the contents of
              * 'position' directly connected to the prototype.  We need to
@@ -86,10 +91,8 @@
 
             // Bind to changes to our underlying model
             self.model.bind('destroy', _.bind(self.remove,  self));
-            self.model.bind('change',  _.bind(self.refresh, self));
 
             var comments    = self.model.get('comments');
-
             comments.bind('add',    _.bind(self._commentAdded,   self));
             comments.bind('remove', _.bind(self._commentRemoved, self));
 
@@ -114,10 +117,16 @@
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View::Note:render()[%s]:",
+                        self.model.cid);
+            // */
+
             self.$el = $(self.el);
+            self.$el.attr('id', self.model.cid);
            
             /* Now, perform any additional rendering needed to fully present
-             * this not and all associated comments.
+             * this note and all associated comments.
              */
             if (opts.hidden === true)
             {
@@ -179,6 +188,11 @@
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View::Note:remove()[%s]:",
+                        self.model.cid);
+            // */
+
             $(document).unbind('click.viewNote', self._docClick);
 
             if ($.isArray(self.rangeViews))
@@ -201,17 +215,6 @@
             return self;
         },
 
-        /** @brief  Refresh our view due to a change to the underlying model.
-         *
-         *  @return this    for a fluent interface
-         */
-        refresh: function() {
-            var self    = this,
-                opts    = self.options;
-
-            return self;
-        },
-
         /** @brief  Mark this instance as 'active'
          *  @param  e       The triggering event.
          *  @param  cb      If a function is provided, invoke this callback
@@ -226,9 +229,18 @@
             if (self.$el.hasClass('note-active'))
             {
                 // Already actived
+                /*
+                console.log("View:Note::activate()[%s]: already active",
+                            self.model.cid);
+                // */
+
                 if ($.isFunction(cb))   { cb.call(self); }
                 return self;
             }
+
+            /*
+            console.log("View:Note::activate()[%s]", self.model.cid);
+            // */
 
             // Ensure proper reply input/button state by initially blurring
             self.$reply.blur();
@@ -272,8 +284,16 @@
                  * and has propagated up to our _docClick handler (established
                  * in initialize()).  Ignore it.
                  */
+                /*
+                console.log("View:Note::deactivate()[%s]: -- ignore",
+                            self.model.cid);
+                // */
                 return;
             }
+
+            /*
+            console.log("View:Note::deactivate()[%s]", self.model.cid);
+            // */
 
             if ((! self.$el.hasClass('note-active')) ||
                 self.deactivating ||
@@ -308,6 +328,10 @@
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View:Note::show()[%s]", self.model.cid);
+            // */
+
             self.$el.fadeIn( app.options.get('animSpeed'), function() {
                 self._isVisible = true;
                 self.reposition();
@@ -328,6 +352,10 @@
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View:Note::hide()[%s]", self.model.cid);
+            // */
+
             self.$el.fadeOut( app.options.get('animSpeed'), function() {
                 self._isVisible = false;
 
@@ -345,6 +373,10 @@
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View:Note::focus()[%s]", self.model.cid);
+            // */
+
             self.$reply.trigger('focus');
 
             return self;
@@ -358,6 +390,10 @@
             var self    = this,
                 opts    = self.options;
             
+            /*
+            console.log("View:Note::reposition()[%s]", self.model.cid);
+            // */
+
             self.$el.position( opts.position );
 
             return self;
@@ -389,6 +425,10 @@
                 $comment    = self.$body.find('.comment')
                                     .eq( (comment ? comment : 0) );
 
+            /*
+            console.log("View:Note::editComment()[%s]", self.model.cid);
+            // */
+
             if ($comment.length > 0)
             {
                 self.activate(undefined, function() {
@@ -412,6 +452,10 @@
         _showControl: function( coords ) {
             var self    = this;
 
+            /*
+            console.log("View:Note::_showControl()[%s]", self.model.cid);
+            // */
+
             //app.View.Selection.prototype._showControl.call( self, coords );
             var res     = app.View.Selection.prototype
                                 ._showControl.apply( self, arguments );
@@ -430,6 +474,10 @@
             var self    = this;
             var res     = app.View.Selection.prototype
                                 ._hideControl.apply( self, arguments );
+
+            /*
+            console.log("View:Note::_hideControl()[%s]", self.model.cid);
+            // */
 
             // Deactivate this note
             self.deactivate();
@@ -520,6 +568,10 @@
                 opts    = self.options,
                 $reply  = self.$buttons.filter('[name=reply]');
 
+            /*
+            console.log("View:Note::_keyup()[%s]", self.model.cid);
+            // */
+
             // Special keys
             switch (e.keyCode)
             {
@@ -548,27 +600,36 @@
                 opts    = self.options,
                 $reply  = self.$buttons.filter('[name=reply]');
 
+            /*
+            console.log("View:Note::_focusChange()[%s]: type[ %s ]",
+                        self.model.cid, e.type);
+            // */
+
             switch (e.type)
             {
             case 'focusin':
             case 'focus':
-                if (self.$reply.hasClass('hint'))
+                if (! self.hasFocus())
                 {
-                    self.$reply.val('')
-                               .removeClass('hint');
-                }
+                    if (self.$reply.hasClass('hint'))
+                    {
+                        self.$reply.val('')
+                                   .removeClass('hint');
+                    }
 
-                if (self.$reply.val().length > 0)
-                {
-                    $reply.button('enable');
+                    if (self.$reply.val().length > 0)
+                    {
+                        $reply.button('enable');
+                    }
+                    else
+                    {
+                        $reply.button('disable');
+                    }
+                    self.$buttons.show();
                 }
-                else
-                {
-                    $reply.button('disable');
-                }
-                self.$buttons.show();
                 break;
 
+            case 'focusout':
             case 'blur':
                 if (self.$reply.val().length > 0)
                 {
@@ -599,6 +660,11 @@
             var self    = this,
                 opts    = self.options,
                 $button = $(e.target).parent();
+
+            /*
+            console.log("View:Note::_buttonClick()[%s]: type[ %s ]",
+                        self.model.cid, e.type);
+            // */
 
             switch ($button.attr('name'))
             {
@@ -633,8 +699,10 @@
                 $el     = $(e.originalEvent.target),
                 name    = $el.attr('name');
 
+            /*
             console.log('View.Note::_controlClick(): '
                         +   'name[ '+ name +' ]');
+            // */
 
             switch (name)
             {
@@ -660,6 +728,11 @@
                 opts    = self.options,
                 view    = new app.View.Comment({model: comment});
 
+            /*
+            console.log("View:Note::_commentAdded()[%s]",
+                        self.model.cid);
+            // */
+
             self.$body.append( view.render().el );
         },
 
@@ -671,6 +744,11 @@
         _commentRemoved: function(comment, comments, options) {
             var self    = this,
                 opts    = self.options;
+
+            /*
+            console.log("View:Note::_commentRemoved()[%s]",
+                        self.model.cid);
+            // */
 
             /* The associated View.Comment instance should notice the deletion
              * of it's underlying model and remove itself.

@@ -24,17 +24,11 @@
             id:         null,
             rank:       0.0,
             content:    null
-        },
-
-        initialize: function(spec) {
         }
     });
 
     app.Model.Sentences = Backbone.Collection.extend({
-        model:  app.Model.Sentence,
-
-        initialize: function() {
-        }
+        model:  app.Model.Sentence
     });
 
  }).call(this);

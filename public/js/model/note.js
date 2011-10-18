@@ -45,7 +45,7 @@
         localStorage:   new this.LocalStore('app.notes'),
         sync:           this.LocalStore.prototype.sync,
 
-        initialize: function(spec) {
+        initialize: function() {
             var self    = this,
                 id      = self.get('id');
             
@@ -59,13 +59,18 @@
             var ranges      = self.get('ranges');
             if ((! comments) || ! (comments instanceof app.Model.Comments))
             {
-                self.set({comments: new app.Model.Comments(comments)});
+                comments = new app.Model.Comments( comments );
+                self.set({comments: comments});
             }
 
             if ((! ranges) || ! (ranges instanceof app.Model.Ranges))
             {
-                self.set({ranges: new app.Model.Ranges(ranges)});
+                ranges = new app.Model.Ranges(ranges);
+                self.set({ranges: ranges});
             }
+
+            // Bind to changes to comments
+            comments.bind('all', _.bind(self._commentsProxy, self));
         },
 
         /** @brief  Retrieve the count of comments.
@@ -83,7 +88,38 @@
             var self        = this;
             var comments    = self.get('comments');
 
+            /*
+            console.log("Model:Note::addComment()[%s]: comment[ %s ]",
+                        self.cid, comment.cid);
+            // */
+
             comments.add( comment );
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+
+        /** @brief  Proxy any events from our comments instance.
+         *  @param  eventName   The event;
+         */
+        _commentsProxy: function(eventName) {
+            var self    = this;
+
+            switch (eventName)
+            {
+            case 'add':
+            case 'change':
+            case 'destroy':
+                /*
+                console.log("Model:Note::_commentsProxy()[%s]: event[ %s ]",
+                            self.cid, eventName);
+                // */
+
+                self.trigger( 'change', self, self.collection );
+                break;
+            }
         }
     });
 

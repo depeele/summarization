@@ -39,8 +39,16 @@
 
             rangy.init();
 
-            // Bind to mouseup and click at the document level.
-            $(document).bind('mouseup.viewDoc click.viewDoc',
+            /* Bind to mousedown, mouseup and dblclick at the document level.
+             *
+             * :NOTE: Do NOT bind 'click' since it will be fired following
+             *        mousedown when selecting (at least in Chrome).  Instead,
+             *        we bind to 'mousedown' and 'mouseup' and check for a
+             *        click ourselves.
+             */
+            $(document).bind( ['mousedown.viewDoc',
+                               'mouseup.viewDoc',
+                               'dblclick.viewDoc'].join(' '),
                              _.bind(this.setSelection, this));
         },
 
@@ -97,8 +105,47 @@
             }
 
             /*
-            console.log('View::Doc:setSelection(): '
-                        +   'type[ '+ (e ? e.type : '--') +' ]');
+            console.log('View::Doc:setSelection()[%s]: type[ %s ]',
+                        self.model.cid,
+                        (e ? e.type : '--'));
+            // */
+
+            /* :NOTE: Do NOT bind 'click' since it will be fired following
+             *        mousedown when selecting (at least in Chrome).  Instead,
+             *        we bind to 'mousedown' and 'mouseup' and check for a
+             *        click ourselves.
+             */
+            if (e && (e.type === 'mousedown'))
+            {
+                self._mousedownE = e;
+                return;
+            }
+            else if (e && (e.type === 'mouseup') && self._mousedownE)
+            {
+                /* Wait a short time to see if this will be part of a click
+                 * event
+                 */
+                var delta   = {
+                    x:  Math.abs( self._mousedownE.pageX - e.pageX ),
+                    y:  Math.abs( self._mousedownE.pageY - e.pageY )
+                }
+                self._mousedownE = null;
+
+                if ( (delta.x <= 5) && (delta.y <= 5) )
+                {
+                    // Seems to be a click -- ignore it
+                    /*
+                    console.log('View::Doc:setSelection()[%s]: ignore click',
+                                self.model.cid);
+                    // */
+                    return;
+                }
+            }
+
+            /*
+            console.log('View::Doc:setSelection()[%s]: type[ %s ] -- ACT',
+                        self.model.cid,
+                        (e ? e.type : '--'));
             // */
 
             var sel         = rangy.getSelection();
@@ -308,6 +355,12 @@
                 $ranges = self.$s.filter( function(idex) {
                                             return (idex >= fromDex); })
                                     .find('.overlay .range');
+
+            /*
+            console.log('View::Doc:_adjustPositions()[%s]: %d ranges',
+                        self.model.cid,
+                        $ranges.length);
+            // */
 
             if ($ranges.length > 0)
             {

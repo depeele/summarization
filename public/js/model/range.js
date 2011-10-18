@@ -29,9 +29,6 @@
             offsetEnd:  null    // The ending   offset within the sentence
         },
 
-        initialize: function(spec) {
-        },
-
         setStart: function(offset) {
             this.set({offsetStart: offset});
         },
@@ -78,9 +75,6 @@
     /** @brief  A collection of ranges within mutliple sentences. */
     app.Model.Ranges    = Backbone.Collection.extend({
         model:  app.Model.Range,
-
-        initialize: function() {
-        },
 
         /** @brief  Retrieve all sentences represented by these ranges.
          */

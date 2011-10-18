@@ -14566,18 +14566,11 @@ _.extend(LocalStore.prototype, {
             name:       'anonymous',
             fullName:   'Anonymous',
             avatarUrl:  'images/avatar.jpg'
-        },
-
-        // id, name, fullName, avatarUrl
-        initialize: function(spec) {
         }
     });
 
     app.Model.Users = Backbone.Collection.extend({
-        model:  app.Model.User,
-
-        initialize: function() {
-        }
+        model:  app.Model.User
     });
 
  }).call(this);
@@ -14615,12 +14608,13 @@ _.extend(LocalStore.prototype, {
             created:    null
         },
 
-        initialize: function(spec) {
+        initialize: function() {
             var author  = this.get('author');
             var created = this.get('created');
             if ( ! (author instanceof app.Model.User) )
             {
-                this.set({'author': new app.Model.User(author)});
+                author = new app.Model.User(author);
+                this.set({'author': author});
             }
 
             if ( ! (created instanceof Date) )
@@ -14635,10 +14629,7 @@ _.extend(LocalStore.prototype, {
     });
 
     app.Model.Comments  = Backbone.Collection.extend({
-        model:  app.Model.Comment,
-
-        initialize: function() {
-        }
+        model:  app.Model.Comment
     });
 
  }).call(this);
@@ -14671,9 +14662,6 @@ _.extend(LocalStore.prototype, {
             sentenceId: null,   // The id of the sentence that roots this range
             offsetStart:null,   // The starting offset within the sentence
             offsetEnd:  null    // The ending   offset within the sentence
-        },
-
-        initialize: function(spec) {
         },
 
         setStart: function(offset) {
@@ -14722,9 +14710,6 @@ _.extend(LocalStore.prototype, {
     /** @brief  A collection of ranges within mutliple sentences. */
     app.Model.Ranges    = Backbone.Collection.extend({
         model:  app.Model.Range,
-
-        initialize: function() {
-        },
 
         /** @brief  Retrieve all sentences represented by these ranges.
          */
@@ -14787,7 +14772,7 @@ _.extend(LocalStore.prototype, {
         localStorage:   new this.LocalStore('app.notes'),
         sync:           this.LocalStore.prototype.sync,
 
-        initialize: function(spec) {
+        initialize: function() {
             var self    = this,
                 id      = self.get('id');
             
@@ -14801,13 +14786,18 @@ _.extend(LocalStore.prototype, {
             var ranges      = self.get('ranges');
             if ((! comments) || ! (comments instanceof app.Model.Comments))
             {
-                self.set({comments: new app.Model.Comments(comments)});
+                comments = new app.Model.Comments( comments );
+                self.set({comments: comments});
             }
 
             if ((! ranges) || ! (ranges instanceof app.Model.Ranges))
             {
-                self.set({ranges: new app.Model.Ranges(ranges)});
+                ranges = new app.Model.Ranges(ranges);
+                self.set({ranges: ranges});
             }
+
+            // Bind to changes to comments
+            comments.bind('all', _.bind(self._commentsProxy, self));
         },
 
         /** @brief  Retrieve the count of comments.
@@ -14825,7 +14815,38 @@ _.extend(LocalStore.prototype, {
             var self        = this;
             var comments    = self.get('comments');
 
+            /*
+            console.log("Model:Note::addComment()[%s]: comment[ %s ]",
+                        self.cid, comment.cid);
+            // */
+
             comments.add( comment );
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+
+        /** @brief  Proxy any events from our comments instance.
+         *  @param  eventName   The event;
+         */
+        _commentsProxy: function(eventName) {
+            var self    = this;
+
+            switch (eventName)
+            {
+            case 'add':
+            case 'change':
+            case 'destroy':
+                /*
+                console.log("Model:Note::_commentsProxy()[%s]: event[ %s ]",
+                            self.cid, eventName);
+                // */
+
+                self.trigger( 'change', self, self.collection );
+                break;
+            }
         }
     });
 
@@ -14862,17 +14883,11 @@ _.extend(LocalStore.prototype, {
             id:         null,
             rank:       0.0,
             content:    null
-        },
-
-        initialize: function(spec) {
         }
     });
 
     app.Model.Sentences = Backbone.Collection.extend({
-        model:  app.Model.Sentence,
-
-        initialize: function() {
-        }
+        model:  app.Model.Sentence
     });
 
  }).call(this);
@@ -14910,20 +14925,18 @@ _.extend(LocalStore.prototype, {
             sentences:  null
         },
 
-        initialize: function(spec) {
+        initialize: function() {
             var sentences   = this.get('sentences');
             if (! (sentences instanceof app.Model.Sentences))
             {
-                this.set({'sentences': new app.Model.Sentences(sentences)});
+                sentences = new app.Model.Sentences(sentences);
+                this.set({'sentences': sentences});
             }
         }
     });
 
     app.Model.Paragraphs    = Backbone.Collection.extend({
-        model:  app.Model.Paragraph,
-
-        initialize: function() {
-        }
+        model:  app.Model.Paragraph
     });
 
  }).call(this);
@@ -14961,20 +14974,18 @@ _.extend(LocalStore.prototype, {
             paragraphs: null
         },
 
-        initialize: function(spec) {
+        initialize: function() {
             var paragraphs  = this.get('paragraphs');
             if (! (paragraphs instanceof app.Model.Paragraphs))
             {
-                this.set({'paragraphs': new app.Model.Paragraphs(paragraphs)});
+                paragraphs = new app.Model.Paragraphs(paragraphs);
+                this.set({'paragraphs': paragraphs});
             }
         }
     });
 
     app.Model.Sections  = Backbone.Collection.extend({
-        model:  app.Model.Section,
-
-        initialize: function() {
-        }
+        model:  app.Model.Section
     });
 
  }).call(this);
@@ -15024,7 +15035,7 @@ _.extend(LocalStore.prototype, {
             notes:      null
         },
 
-        initialize: function(spec) {
+        initialize: function() {
             var self        = this;
             var published   = self.get('published');
             var sections    = self.get('sections');
@@ -15040,17 +15051,21 @@ _.extend(LocalStore.prototype, {
 
             if ((! sections) || ! (sections instanceof app.Model.Sections))
             {
-                self.set({sections: new app.Model.Sections(sections)});
+                sections = new app.Model.Sections(sections);
+                self.set({sections: sections});
             }
 
             if ((! notes) || ! (notes instanceof app.Model.Notes))
             {
-                var notes   = new app.Model.Notes();
+                notes = new app.Model.Notes();
                 notes.fetch({docId: self.get('url')});
 
                 //self.set({notes: new app.Model.Notes(notes)});
                 self.set({notes: notes}, {silent: true});
             }
+
+            notes.bind('add',    _.bind(self._notesChanged, self));
+            notes.bind('change', _.bind(self._notesChanged, self));
         },
 
         /** @brief  Add a new Model.Note instance to the notes collection.
@@ -15060,6 +15075,11 @@ _.extend(LocalStore.prototype, {
             var self    = this;
             var notes   = self.get('notes');
 
+            /*
+            console.log("Model:Doc::addNote()[%s]",
+                        self.cid);                        
+            // */
+
             // If this note has no comments, add a single, empty comment now.
             if (note.commentCount() < 1)
             {
@@ -15068,17 +15088,37 @@ _.extend(LocalStore.prototype, {
 
             note.set({docId: self.get('url')});
 
+            /* :NOTE: This will trigger an 'add' event on Model.Comments which
+             *        will be proxied as a 'change' event on Model.Note which
+             *        will be handled by our _notesChanged() method causing the
+             *        Model.Note to be saved.
+             */
             notes.add( note );
-            
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+
+        /** @brief  Proxy any events from our notes instance.
+         *  @param  eventName   The event;
+         */
+        _notesChanged: function(note, notes, options) {
+            var self    = this;
+
+            // /*
+            console.log("Model:Doc::_notesChanged()[%s]: note[ %s ]",
+                        self.cid, note.cid);
+            // */
+
+            // For any change, save the note
             note.save();
         }
     });
 
     app.Model.Docs  = Backbone.Collection.extend({
-        model:  app.Model.Document,
-
-        initialize: function() {
-        }
+        model:  app.Model.Document
     });
 
  }).call(this);
@@ -15118,23 +15158,12 @@ _.extend(LocalStore.prototype, {
             'click':                        'expansionToggle'
         },
 
-        initialize: function() {
-            this.$el = $(this.el);
-
-            /*
-            this.$el.bind('sentence:expand',   _.bind(this.expand, this));
-            this.$el.bind('sentence:collapse', _.bind(this.collapse, this));
-            this.$el.bind('sentence:toggle',   _.bind(this.toggle, this));
-            this.$el.bind('click',             _.bind(this.expansionToggle,
-                                                      this));
-            // */
-        },
-
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this;
             var rank    = Math.floor( self.model.get('rank') * 100 );
 
+            self.$el    = $(this.el);
             self.$el.attr('id',   self.model.cid);
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
@@ -15279,15 +15308,12 @@ _.extend(LocalStore.prototype, {
             'click':                                'toggle'
         },
 
-        initialize: function() {
-            this.$el        = $(this.el);
-        },
-
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this;
             var rank    = Math.floor( self.model.get('rank') * 100 );
 
+            self.$el    = $(this.el);
             self.$el.attr('id',   self.model.cid);
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
@@ -15364,15 +15390,12 @@ _.extend(LocalStore.prototype, {
         tagName:    'section',
         template:   _.template($('#template-section').html()),
 
-        initialize: function() {
-            this.$el = $(this.el);
-        },
-
         /** @brief  (Re)render the contents of the section item. */
         render:     function() {
             var self    = this;
             var rank    = Math.floor( self.model.get('rank') * 100 );
 
+            self.$el    = $(this.el);
             self.$el.attr('id',   self.model.cid);
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );
@@ -15414,25 +15437,6 @@ _.extend(LocalStore.prototype, {
     app.View.Range  = Backbone.View.extend({
         tagName:    'span',
         className:  'range',
-
-        initialize: function() {
-        },
-
-        /** @brief  Override so we can destroy the range model since it isn't
-         *          needed without the view.
-         *  @param  keepModel   if true, do NOT destroy the underlying model;
-         */
-        remove: function(keepModel) {
-            var self    = this;
-
-            if (keepModel !== true) { self.model.destroy(); }
-
-            self.$el.fadeOut( app.options.get('animSpeed'), function() {
-                Backbone.View.prototype.remove.call(self);
-            });
-
-            return self;
-        },
 
         /** @brief  (Re)render the contents of the range item. */
         render:     function() {
@@ -15521,6 +15525,22 @@ _.extend(LocalStore.prototype, {
             }
 
             return self;
+        },
+
+        /** @brief  Override so we can destroy the range model since it isn't
+         *          needed without the view.
+         *  @param  keepModel   if true, do NOT destroy the underlying model;
+         */
+        remove: function(keepModel) {
+            var self    = this;
+
+            if (keepModel !== true) { self.model.destroy(); }
+
+            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+                Backbone.View.prototype.remove.call(self);
+            });
+
+            return self;
         }
     });
 
@@ -15570,42 +15590,14 @@ _.extend(LocalStore.prototype, {
             this.rangeViews = this.options.rangeViews;
         },
 
-        /** @brief  Override so we can properly remove component range views.
-         */
-        remove: function() {
-            var self    = this;
-
-            if (self.rangeViews)
-            {
-                /* Remove all component View.Range elements, which will also
-                 * destroy the underlying models (Model.Range).
-                 */
-                var events  = '.'+ self.viewName;
-                $.each(self.rangeViews, function() {
-                    var view    = this;
-
-                    // Un-bind event handlers
-                    $(view.el).undelegate('.selected', events,
-                                          self.__rangeMouse);
-
-                    view.remove( (self.ranges === null) );
-                });
-            }
-
-            if (self.$control)
-            {
-                self.$control.unbind('.'+ self.viewName);
-            }
-
-            return Backbone.View.prototype.remove.call(this);
-        },
-
         /** @brief  Render this view. */
         render: function() {
             var self    = this;
 
             self.$el = $(self.el);
-            //self.$el.attr('id', self.ranges.cid);
+
+            if (self.ranges.cid)    { self.$el.attr('id', self.ranges.cid); }
+
             self.$el.html( self.template( (self.model
                                             ? self.model.toJSON()
                                             : null) ) );
@@ -15653,6 +15645,37 @@ _.extend(LocalStore.prototype, {
             return self;
         },
 
+        /** @brief  Override so we can properly remove component range views.
+         */
+        remove: function() {
+            var self    = this;
+
+            if (self.rangeViews)
+            {
+                /* Remove all component View.Range elements, which will also
+                 * destroy the underlying models (Model.Range).
+                 */
+                var events  = '.'+ self.viewName;
+                $.each(self.rangeViews, function() {
+                    var view    = this;
+
+                    // Un-bind event handlers
+                    $(view.el).undelegate('.selected', events,
+                                          self.__rangeMouse);
+
+                    view.remove( (self.ranges === null) );
+                });
+            }
+
+            if (self.$control)
+            {
+                self.$control.unbind('.'+ self.viewName);
+            }
+
+            return Backbone.View.prototype.remove.call(this);
+        },
+
+
         /** @brief  Generate a Model.Note instance with our ranges,
          *          disconnecting the ranges from this instance.
          *
@@ -15687,13 +15710,13 @@ _.extend(LocalStore.prototype, {
          *                  originating target;
          */
         _controlClick: function(e) {
-            var self    = this;
-            var $el     = $(e.originalEvent.target);
-            var name    = $el.attr('name');
+            var self    = this,
+                $el     = $(e.originalEvent.target),
+                name    = $el.attr('name');
 
             /*
-            console.log('View.'+ self.viewName +'::_controlClick(): '
-                        +   'name[ '+ name +' ]');
+            console.log('View.%s::_controlClick(): name[ %s ]',
+                        self.viewName, name);
             // */
 
             switch (name)
@@ -15712,8 +15735,10 @@ _.extend(LocalStore.prototype, {
         _controlMouse: function(e) {
             var self    = this;
 
-            console.log('View.Selection::_controlMouse(): '
-                        + 'type[ '+ e.type +' ]');
+            /*
+            console.log('View.%s::_controlMouse(): type[ %s ]',
+                        self.viewName, e.type);
+            // */
 
             switch (e.type)
             {
@@ -15922,7 +15947,9 @@ _.extend(LocalStore.prototype, {
             // Cache the segments
             self._cacheSegments = segments;
 
-            //console.log(segments);
+            /*
+            console.log(segments);
+            // */
 
             return segments;
         },
@@ -15989,6 +16016,9 @@ _.extend(LocalStore.prototype, {
             'cancel':                   '_cancelEdit',
 
             'keyup .edit':              '_keyup',
+            'focus .edit':              '_focusChange',
+            'blur  .edit':              '_focusChange',
+
             'click .buttons button':    '_buttonClick',
 
             'comment:edit':             '_edit',
@@ -16033,8 +16063,6 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
-            $(document).unbind('.viewNote');
-
             self.$el.slideUp(function() {
                 self.$buttons.button('destroy');
 
@@ -16047,6 +16075,11 @@ _.extend(LocalStore.prototype, {
         refresh: function() {
             var self    = this;
 
+            /*
+            console.log("View:Comment::refresh()[%s]",
+                        self.model.cid);
+            // */
+
             self.$created.text( $.prettyDate(self.model.get('created')) );
             self.$text.text( self.model.get('text') );
 
@@ -16058,6 +16091,24 @@ _.extend(LocalStore.prototype, {
          *
          */
 
+        /** @brief  Focus on the edit area.
+         *  @param  e   The triggering event;
+         *
+         */
+        _focus: function(e) {
+            var self    = this,
+                opts    = self.options;
+
+            if (! self.editing) { return self; }
+            
+            /*
+            console.log("View:Comment::_focus()[%s]",
+                        self.model.cid);
+            // */
+
+            self.$edit.focus();
+        },
+
         /** @brief  Put this comment in edit mode.
          *  @param  e   The triggering event;
          *
@@ -16067,6 +16118,12 @@ _.extend(LocalStore.prototype, {
                 opts    = self.options;
 
             if (self.editing)   { return self; }
+
+            /*
+            console.log("View:Comment::_edit()[%s]",
+                        self.model.cid);
+            // */
+
             self.editing = true;
 
             self.$text.hide( );
@@ -16074,9 +16131,8 @@ _.extend(LocalStore.prototype, {
 
             self.$edit.val( self.$text.text() );
             self.$editArea.show();
-            self.$edit.focus();
 
-            return self;
+            return self._focus(e);
         },
 
         /** @brief  Destroy the underlying model (and thus this instance).
@@ -16087,6 +16143,11 @@ _.extend(LocalStore.prototype, {
         _destroy: function(e) {
             var self    = this,
                 opts    = self.options;
+
+            /*
+            console.log("View:Comment::_destroy()[%s]",
+                        self.model.cid);
+            // */
 
             self.model.destroy();
 
@@ -16101,6 +16162,11 @@ _.extend(LocalStore.prototype, {
         _save: function(e) {
             var self    = this,
                 opts    = self.options;
+
+            /*
+            console.log("View:Comment::_save()[%s]",
+                        self.model.cid);
+            // */
 
             self.model.set( {text: self.$edit.val()} );
 
@@ -16120,6 +16186,12 @@ _.extend(LocalStore.prototype, {
                 opts    = self.options;
 
             if (! self.editing) { return self; }
+
+            /*
+            console.log("View:Comment::_cancelEdit()[%s]",
+                        self.model.cid);
+            // */
+
             self.editing = false;
 
             self.$editArea.hide();
@@ -16151,6 +16223,31 @@ _.extend(LocalStore.prototype, {
             }
         },
 
+        /** @brief  Handle 'focus/blur' within the edit area.
+         *  @param  e       The triggering event.
+         */
+        _focusChange: function(e) {
+            var self    = this,
+                opts    = self.options;
+
+            /*
+            console.log("View:Comment::_focusChange()[%s]: type[ %s ]",
+                        self.model.cid, e.type);
+            // */
+
+            switch (e.type)
+            {
+            case 'focusin':
+            case 'focus':
+                break;
+
+            case 'focusout':
+            case 'blur':
+                //self._cancelEdit();
+                break;
+            }
+        },
+
         /** @brief  Handle a button click (save/cancel).
          *  @param  e       The triggering event.
          */
@@ -16159,22 +16256,28 @@ _.extend(LocalStore.prototype, {
                 opts    = self.options,
                 $button = $(e.target).parent();
 
+            /*
+            console.log("View:Comment::_buttonClick()[%s]: button[ %s ]",
+                        self.model.cid,
+                        $button.attr('name'));
+            // */
+
             switch ($button.attr('name'))
             {
             case 'edit':
-                self._edit();
+                self._edit(e);
                 break;
 
             case 'delete':
-                self._destroy();
+                self._destroy(e);
                 break;
 
             case 'save':
-                self._save();
+                self._save(e);
                 break;
 
             case 'cancel-edit':
-                self._cancelEdit();
+                self._cancelEdit(e);
                 break;
             }
         },
@@ -16182,7 +16285,6 @@ _.extend(LocalStore.prototype, {
     });
 
  }).call(this);
-
 /** @file
  *
  *  An extension of app.View.Selection that provides a view for a single note.
@@ -16252,6 +16354,11 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View::Note:initialize()[%s]:",
+                        self.model.cid);
+            // */
+
             /* Backbone does NOT fully extend options since it uses _.extend()
              * which does NOT provide a deep copy, leaving the contents of
              * 'position' directly connected to the prototype.  We need to
@@ -16271,10 +16378,8 @@ _.extend(LocalStore.prototype, {
 
             // Bind to changes to our underlying model
             self.model.bind('destroy', _.bind(self.remove,  self));
-            self.model.bind('change',  _.bind(self.refresh, self));
 
             var comments    = self.model.get('comments');
-
             comments.bind('add',    _.bind(self._commentAdded,   self));
             comments.bind('remove', _.bind(self._commentRemoved, self));
 
@@ -16299,10 +16404,16 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View::Note:render()[%s]:",
+                        self.model.cid);
+            // */
+
             self.$el = $(self.el);
+            self.$el.attr('id', self.model.cid);
            
             /* Now, perform any additional rendering needed to fully present
-             * this not and all associated comments.
+             * this note and all associated comments.
              */
             if (opts.hidden === true)
             {
@@ -16364,6 +16475,11 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View::Note:remove()[%s]:",
+                        self.model.cid);
+            // */
+
             $(document).unbind('click.viewNote', self._docClick);
 
             if ($.isArray(self.rangeViews))
@@ -16386,17 +16502,6 @@ _.extend(LocalStore.prototype, {
             return self;
         },
 
-        /** @brief  Refresh our view due to a change to the underlying model.
-         *
-         *  @return this    for a fluent interface
-         */
-        refresh: function() {
-            var self    = this,
-                opts    = self.options;
-
-            return self;
-        },
-
         /** @brief  Mark this instance as 'active'
          *  @param  e       The triggering event.
          *  @param  cb      If a function is provided, invoke this callback
@@ -16411,9 +16516,18 @@ _.extend(LocalStore.prototype, {
             if (self.$el.hasClass('note-active'))
             {
                 // Already actived
+                /*
+                console.log("View:Note::activate()[%s]: already active",
+                            self.model.cid);
+                // */
+
                 if ($.isFunction(cb))   { cb.call(self); }
                 return self;
             }
+
+            /*
+            console.log("View:Note::activate()[%s]", self.model.cid);
+            // */
 
             // Ensure proper reply input/button state by initially blurring
             self.$reply.blur();
@@ -16457,8 +16571,16 @@ _.extend(LocalStore.prototype, {
                  * and has propagated up to our _docClick handler (established
                  * in initialize()).  Ignore it.
                  */
+                /*
+                console.log("View:Note::deactivate()[%s]: -- ignore",
+                            self.model.cid);
+                // */
                 return;
             }
+
+            /*
+            console.log("View:Note::deactivate()[%s]", self.model.cid);
+            // */
 
             if ((! self.$el.hasClass('note-active')) ||
                 self.deactivating ||
@@ -16493,6 +16615,10 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View:Note::show()[%s]", self.model.cid);
+            // */
+
             self.$el.fadeIn( app.options.get('animSpeed'), function() {
                 self._isVisible = true;
                 self.reposition();
@@ -16513,6 +16639,10 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View:Note::hide()[%s]", self.model.cid);
+            // */
+
             self.$el.fadeOut( app.options.get('animSpeed'), function() {
                 self._isVisible = false;
 
@@ -16530,6 +16660,10 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
+            /*
+            console.log("View:Note::focus()[%s]", self.model.cid);
+            // */
+
             self.$reply.trigger('focus');
 
             return self;
@@ -16543,6 +16677,10 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
             
+            /*
+            console.log("View:Note::reposition()[%s]", self.model.cid);
+            // */
+
             self.$el.position( opts.position );
 
             return self;
@@ -16574,6 +16712,10 @@ _.extend(LocalStore.prototype, {
                 $comment    = self.$body.find('.comment')
                                     .eq( (comment ? comment : 0) );
 
+            /*
+            console.log("View:Note::editComment()[%s]", self.model.cid);
+            // */
+
             if ($comment.length > 0)
             {
                 self.activate(undefined, function() {
@@ -16597,6 +16739,10 @@ _.extend(LocalStore.prototype, {
         _showControl: function( coords ) {
             var self    = this;
 
+            /*
+            console.log("View:Note::_showControl()[%s]", self.model.cid);
+            // */
+
             //app.View.Selection.prototype._showControl.call( self, coords );
             var res     = app.View.Selection.prototype
                                 ._showControl.apply( self, arguments );
@@ -16615,6 +16761,10 @@ _.extend(LocalStore.prototype, {
             var self    = this;
             var res     = app.View.Selection.prototype
                                 ._hideControl.apply( self, arguments );
+
+            /*
+            console.log("View:Note::_hideControl()[%s]", self.model.cid);
+            // */
 
             // Deactivate this note
             self.deactivate();
@@ -16705,6 +16855,10 @@ _.extend(LocalStore.prototype, {
                 opts    = self.options,
                 $reply  = self.$buttons.filter('[name=reply]');
 
+            /*
+            console.log("View:Note::_keyup()[%s]", self.model.cid);
+            // */
+
             // Special keys
             switch (e.keyCode)
             {
@@ -16733,27 +16887,36 @@ _.extend(LocalStore.prototype, {
                 opts    = self.options,
                 $reply  = self.$buttons.filter('[name=reply]');
 
+            /*
+            console.log("View:Note::_focusChange()[%s]: type[ %s ]",
+                        self.model.cid, e.type);
+            // */
+
             switch (e.type)
             {
             case 'focusin':
             case 'focus':
-                if (self.$reply.hasClass('hint'))
+                if (! self.hasFocus())
                 {
-                    self.$reply.val('')
-                               .removeClass('hint');
-                }
+                    if (self.$reply.hasClass('hint'))
+                    {
+                        self.$reply.val('')
+                                   .removeClass('hint');
+                    }
 
-                if (self.$reply.val().length > 0)
-                {
-                    $reply.button('enable');
+                    if (self.$reply.val().length > 0)
+                    {
+                        $reply.button('enable');
+                    }
+                    else
+                    {
+                        $reply.button('disable');
+                    }
+                    self.$buttons.show();
                 }
-                else
-                {
-                    $reply.button('disable');
-                }
-                self.$buttons.show();
                 break;
 
+            case 'focusout':
             case 'blur':
                 if (self.$reply.val().length > 0)
                 {
@@ -16784,6 +16947,11 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options,
                 $button = $(e.target).parent();
+
+            /*
+            console.log("View:Note::_buttonClick()[%s]: type[ %s ]",
+                        self.model.cid, e.type);
+            // */
 
             switch ($button.attr('name'))
             {
@@ -16818,8 +16986,10 @@ _.extend(LocalStore.prototype, {
                 $el     = $(e.originalEvent.target),
                 name    = $el.attr('name');
 
+            /*
             console.log('View.Note::_controlClick(): '
                         +   'name[ '+ name +' ]');
+            // */
 
             switch (name)
             {
@@ -16845,6 +17015,11 @@ _.extend(LocalStore.prototype, {
                 opts    = self.options,
                 view    = new app.View.Comment({model: comment});
 
+            /*
+            console.log("View:Note::_commentAdded()[%s]",
+                        self.model.cid);
+            // */
+
             self.$body.append( view.render().el );
         },
 
@@ -16856,6 +17031,11 @@ _.extend(LocalStore.prototype, {
         _commentRemoved: function(comment, comments, options) {
             var self    = this,
                 opts    = self.options;
+
+            /*
+            console.log("View:Note::_commentRemoved()[%s]",
+                        self.model.cid);
+            // */
 
             /* The associated View.Comment instance should notice the deletion
              * of it's underlying model and remove itself.
@@ -17026,8 +17206,16 @@ _.extend(LocalStore.prototype, {
 
             rangy.init();
 
-            // Bind to mouseup and click at the document level.
-            $(document).bind('mouseup.viewDoc click.viewDoc',
+            /* Bind to mousedown, mouseup and dblclick at the document level.
+             *
+             * :NOTE: Do NOT bind 'click' since it will be fired following
+             *        mousedown when selecting (at least in Chrome).  Instead,
+             *        we bind to 'mousedown' and 'mouseup' and check for a
+             *        click ourselves.
+             */
+            $(document).bind( ['mousedown.viewDoc',
+                               'mouseup.viewDoc',
+                               'dblclick.viewDoc'].join(' '),
                              _.bind(this.setSelection, this));
         },
 
@@ -17084,8 +17272,47 @@ _.extend(LocalStore.prototype, {
             }
 
             /*
-            console.log('View::Doc:setSelection(): '
-                        +   'type[ '+ (e ? e.type : '--') +' ]');
+            console.log('View::Doc:setSelection()[%s]: type[ %s ]',
+                        self.model.cid,
+                        (e ? e.type : '--'));
+            // */
+
+            /* :NOTE: Do NOT bind 'click' since it will be fired following
+             *        mousedown when selecting (at least in Chrome).  Instead,
+             *        we bind to 'mousedown' and 'mouseup' and check for a
+             *        click ourselves.
+             */
+            if (e && (e.type === 'mousedown'))
+            {
+                self._mousedownE = e;
+                return;
+            }
+            else if (e && (e.type === 'mouseup') && self._mousedownE)
+            {
+                /* Wait a short time to see if this will be part of a click
+                 * event
+                 */
+                var delta   = {
+                    x:  Math.abs( self._mousedownE.pageX - e.pageX ),
+                    y:  Math.abs( self._mousedownE.pageY - e.pageY )
+                }
+                self._mousedownE = null;
+
+                if ( (delta.x <= 5) && (delta.y <= 5) )
+                {
+                    // Seems to be a click -- ignore it
+                    /*
+                    console.log('View::Doc:setSelection()[%s]: ignore click',
+                                self.model.cid);
+                    // */
+                    return;
+                }
+            }
+
+            /*
+            console.log('View::Doc:setSelection()[%s]: type[ %s ] -- ACT',
+                        self.model.cid,
+                        (e ? e.type : '--'));
             // */
 
             var sel         = rangy.getSelection();
@@ -17295,6 +17522,12 @@ _.extend(LocalStore.prototype, {
                 $ranges = self.$s.filter( function(idex) {
                                             return (idex >= fromDex); })
                                     .find('.overlay .range');
+
+            /*
+            console.log('View::Doc:_adjustPositions()[%s]: %d ranges',
+                        self.model.cid,
+                        $ranges.length);
+            // */
 
             if ($ranges.length > 0)
             {

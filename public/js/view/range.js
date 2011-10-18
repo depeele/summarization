@@ -19,25 +19,6 @@
         tagName:    'span',
         className:  'range',
 
-        initialize: function() {
-        },
-
-        /** @brief  Override so we can destroy the range model since it isn't
-         *          needed without the view.
-         *  @param  keepModel   if true, do NOT destroy the underlying model;
-         */
-        remove: function(keepModel) {
-            var self    = this;
-
-            if (keepModel !== true) { self.model.destroy(); }
-
-            self.$el.fadeOut( app.options.get('animSpeed'), function() {
-                Backbone.View.prototype.remove.call(self);
-            });
-
-            return self;
-        },
-
         /** @brief  (Re)render the contents of the range item. */
         render:     function() {
             var self    = this,
@@ -123,6 +104,22 @@
                         .appendTo($selected);
                 }
             }
+
+            return self;
+        },
+
+        /** @brief  Override so we can destroy the range model since it isn't
+         *          needed without the view.
+         *  @param  keepModel   if true, do NOT destroy the underlying model;
+         */
+        remove: function(keepModel) {
+            var self    = this;
+
+            if (keepModel !== true) { self.model.destroy(); }
+
+            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+                Backbone.View.prototype.remove.call(self);
+            });
 
             return self;
         }

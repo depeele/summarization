@@ -43,42 +43,14 @@
             this.rangeViews = this.options.rangeViews;
         },
 
-        /** @brief  Override so we can properly remove component range views.
-         */
-        remove: function() {
-            var self    = this;
-
-            if (self.rangeViews)
-            {
-                /* Remove all component View.Range elements, which will also
-                 * destroy the underlying models (Model.Range).
-                 */
-                var events  = '.'+ self.viewName;
-                $.each(self.rangeViews, function() {
-                    var view    = this;
-
-                    // Un-bind event handlers
-                    $(view.el).undelegate('.selected', events,
-                                          self.__rangeMouse);
-
-                    view.remove( (self.ranges === null) );
-                });
-            }
-
-            if (self.$control)
-            {
-                self.$control.unbind('.'+ self.viewName);
-            }
-
-            return Backbone.View.prototype.remove.call(this);
-        },
-
         /** @brief  Render this view. */
         render: function() {
             var self    = this;
 
             self.$el = $(self.el);
-            //self.$el.attr('id', self.ranges.cid);
+
+            if (self.ranges.cid)    { self.$el.attr('id', self.ranges.cid); }
+
             self.$el.html( self.template( (self.model
                                             ? self.model.toJSON()
                                             : null) ) );
@@ -126,6 +98,37 @@
             return self;
         },
 
+        /** @brief  Override so we can properly remove component range views.
+         */
+        remove: function() {
+            var self    = this;
+
+            if (self.rangeViews)
+            {
+                /* Remove all component View.Range elements, which will also
+                 * destroy the underlying models (Model.Range).
+                 */
+                var events  = '.'+ self.viewName;
+                $.each(self.rangeViews, function() {
+                    var view    = this;
+
+                    // Un-bind event handlers
+                    $(view.el).undelegate('.selected', events,
+                                          self.__rangeMouse);
+
+                    view.remove( (self.ranges === null) );
+                });
+            }
+
+            if (self.$control)
+            {
+                self.$control.unbind('.'+ self.viewName);
+            }
+
+            return Backbone.View.prototype.remove.call(this);
+        },
+
+
         /** @brief  Generate a Model.Note instance with our ranges,
          *          disconnecting the ranges from this instance.
          *
@@ -160,13 +163,13 @@
          *                  originating target;
          */
         _controlClick: function(e) {
-            var self    = this;
-            var $el     = $(e.originalEvent.target);
-            var name    = $el.attr('name');
+            var self    = this,
+                $el     = $(e.originalEvent.target),
+                name    = $el.attr('name');
 
             /*
-            console.log('View.'+ self.viewName +'::_controlClick(): '
-                        +   'name[ '+ name +' ]');
+            console.log('View.%s::_controlClick(): name[ %s ]',
+                        self.viewName, name);
             // */
 
             switch (name)
@@ -185,8 +188,10 @@
         _controlMouse: function(e) {
             var self    = this;
 
-            console.log('View.Selection::_controlMouse(): '
-                        + 'type[ '+ e.type +' ]');
+            /*
+            console.log('View.%s::_controlMouse(): type[ %s ]',
+                        self.viewName, e.type);
+            // */
 
             switch (e.type)
             {
@@ -395,7 +400,9 @@
             // Cache the segments
             self._cacheSegments = segments;
 
-            //console.log(segments);
+            /*
+            console.log(segments);
+            // */
 
             return segments;
         },

@@ -44,7 +44,7 @@
             notes:      null
         },
 
-        initialize: function(spec) {
+        initialize: function() {
             var self        = this;
             var published   = self.get('published');
             var sections    = self.get('sections');
@@ -60,17 +60,21 @@
 
             if ((! sections) || ! (sections instanceof app.Model.Sections))
             {
-                self.set({sections: new app.Model.Sections(sections)});
+                sections = new app.Model.Sections(sections);
+                self.set({sections: sections});
             }
 
             if ((! notes) || ! (notes instanceof app.Model.Notes))
             {
-                var notes   = new app.Model.Notes();
+                notes = new app.Model.Notes();
                 notes.fetch({docId: self.get('url')});
 
                 //self.set({notes: new app.Model.Notes(notes)});
                 self.set({notes: notes}, {silent: true});
             }
+
+            notes.bind('add',    _.bind(self._notesChanged, self));
+            notes.bind('change', _.bind(self._notesChanged, self));
         },
 
         /** @brief  Add a new Model.Note instance to the notes collection.
@@ -80,6 +84,11 @@
             var self    = this;
             var notes   = self.get('notes');
 
+            /*
+            console.log("Model:Doc::addNote()[%s]",
+                        self.cid);                        
+            // */
+
             // If this note has no comments, add a single, empty comment now.
             if (note.commentCount() < 1)
             {
@@ -88,17 +97,37 @@
 
             note.set({docId: self.get('url')});
 
+            /* :NOTE: This will trigger an 'add' event on Model.Comments which
+             *        will be proxied as a 'change' event on Model.Note which
+             *        will be handled by our _notesChanged() method causing the
+             *        Model.Note to be saved.
+             */
             notes.add( note );
-            
+        },
+
+        /**********************************************************************
+         * "Private" methods.
+         *
+         */
+
+        /** @brief  Proxy any events from our notes instance.
+         *  @param  eventName   The event;
+         */
+        _notesChanged: function(note, notes, options) {
+            var self    = this;
+
+            // /*
+            console.log("Model:Doc::_notesChanged()[%s]: note[ %s ]",
+                        self.cid, note.cid);
+            // */
+
+            // For any change, save the note
             note.save();
         }
     });
 
     app.Model.Docs  = Backbone.Collection.extend({
-        model:  app.Model.Document,
-
-        initialize: function() {
-        }
+        model:  app.Model.Document
     });
 
  }).call(this);

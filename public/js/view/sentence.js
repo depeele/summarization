@@ -34,23 +34,12 @@
             'click':                        'expansionToggle'
         },
 
-        initialize: function() {
-            this.$el = $(this.el);
-
-            /*
-            this.$el.bind('sentence:expand',   _.bind(this.expand, this));
-            this.$el.bind('sentence:collapse', _.bind(this.collapse, this));
-            this.$el.bind('sentence:toggle',   _.bind(this.toggle, this));
-            this.$el.bind('click',             _.bind(this.expansionToggle,
-                                                      this));
-            // */
-        },
-
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this;
             var rank    = Math.floor( self.model.get('rank') * 100 );
 
+            self.$el    = $(this.el);
             self.$el.attr('id',   self.model.cid);
             self.$el.attr('rank', rank);
             self.$el.html( self.template( self.model.toJSON() ) );

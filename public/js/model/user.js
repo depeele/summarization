@@ -23,18 +23,11 @@
             name:       'anonymous',
             fullName:   'Anonymous',
             avatarUrl:  'images/avatar.jpg'
-        },
-
-        // id, name, fullName, avatarUrl
-        initialize: function(spec) {
         }
     });
 
     app.Model.Users = Backbone.Collection.extend({
-        model:  app.Model.User,
-
-        initialize: function() {
-        }
+        model:  app.Model.User
     });
 
  }).call(this);
