@@ -16016,9 +16016,6 @@ _.extend(LocalStore.prototype, {
             'cancel':                   '_cancelEdit',
 
             'keyup .edit':              '_keyup',
-            'focus .edit':              '_focusChange',
-            'blur  .edit':              '_focusChange',
-
             'click .buttons button':    '_buttonClick',
 
             'comment:edit':             '_edit',
@@ -16219,31 +16216,6 @@ _.extend(LocalStore.prototype, {
             {
             case $.ui.keyCode.ESCAPE:   // 27
                 self._cancelEdit();
-                break;
-            }
-        },
-
-        /** @brief  Handle 'focus/blur' within the edit area.
-         *  @param  e       The triggering event.
-         */
-        _focusChange: function(e) {
-            var self    = this,
-                opts    = self.options;
-
-            /*
-            console.log("View:Comment::_focusChange()[%s]: type[ %s ]",
-                        self.model.cid, e.type);
-            // */
-
-            switch (e.type)
-            {
-            case 'focusin':
-            case 'focus':
-                break;
-
-            case 'focusout':
-            case 'blur':
-                //self._cancelEdit();
                 break;
             }
         },
