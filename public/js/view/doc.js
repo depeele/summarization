@@ -43,8 +43,7 @@
              *
              * :NOTE: Do NOT bind 'click' since it will be fired following
              *        mousedown when selecting (at least in Chrome).  Instead,
-             *        we bind to 'mousedown' and 'mouseup' and check for a
-             *        click ourselves.
+             *        we bind to 'mousedown' and 'mouseup'.
              */
             $(document).bind( ['mousedown.viewDoc',
                                'mouseup.viewDoc',
@@ -112,35 +111,18 @@
 
             /* :NOTE: Do NOT bind 'click' since it will be fired following
              *        mousedown when selecting (at least in Chrome).  Instead,
-             *        we bind to 'mousedown' and 'mouseup' and check for a
-             *        click ourselves.
+             *        we bind to 'mousedown' and 'mouseup'.
              */
             if (e && (e.type === 'mousedown'))
             {
                 self._mousedownE = e;
                 return;
             }
-            else if (e && (e.type === 'mouseup') && self._mousedownE)
+            else if (e && (e.type === 'mouseup') && (! self._mousedownE))
             {
-                /* Wait a short time to see if this will be part of a click
-                 * event
-                 */
-                var delta   = {
-                    x:  Math.abs( self._mousedownE.pageX - e.pageX ),
-                    y:  Math.abs( self._mousedownE.pageY - e.pageY )
-                }
-                self._mousedownE = null;
-
-                if ( (delta.x <= 5) && (delta.y <= 5) )
-                {
-                    // Seems to be a click -- ignore it
-                    /*
-                    console.log('View::Doc:setSelection()[%s]: ignore click',
-                                self.model.cid);
-                    // */
-                    return;
-                }
+                return;
             }
+            self._mousedownE = null;
 
             /*
             console.log('View::Doc:setSelection()[%s]: type[ %s ] -- ACT',

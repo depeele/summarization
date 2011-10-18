@@ -33,7 +33,17 @@
         events: {
             'mouseenter .range-control':    '_controlMouse',
             'mouseleave .range-control':    '_controlMouse',
-            'click .range-control':         '_controlClick'
+            'click .range-control':         '_controlClick',
+
+            /* Since View.Doc uses 'mouseup' to see if a rangy selection has
+             * been established (in order to create a View.Selection from the
+             * rangy selection) and will remove any existing View.Selection
+             * elements if there is no rangy selection, we need to squelch any
+             * 'mouseup' events within our range-control to ensure that, when
+             * clicked, our view is not destroyed before _controlClikc() can be
+             * invoked to generate a matching View.Note.
+             */
+            'mouseup .range-control':       '_squelch'
         },
 
         /** @brief  Initialize this instance. */
@@ -156,6 +166,13 @@
          * "Private" methods.
          *
          */
+
+        /** @brief  Squelch the event.
+         *  @param  e       The triggering event;
+         */
+        _squelch: function(e) {
+            e.stopPropagation();
+        },
 
         /** @brief  Handle click events on our control element.
          *  @param  e       The triggering event which SHOULD include an

@@ -15124,6 +15124,49 @@ _.extend(LocalStore.prototype, {
  }).call(this);
 /** @file
  *
+ *  Backbone Model for user options.
+ *
+ *  Requires:
+ *      backbone.js
+ */
+/*jslint nomen:false,laxbreak:true,white:false,onevar:false */
+/*global Backbone:false */
+(function() {
+    var app         = this.app || (module ? module.exports : this);
+    if (! app.Model)    { app.Model = {}; }
+
+    var Backbone    = this.Backbone;
+    if (!Backbone && (typeof require !== 'undefined'))
+    {
+        Backbone = require('../backbone.js');
+    }
+
+    app.Model.Options  = Backbone.Model.extend({
+        defaults:   {
+            id:         null,
+            mode:       'production',   // 'production' | 'development'
+            animSpeed:  200,            // Global animation speed
+            quickTag:   true            // Quick tagging?
+        },
+
+        localStorage:   new this.LocalStore('app.options'),
+        sync:           this.LocalStore.prototype.sync,
+
+        initialize: function() {
+            var self    = this,
+                id      = self.get('id');
+            
+            // Make sure we fetch the actual record if it exists.
+            if (id !== null)
+            {
+                self.fetch({id: id});
+            }
+        }
+    });
+
+ }).call(this);
+/** @file
+ *
  *  Backbone View for a paragraph.
  *
  *  Requires:
@@ -15580,7 +15623,17 @@ _.extend(LocalStore.prototype, {
         events: {
             'mouseenter .range-control':    '_controlMouse',
             'mouseleave .range-control':    '_controlMouse',
-            'click .range-control':         '_controlClick'
+            'click .range-control':         '_controlClick',
+
+            /* Since View.Doc uses 'mouseup' to see if a rangy selection has
+             * been established (in order to create a View.Selection from the
+             * rangy selection) and will remove any existing View.Selection
+             * elements if there is no rangy selection, we need to squelch any
+             * 'mouseup' events within our range-control to ensure that, when
+             * clicked, our view is not destroyed before _controlClikc() can be
+             * invoked to generate a matching View.Note.
+             */
+            'mouseup .range-control':       '_squelch'
         },
 
         /** @brief  Initialize this instance. */
@@ -15703,6 +15756,13 @@ _.extend(LocalStore.prototype, {
          * "Private" methods.
          *
          */
+
+        /** @brief  Squelch the event.
+         *  @param  e       The triggering event;
+         */
+        _squelch: function(e) {
+            e.stopPropagation();
+        },
 
         /** @brief  Handle click events on our control element.
          *  @param  e       The triggering event which SHOULD include an
@@ -17182,8 +17242,7 @@ _.extend(LocalStore.prototype, {
              *
              * :NOTE: Do NOT bind 'click' since it will be fired following
              *        mousedown when selecting (at least in Chrome).  Instead,
-             *        we bind to 'mousedown' and 'mouseup' and check for a
-             *        click ourselves.
+             *        we bind to 'mousedown' and 'mouseup'.
              */
             $(document).bind( ['mousedown.viewDoc',
                                'mouseup.viewDoc',
@@ -17251,35 +17310,18 @@ _.extend(LocalStore.prototype, {
 
             /* :NOTE: Do NOT bind 'click' since it will be fired following
              *        mousedown when selecting (at least in Chrome).  Instead,
-             *        we bind to 'mousedown' and 'mouseup' and check for a
-             *        click ourselves.
+             *        we bind to 'mousedown' and 'mouseup'.
              */
             if (e && (e.type === 'mousedown'))
             {
                 self._mousedownE = e;
                 return;
             }
-            else if (e && (e.type === 'mouseup') && self._mousedownE)
+            else if (e && (e.type === 'mouseup') && (! self._mousedownE))
             {
-                /* Wait a short time to see if this will be part of a click
-                 * event
-                 */
-                var delta   = {
-                    x:  Math.abs( self._mousedownE.pageX - e.pageX ),
-                    y:  Math.abs( self._mousedownE.pageY - e.pageY )
-                }
-                self._mousedownE = null;
-
-                if ( (delta.x <= 5) && (delta.y <= 5) )
-                {
-                    // Seems to be a click -- ignore it
-                    /*
-                    console.log('View::Doc:setSelection()[%s]: ignore click',
-                                self.model.cid);
-                    // */
-                    return;
-                }
+                return;
             }
+            self._mousedownE = null;
 
             /*
             console.log('View::Doc:setSelection()[%s]: type[ %s ] -- ACT',
