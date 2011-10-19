@@ -36,15 +36,6 @@ BB_MODELS=model/options.js		\
 	  model/doc.js			\
 	  model/options.js
 
-BB_VIEWS= view/sentence.js		\
-	  view/paragraph.js		\
-	  view/section.js		\
-	  view/range.js			\
-	  view/selection.js		\
-	  view/comment.js		\
-	  view/note.js			\
-	  view/doc.js
-
 SRC_06	= $(SHRED)			\
 	  $(COMMON)			\
 	  jquery.notes.js		\
@@ -61,13 +52,27 @@ SRC_07	= $(SHRED)			\
 
 SRC_08	= $(BACKBONE)			\
 	  $(BB_MODELS)			\
-	  $(BB_VIEWS)			\
+	  view/sentence.js		\
+	  view/paragraph.js		\
+	  view/section.js		\
+	  view/range.js			\
+	  view/selection.js		\
+	  view/comment.js		\
+	  view/note.js			\
+	  view/doc.js			\
 	  $(JQUI)			\
 	  jquery.summary-08.js
 
 SRC_09	= $(BACKBONE)			\
 	  $(BB_MODELS)			\
-	  $(BB_VIEWS)			\
+	  view/sentence.js		\
+	  view/paragraph.js		\
+	  view/section.js		\
+	  view/range-09.js		\
+	  view/selection-09.js		\
+	  view/comment.js		\
+	  view/note-09.js		\
+	  view/doc-09.js		\
 	  $(JQUI)			\
 	  jquery.summary-09.js
 

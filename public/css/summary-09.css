@@ -835,36 +835,6 @@ a {
   -khtml-user-select: none;
   user-select: none;
 }
-.content-pane article section p .sentence .overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-}
-.content-pane article section p .sentence .overlay .range, .content-pane article section p .sentence .overlay .selection, .content-pane article section p .sentence .overlay .note {
-  position: absolute;
-  top: auto;
-  left: auto;
-}
-.content-pane article section p .sentence .overlay .range .before,
-.content-pane article section p .sentence .overlay .selection .before,
-.content-pane article section p .sentence .overlay .note .before,
-.content-pane article section p .sentence .overlay .range .after,
-.content-pane article section p .sentence .overlay .selection .after,
-.content-pane article section p .sentence .overlay .note .after {
-  visibility: hidden;
-}
-.content-pane article section p .sentence .overlay .selection .selected {
-  background-color: #444444;
-  color: #ffffff;
-  padding: 0.1em;
-}
-.content-pane article section p .sentence .overlay .note .selected .segment {
-  position: absolute;
-  display: block;
-  background-color: #d7ebf9;
-  color: #2779aa;
-}
 .content-pane article section p .sentence .rank {
   position: absolute;
   top: -0.2em;
@@ -891,6 +861,17 @@ a {
   -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
   -o-opacity: 1;
   -khtml-opacity: 1;
+}
+.content-pane article section p .sentence .content .word, .content-pane article section p .sentence .content .ws, .content-pane article section p .sentence .content .punc {
+  padding: 0.0625em;
+}
+.content-pane article section p .sentence .content .selection {
+  background-color: #444444;
+  color: #ffffff;
+}
+.content-pane article section p .sentence .content .note {
+  background-color: #d7ebf9;
+  color: #2779aa;
 }
 .content-pane article section p .expanded, .content-pane article section p .expansion {
   font-size: 1em;

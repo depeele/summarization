@@ -234,46 +234,6 @@ a {
           -khtml-user-select: none;
           user-select:        none;
 
-          .overlay {
-            // Make sure .overlay mirrors any styling within .content that
-            // would effect positioning!
-            position:     absolute;
-            top:          0;
-            left:         0;
-            width:        100%;
-
-            .range, .selection, .note {
-                position:   absolute;
-                top:        auto;
-                left:       auto;
-
-                .before, .after {
-                    visibility: hidden;
-                }
-                .selected {
-                }
-            }
-
-            .selection {
-                .selected {
-                    background-color:   @colorSelectedBackground;
-                    color:              @colorSelection;
-                    padding:            0.1em;
-                }
-            }
-
-            .note {
-                .selected {
-                    .segment {
-                      position:         absolute;
-                      display:          block;
-                      background-color: @colorTagBackground;
-                      color:            @colorTag;
-                    }
-                }
-            }
-          }
-
           .rank {
             position:     absolute;
             top:          -0.2em;
@@ -296,8 +256,19 @@ a {
           }
 
           .content {
-            // Make sure .overlay mirrors any styling within .content that
-            // would effect positioning!
+            .word,.ws,.punc {
+              padding:            0.0625em;
+            }
+
+            .selection {
+              background-color:   @colorSelectedBackground;
+              color:              @colorSelection;
+            }
+
+            .note {
+              background-color: @colorTagBackground;
+              color:            @colorTag;
+            }
           }
         }
 

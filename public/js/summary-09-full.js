@@ -15476,8 +15476,15 @@ _.extend(LocalStore.prototype, {
 
     var $           = jQuery.noConflict();
 
-    /** @brief  A View for a single app.Model.Range */
+    /** @brief  A View for a single app.Model.Range
+     *
+     *  For this version, offsets represent the token index within the target
+     *  sentence.
+     */
     app.View.Range  = Backbone.View.extend({
+        el:         {},     /* Do NOT create an element.  This is really a
+                             * pseudo view "overlayed" onto a View.Sentence.
+                             */
         tagName:    'span',
         className:  'range',
 
@@ -15488,83 +15495,20 @@ _.extend(LocalStore.prototype, {
 
             // Locate the target sentence.
             self.$s     = $( '#'+ self.model.get('sentenceId') );
-            self.$el    = $(this.el);
-
-            // ALWAYS include 'range' as a class
-            self.$el.addClass('range');
-            self.$el.attr('id', self.model.cid);
-            self.$el.empty();
-
-            // Store a reference to this view instance
-            self.$el.data('View:Range', self);
-
-            // Locate the content and overlay elements of the target sentence.
-            self.$sOverlay = self.$s.find('.overlay');
-            self.$sContent = self.$s.find('.content');
-
-            /* Move this element into the overlay area of self.$s.  Needed to
-             * ensure that our measurments are within the context of the target
-             * sentence.
-             */
-            self.$sOverlay.append( self.$el );
+            self.$el    = self.$s.find('.content');
 
             /******************************************************************
-             * Break the selection into $before, $selected, and $after.
+             * Mark all tokens from offsetStart to offsetEnd with
              *
              */
-            var strFull     = self.$sContent.text();
-            var start       = self.model.get('offsetStart');
-            var end         = self.model.get('offsetEnd');
-            var strSel      = strFull.substr(start, end - start);
-
-            var $before     = $('<span />')
-                                .addClass('before')
-                                .text( strFull.substr(0, start) )
-                                .appendTo( self.$el );
-            var $selected   = $('<span />')
-                                .addClass('selected')
-                                .appendTo( self.$el );
-            /*
-            var $after      = $('<span />')
-                                .addClass('after')
-                                .text( strFull.substr(end) )
-                                .appendTo( self.$el );
-            // */
-
-            /* Split the text of $selected into individual, measurable elements
-             * to enable others to determine the edges of this range and the
-             * presentation "lines" that comprise it.
-             */
-            var re  = /([\w’']+)(\W+)?/i;
-            var parts;
-            while ( (parts = re.exec(strSel)) )
+            var end     = self.model.get('offsetEnd'),
+                $tokens = self.$el.children(),
+                classes = 'range '+ self.className; // ALWAYS include 'range'
+            for (var idex = self.model.get('offsetStart'); idex <= end; idex++)
             {
-                // Remove this word and word separator
-                strSel = strSel.substr(parts[1].length +
-                                       (parts[2] ? parts[2].length : 0));
-
-                // Create elements for the word and word separator.
-                $('<span />')
-                    .text(parts[1])
-                    .appendTo($selected);
-
-                if (parts[2])
-                {
-                    if ( (strSel.length < 1) && (parts[2] === ' ') )
-                    {
-                        /* The final character is a space.  If we use a space
-                         * the browser (chrome specifically) will NOT properly
-                         * position it.  To ensure positioning, include a
-                         * zero-width non-joiner entity within the final
-                         * element.
-                         */
-                        parts[2] += '&zwnj;';
-                    }
-
-                    $('<span />')
-                        .html(parts[2])
-                        .appendTo($selected);
-                }
+                var $token = $tokens.eq(idex);
+                $token.addClass( classes )
+                      .data('View:Range', self);
             }
 
             return self;
@@ -15579,11 +15523,45 @@ _.extend(LocalStore.prototype, {
 
             if (keepModel !== true) { self.model.destroy(); }
 
-            self.$el.fadeOut( app.options.get('animSpeed'), function() {
-                Backbone.View.prototype.remove.call(self);
-            });
+            /******************************************************************
+             * Unmark all tokens from offsetStart to offsetEnd with
+             *
+             */
+            var end         = self.model.get('offsetEnd'),
+                $tokens     = self.$el.children(),
+                classes = 'range '+ self.className; // ALWAYS include 'range'
+            for (var idex = self.model.get('offsetStart'); idex <= end; idex++)
+            {
+                var $token = $tokens.eq(idex);
+                $token.removeClass( classes )
+                      .removeData('View:Range');
+            }
 
-            return self;
+            return Backbone.View.prototype.remove.call(self);
+        },
+
+        /** @brief  Retrieve the first/starting token in the range.
+         *
+         *  @return The first/starting token.
+         */
+        start: function() {
+            var self    = this,
+                $tokens = self.$el.children(),
+                $token  = $tokens.eq( self.model.get('offsetStart') );
+
+            return $token;
+        },
+
+        /** @brief  Retrieve the last/ending token in the range.
+         *
+         *  @return The last/ending token.
+         */
+        end: function() {
+            var self    = this,
+                $tokens = self.$el.children(),
+                $token  = $tokens.eq( self.model.get('offsetEnd') );
+
+            return $token;
         }
     });
 
@@ -15623,7 +15601,17 @@ _.extend(LocalStore.prototype, {
         events: {
             'mouseenter .range-control':    '_controlMouse',
             'mouseleave .range-control':    '_controlMouse',
-            'click .range-control':         '_controlClick'
+            'click .range-control':         '_controlClick',
+
+            /* Since View.Doc uses 'mouseup' to see if a rangy selection has
+             * been established (in order to create a View.Selection from the
+             * rangy selection) and will remove any existing View.Selection
+             * elements if there is no rangy selection, we need to squelch any
+             * 'mouseup' events within our range-control to ensure that, when
+             * clicked, our view is not destroyed before _controlClikc() can be
+             * invoked to generate a matching View.Note.
+             */
+            'mouseup .range-control':       '_squelch'
         },
 
         /** @brief  Initialize this instance. */
@@ -15655,8 +15643,9 @@ _.extend(LocalStore.prototype, {
             /* Create a "collection" of range views based upon the attached
              * ranges (Model.Ranges).
              */
-            var events       = [ 'mouseenter.'+ self.viewName,
-                                 'mouseleave.'+ self.viewName ].join(' ');
+            var events      = [ 'mouseenter.'+ self.viewName,
+                                'mouseleave.'+ self.viewName ].join(' '),
+                selector    = '.'+ self.className;
 
             self.__rangeMouse = _.bind(self._rangeMouse, self);
             self.rangeViews   = [];
@@ -15669,8 +15658,7 @@ _.extend(LocalStore.prototype, {
                 view.render();
 
                 // Delegate events for this range view
-                $(view.el).delegate('.selected',  events,
-                                    self.__rangeMouse);
+                view.$el.delegate(selector, events, self.__rangeMouse);
 
                 self.rangeViews.push( view );
 
@@ -15698,13 +15686,13 @@ _.extend(LocalStore.prototype, {
                 /* Remove all component View.Range elements, which will also
                  * destroy the underlying models (Model.Range).
                  */
-                var events  = '.'+ self.viewName;
+                var events      = '.'+ self.viewName,
+                    selector    = '.'+ self.className;
                 $.each(self.rangeViews, function() {
                     var view    = this;
 
                     // Un-bind event handlers
-                    $(view.el).undelegate('.selected', events,
-                                          self.__rangeMouse);
+                    view.$el.undelegate(selector, events, self.__rangeMouse);
 
                     view.remove( (self.ranges === null) );
                 });
@@ -15746,6 +15734,13 @@ _.extend(LocalStore.prototype, {
          * "Private" methods.
          *
          */
+
+        /** @brief  Squelch the event.
+         *  @param  e       The triggering event;
+         */
+        _squelch: function(e) {
+            e.stopPropagation();
+        },
 
         /** @brief  Handle click events on our control element.
          *  @param  e       The triggering event which SHOULD include an
@@ -15822,7 +15817,7 @@ _.extend(LocalStore.prototype, {
             switch (e.type)
             {
             case 'mouseenter':
-                var $selected   = $(e.target);
+                var $token  = $(e.target);
                 if (self._pendingLeave)
                 {
                     // Cancel any pending leave
@@ -15830,7 +15825,7 @@ _.extend(LocalStore.prototype, {
                     self._pendingLeave = null;
                 }
 
-                self._showControl( {x: e.pageX, y: e.pageY} );
+                self._showControl( $token, {x: e.pageX, y: e.pageY} );
                 break;
 
             case 'mouseleave':
@@ -15849,49 +15844,64 @@ _.extend(LocalStore.prototype, {
         /** @brief  Given x,y coordinates, determine if they fall within one of 
          *          our bounding segments.  If so, show the control along the
          *          edge of the nearest segment near the provided coordinates.
+         *  @param  $token      The token element near which to show the
+         *                      control;
          *  @param  coords      An object of { x: , y: } coordinates;
          *
          *  @return The offset, or null.
          */
-        _showControl: function( coords ) {
-            var self    = this;
-            var segment = self._inSegment( coords );
+        _showControl: function( $token, coords ) {
+            var self        = this,
+                segment     = $token.offset(),
+                position    = {
+                    my:     'bottom',
+                    at:     'top',
+                    of:     $token,
+                    using:  function(to) {
+                        if (self.$control.data('control-animation'))
+                        {
+                            // Animate positioning
+                            self.$control
+                                .stop()
+                                .animate( to, app.options.get('animSpeed') );
+                        }
+                        else
+                        {
+                            // Direct move
+                            self.$control
+                                .css( to );
+                        }
+                    }
+                };
 
-            if (! segment)  { return null; }
-
-            var offset  = {top:0, left:0};
+            segment.right  = segment.left + $token.outerWidth();
+            segment.bottom = segment.top  + $token.outerHeight();
 
             // Find the nearest horizontal edge
             if ((coords.y - segment.top) >
                     ((segment.bottom - segment.top) / 2))
             {
                 // Nearest the bottom of 'segment'
-                offset.top = segment.bottom;
+                position.my = 'top';
+                position.at = 'bottom';
                 self.$control.removeClass('ui-corner-top')
                              .addClass('ui-corner-bottom');
             }
             else
             {
                 // Nearest the top of 'segment'
-                offset.top = segment.top - self.$control.height();
                 self.$control.removeClass('ui-corner-bottom')
                              .addClass('ui-corner-top');
             }
 
-            // Find the nearest vertical edge
-            var cWidth  = self.$control.outerWidth();
-            offset.left = coords.x - (cWidth / 2);
-            if ((offset.left + cWidth) > segment.right)
-            {
-                offset.left = segment.right - cWidth;
-            }
-            else if (offset.left < segment.left)
-            {
-                offset.left = segment.left;
-            }
-
-            self.$control.show()
-                         .offset( offset );
+            /* Mark whether or not to animate the position based upon the
+             * current visibility of the control, ensure that it is visible,
+             * and perform positioning.
+             */
+            self.$control.data('control-animation',
+                               self.$control.is(':visible'))
+                         .show()
+                         .position( position );
 
             return self;
         },
@@ -15906,125 +15916,6 @@ _.extend(LocalStore.prototype, {
             self.$control.hide();
 
             return self;
-        },
-
-        /** @brief  Retrieve the bounding segments of the selection.
-         *  @param  force   If true, force a re-computation, otherwise, if we
-         *                  have cached values, return them;
-         *
-         *  The bounds of any selection can be defined by 3 contiguous
-         *  segments:
-         *      +------------------------------------------+
-         *      |                                          |
-         *      |          +-----------------------------+ |
-         *      |          | 1                           | |
-         *      | +--------+-----------------------------+ |
-         *      | |          2                           | |
-         *      | +-------------------------+------------+ |
-         *      | |          3              |              |
-         *      | +-------------------------+              |
-         *      |                                          |
-         *      +------------------------------------------+
-         *
-         *  @return The bounding segments, each in the form:
-         *              { top:, right:, bottom:, left: }
-         */
-        _boundingSegments: function(force) {
-            var self            = this;
-
-            if ( (force !== true) && self._cacheSegments)
-            {
-                return self._cacheSegments;
-            }
-
-            var $first          = $( _.first(self.rangeViews).el )
-                                                        .find('.selected'),
-                $last           = $( _.last(self.rangeViews).el )
-                                                        .find('.selected'),
-                $measureStart   = $first.children(':first'),
-                $measureEnd     = $last.children(':last'),
-                segments        = [],
-                segment;
-
-            // Compute segment 1
-            segment         = $measureStart.offset();
-
-            // Account for padding
-            segment.top    -= ($first.outerHeight() - $first.height()) / 2;
-            segment.left   -= ($first.outerWidth()  - $first.width())  / 2;
-
-            segment.bottom  = segment.top  + $measureStart.height();
-            segment.right   = (segment.left + $first.outerWidth()) -
-                             (segment.left - $first.offset().left);
-
-            segments[0] = $.extend({}, segment);
-
-            // Compute segment 3
-            segment = $measureEnd.offset();
-            if (segments[0].top === segment.top)
-            {
-                // Segment 3 === Segment 1 (single segment)
-                segment = segments[0];
-            }
-            else
-            {
-                segment.bottom = segment.top  + $measureStart.height();
-                segment.right  = segment.left;
-                segment.left   = $last.offset().left;
-            }
-
-            segments[2] = $.extend({}, segment);
-
-            // Compute segment 2 (if it exists)
-            segment.top = segment.bottom = segment.right = segment.left = 0;
-            if (segments[0].bottom < segments[2].top)
-            {
-                // There is something between.  Construct a non-empty segment
-                segment.top    = segments[0].bottom;
-                segment.right  = segments[0].right;
-                segment.bottom = segments[2].top;
-                segment.left   = segments[2].left;
-            }
-            segments[1] = $.extend({}, segment);
-
-            // Cache the segments
-            self._cacheSegments = segments;
-
-            /*
-            console.log(segments);
-            // */
-
-            return segments;
-        },
-
-        /** @brief  Determine if the given x,y coordinates fall within one of
-         *          our bounding segments.  If so, return the segment.
-         *  @param  coords      An object of { x: , y: } coordinates;
-         *
-         *  @return The segment the contains { x: , y: } or null.
-         */
-        _inSegment: function( coords ) {
-            var self        = this,
-                segments    = self._boundingSegments(),
-                inSegment   = null;
-
-            /*
-            console.log('View:Selection:_inSegment( '
-                        + coords.x +', '+ coords.y +' )');
-            // */
-
-            $.each(segments, function(idex, segment) {
-
-                if ((coords.x >= segment.left) && (coords.x <= segment.right) &&
-                    (coords.y >= segment.top)  && (coords.y <= segment.bottom))
-                {
-                    // HIT
-                    inSegment = segment;
-                    return false;           // terminate iteration
-                }
-            });
-
-            return inSegment;
         }
     });
 
@@ -16325,7 +16216,6 @@ _.extend(LocalStore.prototype, {
      *  Set 'model' in the constructor options to establish the Model.Note
      *  instance to use for this view.
      */
-    //app.View.Note = $.extend(true, {}, app.View.Selection,
     app.View.Note = app.View.Selection.extend({
         viewName:   'Note',
         className:  'note',
@@ -16454,26 +16344,29 @@ _.extend(LocalStore.prototype, {
                 self._commentAdded(model, self.model);
             });
 
-            // Add click handlers for the range views to set focus 
-            self.__focus      = _.bind(self.focus,      self);
-            self.__reposition = _.bind(self.reposition, self);
+            /* Add click and positioning handlers for the range views to set
+             * focus 
+             */
             if ($.isArray(self.rangeViews))
             {
-                // Add a click delegate for all range views.
-                var events  = 'click.'+ self.viewName;
-                $.each(self.rangeViews, function(idex, view) {
-                    // Bind to mouse events on this range view
-                    $(view.el).delegate('.selected',  events,
-                                        self.__focus);
+                self.__focus      = _.bind(self.focus,      self);
+                self.__reposition = _.bind(self.reposition, self);
 
-                    $(view.el).bind('overlay:position', self.__reposition);
+                // Add a click delegate for all range views.
+                var events      = 'click.'+ self.viewName,
+                    selector    = '.'+ self.className;
+                $.each(self.rangeViews, function(idex, view) {
+                    /* Bind the click and positioning events on the sentence
+                     * associated with this range view
+                     */
+                    view.$s.delegate(selector, events, self.__focus)
+                           .bind('overlay:position',   self.__reposition);
                 });
             }
 
             if (opts.position.of === null)
             {
-                opts.position.of = $( _.first(self.rangeViews).el )
-                                        .find('.selected');
+                opts.position.of = _.first(self.rangeViews).start();
             }
 
             if (opts.hidden !== true)
@@ -16500,12 +16393,14 @@ _.extend(LocalStore.prototype, {
             if ($.isArray(self.rangeViews))
             {
                 // undelegate events we've bound to the range views.
-                var events  = 'click.'+ self.viewName;
+                var events      = 'click.'+ self.viewName,
+                    selector    = '.'+ self.className;
                 $.each(self.rangeViews, function(idex, view) {
-                    // Bind to mouse events on this range view
-                    $(view.el).undelegate('.selected',  events,
-                                          self.__focus);
-                    $(view.el).unbind('overlay:position', self.__reposition);
+                    /* Unbind the click and positioning events from the
+                     * sentence associated with this range view
+                     */
+                    view.$s.undelegate(selector, events, self.__focus)
+                           .unbind('overlay:position',   self.__reposition);
                 });
             }
 
@@ -16806,33 +16701,6 @@ _.extend(LocalStore.prototype, {
 
             if (self._isVisible !== true)   { return; }
 
-            if (true)
-            {
-
-            // (Re)generate our segments.
-            var segments    = self._boundingSegments(true);
-
-            } else {
-
-            self.$el.parent().find('.note').each(function() {
-                var $note   = $(this);
-                if (myId === $note.attr('id'))  { return; }
-
-                var pos     = $note.offset(),
-                    extent  = {
-                    top:    pos.top,
-                    bot:    pos.top  + $note.height()
-                };
-
-                if ( ((newTop >= extent.top) && (newTop <= extent.bot)) ||
-                     ((newBot >= extent.top) && (newBot <= extent.bot)) )
-                {
-                    // Collision!  Adjust Down
-                    to.top += $note.height() + 4;
-                }
-            });
-
-            }
 
             if (opts.noPositionAnimation === true)
             {
@@ -17061,121 +16929,6 @@ _.extend(LocalStore.prototype, {
             {
                 self.model.destroy();
             }
-        },
-
-        /** @brief  Retrieve the bounding segments of the selection.
-         *  @param  force   If true, force a re-computation, otherwise, if we
-         *                  have cached values, return them;
-         *
-         *  The bounds of any selection can be defined by 3 contiguous
-         *  segments:
-         *      +------------------------------------------+
-         *      |                                          |
-         *      |          +-----------------------------+ |
-         *      |          | 1                           | |
-         *      | +--------+-----------------------------+ |
-         *      | |          2                           | |
-         *      | +-------------------------+------------+ |
-         *      | |          3              |              |
-         *      | +-------------------------+              |
-         *      |                                          |
-         *      +------------------------------------------+
-         *
-         *  @return The bounding segments, each in the form:
-         *              { top:, right:, bottom:, left: }
-         */
-        _boundingSegments: function(force) {
-            var self            = this;
-
-            if ( (force !== true) && self._cacheSegments)
-            {
-                return self._cacheSegments;
-            }
-
-            /* Wrap the children of our rangeView elements in '.segment'
-             * wrappers based upon which elements are within the same parent
-             * (and on the same line).
-             */
-            var segments    = [];
-            $.each(self.rangeViews, function() {
-                var $range      = $(this.el),
-                    $selected   = $range.find('.selected'),
-                    base        = $range.offset(),
-                    $segment    = $(),
-                    segment,
-                    lastOffset;
-
-                // Ensure that all our positioning elements are shown
-                $range.children().show();
-
-                // Compensate for any padding on '.selected'
-                base.top += $selected.position().top;
-
-                $selected.children().each(function() {
-                    var $el     = $(this),
-                        offset  = $el.offset();
-                    if ( (! lastOffset) || (offset.top !== lastOffset.top) )
-                    {
-                        // New segment
-                        if ( segment                &&
-                            (segment.width  < 1)    &&
-                            (segment.height < 1) )
-                        {
-                            /* Remove empty segments -- can happen if a
-                             * selection crosses a line boundry.
-                             */
-                            segments.pop();
-                        }
-
-                        // Begin a new segment
-                        segment = {
-                            top:        offset.top  - base.top,
-                            left:       offset.left - base.left,
-                            width:      $el.width(),
-                            height:     $el.height(),
-                            $container: $selected,
-                            $el:        $()
-                        };
-
-                        segments.push( segment );
-                    }
-                    else
-                    {
-                        // Same "line" -- add the width to the current segment
-                        segment.width += $el.width();
-                    }
-
-                    segment.$el = segment.$el.add( $el );
-
-                    lastOffset = offset;
-
-                });
-
-                /* Ensure that positioning elements other than '.selected' are
-                 * hidden.
-                 */
-                $range.find('.before,.after').hide();
-            });
-
-            // Now, wrap each segment in a positioned wrapper
-            $.each(segments, function() {
-                var segment = this;
-
-                $('<span />')
-                    .addClass('segment')
-                    .css({
-                        top:    segment.top,
-                        left:   segment.left,
-                        width:  segment.width,
-                        height: segment.height
-                    })
-                    .append( segment.$el )
-                    .appendTo( segment.$container );
-            });
-
-            self._cacheSegments = segments;
-
-            return segments;
         }
     });
 
@@ -17225,8 +16978,7 @@ _.extend(LocalStore.prototype, {
              *
              * :NOTE: Do NOT bind 'click' since it will be fired following
              *        mousedown when selecting (at least in Chrome).  Instead,
-             *        we bind to 'mousedown' and 'mouseup' and check for a
-             *        click ourselves.
+             *        we bind to 'mousedown' and 'mouseup'.
              */
             $(document).bind( ['mousedown.viewDoc',
                                'mouseup.viewDoc',
@@ -17294,35 +17046,18 @@ _.extend(LocalStore.prototype, {
 
             /* :NOTE: Do NOT bind 'click' since it will be fired following
              *        mousedown when selecting (at least in Chrome).  Instead,
-             *        we bind to 'mousedown' and 'mouseup' and check for a
-             *        click ourselves.
+             *        we bind to 'mousedown' and 'mouseup'.
              */
             if (e && (e.type === 'mousedown'))
             {
                 self._mousedownE = e;
                 return;
             }
-            else if (e && (e.type === 'mouseup') && self._mousedownE)
+            else if (e && (e.type === 'mouseup') && (! self._mousedownE))
             {
-                /* Wait a short time to see if this will be part of a click
-                 * event
-                 */
-                var delta   = {
-                    x:  Math.abs( self._mousedownE.pageX - e.pageX ),
-                    y:  Math.abs( self._mousedownE.pageY - e.pageY )
-                }
-                self._mousedownE = null;
-
-                if ( (delta.x <= 5) && (delta.y <= 5) )
-                {
-                    // Seems to be a click -- ignore it
-                    /*
-                    console.log('View::Doc:setSelection()[%s]: ignore click',
-                                self.model.cid);
-                    // */
-                    return;
-                }
+                return;
             }
+            self._mousedownE = null;
 
             /*
             console.log('View::Doc:setSelection()[%s]: type[ %s ] -- ACT',
@@ -17336,11 +17071,15 @@ _.extend(LocalStore.prototype, {
                 return;
             }
 
+            /**********************************************************
+             * Limit selection to token boundaries
+             * (i.e. word, whitespace, punctuation).
+             */
             var range       = sel.getRangeAt(0),        // rangy range
-                $start      = $(range.startContainer),
-                $end        = $(range.endContainer),
-                $startS     = $start.parents('.sentence'),
-                $endS       = $end.parents('.sentence'),
+                $startT     = $(range.startContainer).parent(),
+                $endT       = $(range.endContainer).parent(),
+                $startS     = $startT.parents('.sentence'),
+                $endS       = $endT.parents('.sentence'),
                 ranges      = new app.Model.Ranges();
 
             if (($startS.length > 0) || ($endS.length > 0))
@@ -17354,6 +17093,7 @@ _.extend(LocalStore.prototype, {
                      * to start with the first sentence.
                      */
                     $startS = self.$s.first();
+                    $startT = $startS.children().first();
                 }
 
                 if ($endS.length < 1)
@@ -17362,109 +17102,89 @@ _.extend(LocalStore.prototype, {
                      * to end with the last sentence.
                      */
                     $endS = self.$s.last();
+                    $endT = $endS.children().last();
                 }
             }
 
-            if ($startS[0] !== $endS[0])
+            /* Determine the contiguous sentences involved ending the range
+             * at the first un-expanded sentence and then create a Model.Range
+             * entry for each sentence between $startS.$startT and $endS.$endT
+             */
+            var end         = self.$s.index( $endS ),
+                $selectable = [],
+                $s;
+            for ( var idex = self.$s.index( $startS );
+                    (idex <= end) && ($s = self.$s.eq(idex) );
+                        idex++)
             {
-                /* This range crosses sentence boundaries.
-                 *
-                 * Determine the contiguous sentences involved ending the range
-                 * at the first un-expanded sentence.
+                if ($s.hasClass('expanded') || $s.hasClass('expansion'))
+                {
+                    $selectable.push( $s );
+                }
+                // NOT expanded.  If we have at least one, stop
+                else if ($selectable.length > 0)
+                {
+                    break;
+                }
+            }
+
+            if ($selectable.length > 0)
+            {
+                /* We have one or more selectable sentences.  See if we
+                 * need to contract the start or end of the range.
                  */
-                var end         = self.$s.index( $endS ),
-                    $selectable = [],
-                    $s;
-                for ( var idex = self.$s.index( $startS );
-                        (idex <= end) && ($s = self.$s.eq(idex) );
-                            idex++)
+                var $newStart   = _.first($selectable),
+                    $newEnd     = _.last($selectable);
+
+                /* If we have a new start, contract the beginning of the
+                 * range to the first character of the first selectable
+                 * sentence.
+                 */
+                if ($newStart[0] !== $startS[0])
                 {
-                    if ($s.hasClass('expanded') || $s.hasClass('expansion'))
-                    {
-                        $selectable.push( $s );
-                    }
-                    else if ($selectable.length > 0)
-                    {
-                        break;
-                    }
+                    $startT = $newStart.find('.content').children().first();
                 }
 
-                if ($selectable.length > 0)
+                /* If we have a new end, contract the end of the range to
+                 * the last character of the last selectable sentence.
+                 */
+                if ($newEnd[0] !== $endS[0])
                 {
-                    /* We have one or more selectable sentences.  See if we
-                     * need to contract the start or end of the range.
-                     */
-
-                    var $newStart   = _.first($selectable),
-                        $newEnd     = _.last($selectable),
-                        $content;
-
-                    /* If we have a new start, contract the beginning of the
-                     * range to the first character of the first selectable
-                     * sentence.
-                     */
-                    if ($newStart[0] !== $startS[0])
-                    {
-                        $content = $newStart.find('.content');
-                        range.setStart($content.get(0).childNodes[0], 0);
-                    }
-
-                    /* If we have a new end, contract the end of the range to
-                     * the last character of the last selectable sentence.
-                     */
-                    if ($newEnd[0] !== $endS[0])
-                    {
-                        $content = $newEnd.find('.content');
-                        range.setEnd($content[0].childNodes[0],
-                                     $content.text().length);
-                    }
-
-                    // Establish the new range.
-                    sel.setSingleRange( range );
-
-                    /* Create an independent app.Model.Range for each involved
-                     * sentence.
-                     */
-                    var last    = $selectable.length;
-                    $.each($selectable, function(idex, s) {
-                        var $s          = $(s),
-                            $content    = $s.find('.content'),
-                            rangeModel  = new app.Model.Range({
-                                            sentenceId: $s.attr('id')
-                                          });
-
-                        if (idex === 0)
-                        {
-                            rangeModel.setStart(range.startOffset);
-
-                            /* Careful!  If there is only one sentence, don't
-                             * loose the ending offset.
-                             */
-                            rangeModel.setEnd((idex >= (last - 1)
-                                                ? range.endOffset
-                                                : $content.text().length) );
-                        }
-                        else if (idex >= (last - 1))
-                        {
-                            rangeModel.setOffsets(0, range.endOffset);
-                        }
-                        else
-                        {
-                            rangeModel.setOffsets(0, $content.text().length);
-                        }
-
-                        ranges.add(rangeModel);
-                    });
+                    $endT = $newEnd.find('.content').children().last();
                 }
-            }
-            // IFF we have start and end sentences...
-            else if (($startS.length > 0) && ($endS.length > 0))
-            {
-                // Use the simple range for this single sentence.
-                ranges.add({
-                    sentenceId: $startS.attr('id'),
-                    offsetStart:range.startOffset,
-                    offsetEnd:  range.endOffset
+
+                /* Create an independent app.Model.Range for each involved
+                 * sentence.
+                 */
+                var last    = $selectable.length;
+                $.each($selectable, function(idex, s) {
+                    var $s          = $(s),
+                        $tokens     = $s.find('.content').children(),
+                        rangeModel  = new app.Model.Range({
+                                        sentenceId: $s.attr('id')
+                                      });
+
+                    if (idex === 0)
+                    {
+                        rangeModel.setStart( $tokens.index($startT) );
+
+                        /* Careful!  If there is only one sentence, don't
+                         * loose the ending offset.
+                         */
+                        rangeModel.setEnd((idex >= (last - 1)
+                                            ? $tokens.index($endT)
+                                            : $tokens.length));
+                    }
+                    else if (idex >= (last - 1))
+                    {
+                        rangeModel.setOffsets(0, $tokens.index($endT));
+                    }
+                    else
+                    {
+                        rangeModel.setOffsets(0, $tokens.length);
+                    }
+
+                    ranges.add(rangeModel);
                 });
             }
 
@@ -17535,8 +17255,7 @@ _.extend(LocalStore.prototype, {
                 fromDex = self.$s.index( $s ),
                 // .overlay .range elements from all FOLLOWING sentences
                 $ranges = self.$s.filter( function(idex) {
-                                            return (idex >= fromDex); })
-                                    .find('.overlay .range');
+                                            return (idex >= fromDex); });
 
             /*
             console.log('View::Doc:_adjustPositions()[%s]: %d ranges',

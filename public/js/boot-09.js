@@ -108,17 +108,18 @@ if (app.options.mode === 'development')
         'view.section': { src: 'js/view/section.js',
                           req: ['model.section', 'view.paragraph']},
 
-        'view.range':   { src: 'js/view/range.js',
+        'view.range':   { src: 'js/view/range-09.js',
                           req: ['model.range', 'rangy']},
         'view.selection':
-                        { src: 'js/view/selection.js', req: ['view.range']},
+                        { src: 'js/view/selection-09.js',
+                          req: ['view.range']},
         'view.comment': { src: 'js/view/comment.js',
                           req: ['model.comment']},
-        'view.note':    { src: 'js/view/note.js',
+        'view.note':    { src: 'js/view/note-09.js',
                           req: ['view.selection', 'view.comment',
                                 'model.note']},
 
-        'view.doc':     { src: 'js/view/doc.js',
+        'view.doc':     { src: 'js/view/doc-09.js',
                           req: ['model.doc',
                                 'view.section', 'view.selection', 'view.note']},
 
