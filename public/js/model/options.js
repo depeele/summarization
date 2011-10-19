@@ -25,7 +25,7 @@
             quickTag:   true            // Quick tagging?
         },
 
-        localStorage:   new this.LocalStore('app.options'),
+        localStorage:   new this.LocalStore( app.options.table.options ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {

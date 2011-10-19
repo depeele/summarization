@@ -14,6 +14,10 @@ var app             = this.app = (this.app || {options:{},  Model:{},
                                                View:{},     Controller:{},
                                                Helper:{}});
 app.options.mode    = 'development';
+app.options.table   = {
+    options:'app.options',
+    notes:  'app.notes.08'
+};
 
 /** @brief  Boot the application once all dependencies are loaded. */
 function bootApp()
