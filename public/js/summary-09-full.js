@@ -14525,7 +14525,7 @@ _.extend(LocalStore.prototype, {
             quickTag:   true            // Quick tagging?
         },
 
-        localStorage:   new this.LocalStore('app.options'),
+        localStorage:   new this.LocalStore( app.options.table.options ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {
@@ -14769,7 +14769,7 @@ _.extend(LocalStore.prototype, {
             comments:   null
         },
 
-        localStorage:   new this.LocalStore('app.notes'),
+        localStorage:   new this.LocalStore( app.options.table.notes ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {
@@ -15149,7 +15149,7 @@ _.extend(LocalStore.prototype, {
             quickTag:   true            // Quick tagging?
         },
 
-        localStorage:   new this.LocalStore('app.options'),
+        localStorage:   new this.LocalStore( app.options.table.options ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {
