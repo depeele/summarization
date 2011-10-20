@@ -295,7 +295,7 @@
                             // Animate positioning
                             self.$control
                                 .stop()
-                                .animate( to, app.options.get('animSpeed') );
+                                .animate( to, app.config.animSpeed );
                         }
                         else
                         {

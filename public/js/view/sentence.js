@@ -60,7 +60,7 @@
             var self    = this;
             if (! this.$el.hasClass('expanded'))
             {
-                this.$el.addClass('expanded', app.options.get('animSpeed'),
+                this.$el.addClass('expanded', app.config.animSpeed,
                                   function() {
                     self.$el.trigger('sentence:expanded');
                 });
@@ -72,7 +72,7 @@
             var self    = this;
             if (this.$el.hasClass('expanded'))
             {
-                this.$el.removeClass('expanded', app.options.get('animSpeed'),
+                this.$el.removeClass('expanded', app.config.animSpeed,
                                      function() {
                     self.$el.trigger('sentence:collapsed');
                 });
@@ -97,7 +97,7 @@
             var self    = this;
             if (! this.$el.hasClass('expansion'))
             {
-                this.$el.addClass('expansion', app.options.get('animSpeed'),
+                this.$el.addClass('expansion', app.config.animSpeed,
                                   function() {
                     self.$el.trigger('sentence:expansionExpanded');
                 });
@@ -114,7 +114,7 @@
             var self    = this;
             if (this.$el.hasClass('expansion'))
             {
-                this.$el.removeClass('expansion', app.options.get('animSpeed'),
+                this.$el.removeClass('expansion', app.config.animSpeed,
                                      function() {
                     self.$el.trigger('sentence:expansionCollapsed');
                 });

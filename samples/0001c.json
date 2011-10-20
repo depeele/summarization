@@ -242,7 +242,7 @@
             {"id":"t215","type":"ws",  "content":" "},
             {"id":"t216","type":"word","content":"possible"},
             {"id":"t217","type":"ws",  "content":" "},
-            {"id":"t218","type":"punc","content":"– "},
+            {"id":"t218","type":"punc","content":"–"},
             {"id":"t219","type":"ws",  "content":" "},
             {"id":"t220","type":"word","content":"trust"},
             {"id":"t221","type":"ws",  "content":" "},

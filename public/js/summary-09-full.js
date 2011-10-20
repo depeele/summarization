@@ -14520,12 +14520,10 @@ _.extend(LocalStore.prototype, {
     app.Model.Options  = Backbone.Model.extend({
         defaults:   {
             id:         null,
-            mode:       'production',   // 'production' | 'development'
-            animSpeed:  200,            // Global animation speed
             quickTag:   true            // Quick tagging?
         },
 
-        localStorage:   new this.LocalStore( app.options.table.options ),
+        localStorage:   new this.LocalStore( app.config.table.options.name ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {
@@ -14769,7 +14767,7 @@ _.extend(LocalStore.prototype, {
             comments:   null
         },
 
-        localStorage:   new this.LocalStore( app.options.table.notes ),
+        localStorage:   new this.LocalStore( app.config.table.notes.name ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {
@@ -15144,12 +15142,10 @@ _.extend(LocalStore.prototype, {
     app.Model.Options  = Backbone.Model.extend({
         defaults:   {
             id:         null,
-            mode:       'production',   // 'production' | 'development'
-            animSpeed:  200,            // Global animation speed
             quickTag:   true            // Quick tagging?
         },
 
-        localStorage:   new this.LocalStore( app.options.table.options ),
+        localStorage:   new this.LocalStore( app.config.table.options.name ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {
@@ -15227,7 +15223,7 @@ _.extend(LocalStore.prototype, {
             var self    = this;
             if (! this.$el.hasClass('expanded'))
             {
-                this.$el.addClass('expanded', app.options.get('animSpeed'),
+                this.$el.addClass('expanded', app.config.animSpeed,
                                   function() {
                     self.$el.trigger('sentence:expanded');
                 });
@@ -15239,7 +15235,7 @@ _.extend(LocalStore.prototype, {
             var self    = this;
             if (this.$el.hasClass('expanded'))
             {
-                this.$el.removeClass('expanded', app.options.get('animSpeed'),
+                this.$el.removeClass('expanded', app.config.animSpeed,
                                      function() {
                     self.$el.trigger('sentence:collapsed');
                 });
@@ -15264,7 +15260,7 @@ _.extend(LocalStore.prototype, {
             var self    = this;
             if (! this.$el.hasClass('expansion'))
             {
-                this.$el.addClass('expansion', app.options.get('animSpeed'),
+                this.$el.addClass('expansion', app.config.animSpeed,
                                   function() {
                     self.$el.trigger('sentence:expansionExpanded');
                 });
@@ -15281,7 +15277,7 @@ _.extend(LocalStore.prototype, {
             var self    = this;
             if (this.$el.hasClass('expansion'))
             {
-                this.$el.removeClass('expansion', app.options.get('animSpeed'),
+                this.$el.removeClass('expansion', app.config.animSpeed,
                                      function() {
                     self.$el.trigger('sentence:expansionCollapsed');
                 });
@@ -15863,7 +15859,7 @@ _.extend(LocalStore.prototype, {
                             // Animate positioning
                             self.$control
                                 .stop()
-                                .animate( to, app.options.get('animSpeed') );
+                                .animate( to, app.config.animSpeed );
                         }
                         else
                         {
@@ -16404,7 +16400,7 @@ _.extend(LocalStore.prototype, {
                 });
             }
 
-            self.$el.slideUp( app.options.get('animSpeed'), function() {
+            self.$el.slideUp( app.config.animSpeed, function() {
                 self.$buttons.button('destroy');
                 app.View.Selection.prototype.remove.call(self);
             });
@@ -16449,7 +16445,7 @@ _.extend(LocalStore.prototype, {
             var zIndex  = parseInt(self.$el.css('z-index'), 10);
             self.$el
                     .css('z-index', zIndex + 1) // pop to the top immediately...
-                    .addClass('note-active', app.options.get('animSpeed'),
+                    .addClass('note-active', app.config.animSpeed,
                               function() {
                                 // ...then remove the hard z-index and let
                                 //    the CSS take over.
@@ -16506,7 +16502,7 @@ _.extend(LocalStore.prototype, {
             self.$body.find('.comment').trigger('cancel');
 
             // And close ourselves up
-            self.$el.removeClass('note-active', app.options.get('animSpeed'),
+            self.$el.removeClass('note-active', app.config.animSpeed,
                                  function() {
                                     self.deactivating = false;
                                     if ($.isFunction(cb))   { cb.call(self); }
@@ -16529,7 +16525,7 @@ _.extend(LocalStore.prototype, {
             console.log("View:Note::show()[%s]", self.model.cid);
             // */
 
-            self.$el.fadeIn( app.options.get('animSpeed'), function() {
+            self.$el.fadeIn( app.config.animSpeed, function() {
                 self._isVisible = true;
                 self.reposition();
 
@@ -16553,7 +16549,7 @@ _.extend(LocalStore.prototype, {
             console.log("View:Note::hide()[%s]", self.model.cid);
             // */
 
-            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+            self.$el.fadeOut( app.config.animSpeed, function() {
                 self._isVisible = false;
 
                 if ($.isFunction(cb))   { cb.apply(self); }
@@ -16720,7 +16716,7 @@ _.extend(LocalStore.prototype, {
                 // Mark a new position target and begin animation
                 self._isPositioning = true;
                 self.$el.animate( {top: to.top}, {
-                    duration: app.options.get('animSpeed'),
+                    duration: app.config.animSpeed,
                     complete: function() {
                         self._isPositioning = false;
                     }
@@ -19801,13 +19797,7 @@ $.widget("ui.checkbox", {
 var app     = window.app;   // From boot-08.js
 
 // Retrieve application-wide options
-var options = new app.Model.Options({id: 'mine'});
-if (options.get('mode') !== app.options.mode)
-{
-    // Mix-in any mode override set in boot-08.js
-    options.set({'mode': app.options.mode}).save();
-}
-app.options = options;
+app.options = new app.Model.Options({id: app.config.table.options.id});
 
 /** @brief  The Summary class */
 $.Summary = Backbone.View.extend({
@@ -20287,13 +20277,7 @@ $.Summary = Backbone.View.extend({
 var app     = window.app;   // From boot-08.js
 
 // Retrieve application-wide options
-var options = new app.Model.Options({id: 'mine'});
-if (options.get('mode') !== app.options.mode)
-{
-    // Mix-in any mode override set in boot-08.js
-    options.set({'mode': app.options.mode}).save();
-}
-app.options = options;
+app.options = new app.Model.Options({id: app.config.table.options.id});
 
 /** @brief  The Summary class */
 $.Summary = Backbone.View.extend({

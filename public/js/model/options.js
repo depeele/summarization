@@ -20,12 +20,10 @@
     app.Model.Options  = Backbone.Model.extend({
         defaults:   {
             id:         null,
-            mode:       'production',   // 'production' | 'development'
-            animSpeed:  200,            // Global animation speed
             quickTag:   true            // Quick tagging?
         },
 
-        localStorage:   new this.LocalStore( app.options.table.options ),
+        localStorage:   new this.LocalStore( app.config.table.options.name ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {

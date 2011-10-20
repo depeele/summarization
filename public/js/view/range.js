@@ -117,7 +117,7 @@
 
             if (keepModel !== true) { self.model.destroy(); }
 
-            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+            self.$el.fadeOut( app.config.animSpeed, function() {
                 Backbone.View.prototype.remove.call(self);
             });
 

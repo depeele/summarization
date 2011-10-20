@@ -10,13 +10,16 @@
 (function() {
 
 // Define the application object
-var app             = this.app = (this.app || {options:{},  Model:{},
-                                               View:{},     Controller:{},
-                                               Helper:{}});
-app.options.mode    = 'development';
-app.options.table   = {
-    options:'app.options',
-    notes:  'app.notes.09'
+var app             = this.app = (this.app || {config:{},     options:{},
+                                               Model:{},      View:{},
+                                               Controller:{}, Helper:{}});
+app.config  = {
+    mode:       'development',
+    animSpeed:  200,
+    table:      {
+        options:    {name:'app.options', id:'mine'},
+        notes:      {name:'app.notes.09'}
+    }
 };
 
 /** @brief  Boot the application once all dependencies are loaded. */
@@ -24,7 +27,7 @@ function bootApp()
 {
     var $       = jQuery.noConflict();
 
-    app.options.docId = (window.location.search
+    app.config.docId = (window.location.search
                             ? window.location.search
                                 .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.json|\.xml)?$/, '$1')
                             : '0001c');
@@ -35,7 +38,7 @@ function bootApp()
          */
         app.main = new $.Summary({
             el:     $('#app-Summary'),
-            doc:    'samples/'+ app.options.docId +'.json'
+            doc:    'samples/'+ app.config.docId +'.json'
         });
     });
 }
@@ -44,7 +47,7 @@ function bootApp()
  * Load dependencies and, once loading is complete, invoke bootApp().
  *
  */
-if (app.options.mode === 'development')
+if (app.config.mode === 'development')
 {
     // Development dependencies
     Req.assets = {

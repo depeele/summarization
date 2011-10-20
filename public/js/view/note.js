@@ -207,7 +207,7 @@
                 });
             }
 
-            self.$el.slideUp( app.options.get('animSpeed'), function() {
+            self.$el.slideUp( app.config.animSpeed, function() {
                 self.$buttons.button('destroy');
                 app.View.Selection.prototype.remove.call(self);
             });
@@ -252,7 +252,7 @@
             var zIndex  = parseInt(self.$el.css('z-index'), 10);
             self.$el
                     .css('z-index', zIndex + 1) // pop to the top immediately...
-                    .addClass('note-active', app.options.get('animSpeed'),
+                    .addClass('note-active', app.config.animSpeed,
                               function() {
                                 // ...then remove the hard z-index and let
                                 //    the CSS take over.
@@ -309,7 +309,7 @@
             self.$body.find('.comment').trigger('cancel');
 
             // And close ourselves up
-            self.$el.removeClass('note-active', app.options.get('animSpeed'),
+            self.$el.removeClass('note-active', app.config.animSpeed,
                                  function() {
                                     self.deactivating = false;
                                     if ($.isFunction(cb))   { cb.call(self); }
@@ -332,7 +332,7 @@
             console.log("View:Note::show()[%s]", self.model.cid);
             // */
 
-            self.$el.fadeIn( app.options.get('animSpeed'), function() {
+            self.$el.fadeIn( app.config.animSpeed, function() {
                 self._isVisible = true;
                 self.reposition();
 
@@ -356,7 +356,7 @@
             console.log("View:Note::hide()[%s]", self.model.cid);
             // */
 
-            self.$el.fadeOut( app.options.get('animSpeed'), function() {
+            self.$el.fadeOut( app.config.animSpeed, function() {
                 self._isVisible = false;
 
                 if ($.isFunction(cb))   { cb.apply(self); }
@@ -550,7 +550,7 @@
                 // Mark a new position target and begin animation
                 self._isPositioning = true;
                 self.$el.animate( {top: to.top}, {
-                    duration: app.options.get('animSpeed'),
+                    duration: app.config.animSpeed,
                     complete: function() {
                         self._isPositioning = false;
                     }

@@ -13,13 +13,7 @@
 var app     = window.app;   // From boot-08.js
 
 // Retrieve application-wide options
-var options = new app.Model.Options({id: 'mine'});
-if (options.get('mode') !== app.options.mode)
-{
-    // Mix-in any mode override set in boot-08.js
-    options.set({'mode': app.options.mode}).save();
-}
-app.options = options;
+app.options = new app.Model.Options({id: app.config.table.options.id});
 
 /** @brief  The Summary class */
 $.Summary = Backbone.View.extend({

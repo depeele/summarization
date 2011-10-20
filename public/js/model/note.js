@@ -42,7 +42,7 @@
             comments:   null
         },
 
-        localStorage:   new this.LocalStore( app.options.table.notes ),
+        localStorage:   new this.LocalStore( app.config.table.notes.name ),
         sync:           this.LocalStore.prototype.sync,
 
         initialize: function() {
