@@ -98,7 +98,12 @@
  <script id='template-sentence' type='text/template'
   ><span class="rank"><%= Math.floor(rank * 100) %></span
   ><span class="content"><% _.each(tokens, function(token) {
-  	%><span class="<%= token.type %>"><%= token.content %></span><%
+  	%><span class="<%= token.type %>"<%
+        if (token.value && (token.value.length > 0))
+        {
+            %> data-value="<%= token.value %>"<%
+        }
+    %>><%= token.content %></span><%
   }); %></span></script>
 
  <script id='template-selection' type='text/template'>

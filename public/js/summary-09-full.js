@@ -17074,7 +17074,9 @@ _.extend(LocalStore.prototype, {
             'sentence:expanded .sentence':          '_adjustPositions',
             'sentence:collapsed .sentence':         '_adjustPositions',
             'sentence:expansionExpanded .sentence': '_adjustPositions',
-            'sentence:expansionCollapsed .sentence':'_adjustPositions'
+            'sentence:expansionCollapsed .sentence':'_adjustPositions',
+
+            'click header .keyword':                '_keywordClick'
         },
 
         initialize: function() {
@@ -17354,6 +17356,49 @@ _.extend(LocalStore.prototype, {
             // */
         },
 
+        /** @brief  Expand all sentences containing the target keyword.
+         *  @param  keyword The target keyword;
+         *
+         */
+        keywordExpand: function(keyword) {
+            var self    = this,
+                opts    = self.options;
+                $tokens = self.$s.find('.word[data-value="'+ keyword +'"]');
+
+            $tokens.each(function() {
+                var $token  = $(this),
+                    $s      = $token.parents('.sentence:first');
+
+                $token.addClass('highlight');
+                $s.addClass('keyworded', app.config.animSpeed);
+            });
+        },
+
+        /** @brief  Collapse sentences that are only presented due to a
+         *          contained keyword.
+         *  @param  keyword The target keyword;
+         *
+         */
+        keywordCollapse: function(keyword) {
+            var self    = this,
+                opts    = self.options,
+                $tokens = self.$s.find('.word[data-value="'+ keyword +'"]');
+
+            $tokens.each(function() {
+                var $token  = $(this),
+                    $s      = $token.parents('.sentence:first');
+
+                $token.removeClass('highlight');
+
+                var nLeft   = $s.find('.word.highlight').length;
+                if (nLeft < 1)
+                {
+                    // No more keywords in this sentence
+                    $s.removeClass('keyworded', app.config.animSpeed);
+                }
+            });
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
@@ -17404,6 +17449,28 @@ _.extend(LocalStore.prototype, {
             }
 
             return self;
+        },
+
+        /** @brief  Expand all sentences containing the target keyword.
+         *  @param  e       The triggering event;
+         *
+         */
+        _keywordClick: function(e) {
+            var self    = this,
+                opts    = self.options,
+                $el     = $(e.target),
+                keyword = $el.attr('value');
+
+            if ($el.hasClass('highlight'))
+            {
+                self.keywordCollapse( keyword );
+                $el.removeClass('highlight');
+            }
+            else
+            {
+                $el.addClass('highlight');
+                self.keywordExpand( keyword );
+            }
         },
 
         /** @brief  A note has been added to our underlying model.
@@ -19951,7 +20018,7 @@ $.Summary = Backbone.View.extend({
             min:        -1,         // If -1,-1, dynamically determine the
             max:        -1          //  threshold based upon 'showSentences'
         },
-        filter:         'normal',   // The initial filter (tagged,starred)
+        filter:         'normal',   // The initial filter (normal,tagged)
         
         showSentences:  5           /* The minimum number of sentences to
                                      * present
@@ -20130,15 +20197,7 @@ $.Summary = Backbone.View.extend({
                 /* Show ALL sentences containing one or more tags regardless of
                  * threshold
                  */
-                self.$s.filter( ':has(.tagged)' )
-                        .addClass('toHighlight')
-                        .removeClass('noHighlight');
-            }
-
-            if (opts.filter.indexOf('starred') >= 0)
-            {
-                // Show ALL starred sentences regardless of threshold
-                self.$s.filter( '.starred' )
+                self.$s.filter( ':has(.note)' )
                         .addClass('toHighlight')
                         .removeClass('noHighlight');
             }
@@ -20344,7 +20403,7 @@ $.Summary = Backbone.View.extend({
     },
 
     /** @brief  Change the filter value.
-     *  @param  filter      The new value ('normal', 'tagged', 'starred').
+     *  @param  filter      The new value ('normal', 'tagged').
      *  @param  noRefresh   If true, do NOT perform a refresh.
      *
      *  @return this for a fluent interface.
@@ -20365,10 +20424,6 @@ $.Summary = Backbone.View.extend({
                 $buttons.button('disable');
                 break;
 
-            case 'starred':
-                $buttons.button('disable');
-                break;
-
             case 'normal':
             default:
                 filter = 'normal';
@@ -20386,7 +20441,7 @@ $.Summary = Backbone.View.extend({
 
         // Set the filter value
         opts.filter = filter;
-        self.el.removeClass('starred tagged normal')
+        self.el.removeClass('tagged normal')
                     .addClass(filters.join(' '));
 
         if (noRefresh !== true)
@@ -20431,7 +20486,7 @@ $.Summary = Backbone.View.extend({
             min:        -1,         // If -1,-1, dynamically determine the
             max:        -1          //  threshold based upon 'showSentences'
         },
-        filter:         'normal',   // The initial filter (tagged,starred)
+        filter:         'normal',   // The initial filter (normal,tagged)
         
         showSentences:  5           /* The minimum number of sentences to
                                      * present
@@ -20610,15 +20665,7 @@ $.Summary = Backbone.View.extend({
                 /* Show ALL sentences containing one or more tags regardless of
                  * threshold
                  */
-                self.$s.filter( ':has(.tagged)' )
-                        .addClass('toHighlight')
-                        .removeClass('noHighlight');
-            }
-
-            if (opts.filter.indexOf('starred') >= 0)
-            {
-                // Show ALL starred sentences regardless of threshold
-                self.$s.filter( '.starred' )
+                self.$s.filter( ':has(.note)' )
                         .addClass('toHighlight')
                         .removeClass('noHighlight');
             }
@@ -20824,7 +20871,7 @@ $.Summary = Backbone.View.extend({
     },
 
     /** @brief  Change the filter value.
-     *  @param  filter      The new value ('normal', 'tagged', 'starred').
+     *  @param  filter      The new value ('normal', 'tagged').
      *  @param  noRefresh   If true, do NOT perform a refresh.
      *
      *  @return this for a fluent interface.
@@ -20845,10 +20892,6 @@ $.Summary = Backbone.View.extend({
                 $buttons.button('disable');
                 break;
 
-            case 'starred':
-                $buttons.button('disable');
-                break;
-
             case 'normal':
             default:
                 filter = 'normal';
@@ -20866,7 +20909,7 @@ $.Summary = Backbone.View.extend({
 
         // Set the filter value
         opts.filter = filter;
-        self.el.removeClass('starred tagged normal')
+        self.el.removeClass('tagged normal')
                     .addClass(filters.join(' '));
 
         if (noRefresh !== true)

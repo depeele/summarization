@@ -753,6 +753,10 @@ a {
   cursor: pointer;
   border: 1px solid #ffffff;
 }
+.content-pane header .keywords .keyword.highlight {
+  border-color: #fcdab2;
+  color: #f6931f;
+}
 .content-pane header .keywords .keyword:before {
   content: ' / ';
 }
@@ -873,7 +877,7 @@ a {
   background-color: #d7ebf9;
   color: #2779aa;
 }
-.content-pane article section p .expanded, .content-pane article section p .expansion {
+.content-pane article section p .expanded, .content-pane article section p .expansion, .content-pane article section p .keyworded {
   font-size: 1em;
   line-height: 1.2em;
   /* Make an expanded sentence selectable */
@@ -883,9 +887,14 @@ a {
   -khtml-user-select: text;
   user-select: text;
 }
-.content-pane article section p .expanded {
+.content-pane article section p .expanded, .content-pane article section p .keyworded {
   cursor: text;
   color: #444444;
+}
+.content-pane article section p .keyworded .highlight {
+  border: none;
+  color: #f6931f !important;
+  background-color: none !important;
 }
 .content-pane article section p:hover {
   box-shadow: 2px 0px 4px #c4c4c4;
@@ -895,7 +904,7 @@ a {
 .content-pane article section p:hover .controls {
   visibility: visible;
 }
-.content-pane article section p:hover .expanded {
+.content-pane article section p:hover .expanded, .content-pane article section p:hover .keyworded {
   color: #000000;
 }
 .content-pane article section p:hover .expansion {

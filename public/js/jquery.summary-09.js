@@ -28,7 +28,7 @@ $.Summary = Backbone.View.extend({
             min:        -1,         // If -1,-1, dynamically determine the
             max:        -1          //  threshold based upon 'showSentences'
         },
-        filter:         'normal',   // The initial filter (tagged,starred)
+        filter:         'normal',   // The initial filter (normal,tagged)
         
         showSentences:  5           /* The minimum number of sentences to
                                      * present
@@ -207,15 +207,7 @@ $.Summary = Backbone.View.extend({
                 /* Show ALL sentences containing one or more tags regardless of
                  * threshold
                  */
-                self.$s.filter( ':has(.tagged)' )
-                        .addClass('toHighlight')
-                        .removeClass('noHighlight');
-            }
-
-            if (opts.filter.indexOf('starred') >= 0)
-            {
-                // Show ALL starred sentences regardless of threshold
-                self.$s.filter( '.starred' )
+                self.$s.filter( ':has(.note)' )
                         .addClass('toHighlight')
                         .removeClass('noHighlight');
             }
@@ -421,7 +413,7 @@ $.Summary = Backbone.View.extend({
     },
 
     /** @brief  Change the filter value.
-     *  @param  filter      The new value ('normal', 'tagged', 'starred').
+     *  @param  filter      The new value ('normal', 'tagged').
      *  @param  noRefresh   If true, do NOT perform a refresh.
      *
      *  @return this for a fluent interface.
@@ -442,10 +434,6 @@ $.Summary = Backbone.View.extend({
                 $buttons.button('disable');
                 break;
 
-            case 'starred':
-                $buttons.button('disable');
-                break;
-
             case 'normal':
             default:
                 filter = 'normal';
@@ -463,7 +451,7 @@ $.Summary = Backbone.View.extend({
 
         // Set the filter value
         opts.filter = filter;
-        self.el.removeClass('starred tagged normal')
+        self.el.removeClass('tagged normal')
                     .addClass(filters.join(' '));
 
         if (noRefresh !== true)

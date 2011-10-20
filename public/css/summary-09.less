@@ -161,6 +161,11 @@ a {
         .inlineBlock();
         cursor:     pointer;
         border:     1px solid @colorArticleBackground;
+
+        &.highlight {
+          border-color: lighten(@colorKeyword, 30%);
+          color:        @colorKeyword;
+        }
       }
       .keyword:before {
         content:      ' / ';
@@ -273,7 +278,8 @@ a {
         }
 
         .expanded,
-        .expansion {
+        .expansion,
+        .keyworded {
           font-size:    1em;
           line-height:  1.2em;
 
@@ -283,9 +289,17 @@ a {
           -khtml-user-select: text;
           user-select:        text;
         }
-        .expanded {
+        .expanded,
+        .keyworded {
           cursor:       text;
           color:        @colorText;
+        }
+        .keyworded {
+          .highlight {
+            border:           none;
+            color:            @colorKeyword !important;
+            background-color: none !important;
+          }
         }
 
         &:hover {
@@ -294,7 +308,8 @@ a {
             visibility: visible;
           }
 
-          .expanded {
+          .expanded,
+          .keyworded {
             color:      @colorTextDarkest;
           }
           .expansion {
