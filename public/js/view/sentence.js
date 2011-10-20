@@ -128,21 +128,9 @@
          *  @param  e   The triggering event;
          */
         expansionToggle: function(e) {
-            if (e && (e.type === 'click'))
-            {
-                /* Stop propagation of THIS event to ensure our parent
-                 * paragraph doesn't expand the paragraph due to this "click".
-                 */
-                e.stopPropagation();
-
-                /* To ensure others respond properly to this click, trigger a
-                 * secondary "click" event at the document level.
-                 */
-                $(document).trigger('click');
-            }
-
             if (this.$el.hasClass('expanded'))
             {
+                // Ignore a click in this expanded sentence.
                 return;
             }
 

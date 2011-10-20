@@ -15291,21 +15291,9 @@ _.extend(LocalStore.prototype, {
          *  @param  e   The triggering event;
          */
         expansionToggle: function(e) {
-            if (e && (e.type === 'click'))
-            {
-                /* Stop propagation of THIS event to ensure our parent
-                 * paragraph doesn't expand the paragraph due to this "click".
-                 */
-                e.stopPropagation();
-
-                /* To ensure others respond properly to this click, trigger a
-                 * secondary "click" event at the document level.
-                 */
-                $(document).trigger('click');
-            }
-
             if (this.$el.hasClass('expanded'))
             {
+                // Ignore a click in this expanded sentence.
                 return;
             }
 
@@ -15377,15 +15365,26 @@ _.extend(LocalStore.prototype, {
          */
         toggle: function(e) {
             var self    = this,
-                $s      = self.$el.find('.sentence:not(.expanded)');
+                $s      = $(e.target).parents('.sentence');
+
+            if ($s.hasClass('expanded'))
+            {
+                // Ignore clicks within an expanded sentence.
+                return;
+            }
+
+            /* This was NOT a click on an expanded sentence so grab all
+             * sentences that are NOT 'expanded'
+             */
+            $s = self.$el.find('.sentence:not(.expanded)');
             if ($s.filter('.expansion').length > 0)
             {
-                // Some are expansions, collapse all
+                // There are some sentences that are expansions -- collapse all
                 $s.trigger('sentence:expansionCollapse');
             }
             else
             {
-                // There are no expansions, expand all
+                // There are no sentences that are expansions -- expand all
                 $s.trigger('sentence:expansionExpand');
             }
 
@@ -15946,6 +15945,9 @@ _.extend(LocalStore.prototype, {
             'cancel':                   '_cancelEdit',
 
             'keyup .edit':              '_keyup',
+            'focus .edit':              '_focusChange',
+            'blur  .edit':              '_focusChange',
+
             'click .buttons button':    '_buttonClick',
 
             'comment:edit':             '_edit',
@@ -15970,14 +15972,16 @@ _.extend(LocalStore.prototype, {
             self.$el.html( self.template( self.model.toJSON() ) );
 
             // Store a reference to this view instance
-            self.$el.data('View:Doc', self);
+            self.$el.data('View:Comment', self);
 
             self.$created     = self.$el.find('.created');
             self.$text        = self.$el.find('.text');
             self.$editArea    = self.$el.find('.edit');
             self.$edit        = self.$editArea.find('textarea');
             self.$buttons     = self.$el.find('.buttons button');
-            self.$mainButtons = self.$el.find('.buttons:last');
+
+            self.$editButtons = self.$el.find('.buttons.editing');
+            self.$viewButtons = self.$el.find('.buttons.viewing');
 
             self.$buttons.button();
 
@@ -16013,6 +16017,16 @@ _.extend(LocalStore.prototype, {
             return self;
         },
 
+        /** @brief  Is this comment currently being edited?
+         *
+         *  @return true | false
+         */
+        isEditing: function() {
+            var self    = this;
+
+            return self._editing;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
@@ -16026,7 +16040,7 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
-            if (! self.editing) { return self; }
+            if (! self._editing) { return self; }
             
             /*
             console.log("View:Comment::_focus()[%s]",
@@ -16044,20 +16058,25 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
-            if (self.editing)   { return self; }
+            if (self._editing)  { return self; }
 
             /*
             console.log("View:Comment::_edit()[%s]",
                         self.model.cid);
             // */
 
-            self.editing = true;
-
-            self.$text.hide( );
-            self.$mainButtons.hide( );
+            self._editing = true;
 
             self.$edit.val( self.$text.text() );
+
+            self.$text.hide( );
             self.$editArea.show();
+
+            /* We use CSS and inherent z-index to hide/present the edit
+             * buttons, which SHOULD occur BEFORE the view buttons in the HTML.
+             */
+            self.$viewButtons.hide( );
+            //self.$editButtons.show( );
 
             return self._focus(e);
         },
@@ -16112,24 +16131,28 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
-            if (! self.editing) { return self; }
+            if (! self._editing)    { return self; }
 
             /*
             console.log("View:Comment::_cancelEdit()[%s]",
                         self.model.cid);
             // */
 
-            self.editing = false;
+            self._editing = false;
 
             self.$editArea.hide();
             self.$text.show( );
 
-            /* Note: Do NOT use show() -- it will add a direct style setting
-             *       which will override any CSS rules.  We simply want to
-             *       remove the 'display:none' style added by .hide() in
-             *       edit().
+            /* We use CSS and inherent z-index to hide/present the edit
+             * buttons, which SHOULD occur BEFORE the view buttons in the HTML.
+             *
+             * Because of this, do NOT use self.$viewButtons.show() since it
+             * will add direct styling which will override our CSS rules.  We
+             * simply want to remove the 'display:none' direct style added by
+             * .hide() in _edit().
              */
-            self.$mainButtons.css('display', '');
+            //self.$editButtons.hide();
+            self.$viewButtons.css('display', '');
 
             return self;
         },
@@ -16139,7 +16162,8 @@ _.extend(LocalStore.prototype, {
          */
         _keyup: function(e) {
             var self    = this,
-                opts    = self.options;
+                opts    = self.options,
+                $save   = self.$buttons.filter('[name=save]');
 
             // Special keys
             switch (e.keyCode)
@@ -16148,7 +16172,65 @@ _.extend(LocalStore.prototype, {
                 self._cancelEdit();
                 break;
             }
+
+            // If the current value differs from the model, enable save.
+            var valEdit = self.$edit.val(),
+                valCur  = self.model.get('text');
+            if ( self._editing          && 
+                 (valEdit.length > 0)       &&
+                 (valEdit !== valCur) )
+            {
+                $save.button('enable');
+            }
+            else
+            {
+                $save.button('disable');
+            }
         },
+
+        /** @brief  Handle 'focus/blur' within the edit area.
+         *  @param  e       The triggering event.
+         */
+        _focusChange: function(e) {
+            var self    = this,
+                opts    = self.options,
+                $save   = self.$buttons.filter('[name=save]'),
+                valEdit = self.$edit.val(),
+                valCur  = self.model.get('text');
+
+            switch (e.type)
+            {
+            case 'focusin':
+            case 'focus':
+                /*
+                console.log("View:Comment::_focusChange()[%s]: type[ %s ]",
+                            self.model.cid, e.type);
+                // */
+                if ( (valEdit.length > 0) && (valEdit !== valCur) )
+                {
+                    $save.button('enable');
+                }
+                else
+                {
+                    $save.button('disable');
+                }
+                break;
+
+            case 'focusout':
+            case 'blur':
+                if ( (valEdit.length > 0) && (valEdit !== valCur) )
+                {
+                    // Leave the save/cancel buttons visible
+                }
+                else
+                {
+                    // cancel editing
+                    self._cancelEdit();
+                }
+                break;
+            }
+        },
+
 
         /** @brief  Handle a button click (save/cancel).
          *  @param  e       The triggering event.
@@ -16156,7 +16238,12 @@ _.extend(LocalStore.prototype, {
         _buttonClick: function(e) {
             var self    = this,
                 opts    = self.options,
-                $button = $(e.target).parent();
+                $button = $(e.target);
+            
+            if (! $button.is('button'))
+            {
+                $button = $button.parents('button:first');
+            }
 
             /*
             console.log("View:Comment::_buttonClick()[%s]: button[ %s ]",
@@ -16466,37 +16553,35 @@ _.extend(LocalStore.prototype, {
          */
         deactivate: function(e, cb) {
             var self    = this,
-                opts    = self.options,
-                $note   = ( e && (e.type === 'click')
-                              ? $(e.target).parents('.note')
-                              : [] );
+                opts    = self.options;
 
-            if ($note[0] === self.$el[0])
+            /*
+            console.log("View:Note::deactivate()[%s]: "
+                        + "%sactive, %sdeactivating, %sfocused",
+                        self.model.cid,
+                        (self.$el.hasClass('note-active') ? '' : '!'),
+                        (self._deactivating               ? '' : '!'),
+                        (self.hasFocus()                  ? '' : '!'));
+            // */
+
+            if ((! self.$el.hasClass('note-active')) ||
+                self._deactivating                   ||
+                self.hasFocus())
             {
-                /* This is from a click event that originated within THIS note
-                 * and has propagated up to our _docClick handler (established
-                 * in initialize()).  Ignore it.
-                 */
+                // Already deactived (or has active focus)
                 /*
                 console.log("View:Note::deactivate()[%s]: -- ignore",
                             self.model.cid);
                 // */
-                return;
+
+                if ($.isFunction(cb))   { cb.call(self); }
+                return self;
             }
+            self._deactivating = true;
 
             /*
             console.log("View:Note::deactivate()[%s]", self.model.cid);
             // */
-
-            if ((! self.$el.hasClass('note-active')) ||
-                self.deactivating ||
-                self.hasFocus())
-            {
-                // Already deactived (or has active focus)
-                if ($.isFunction(cb))   { cb.call(self); }
-                return self;
-            }
-            self.deactivating = true;
 
             // Cancel any comment that is currently being edited
             self.$body.find('.comment').trigger('cancel');
@@ -16504,7 +16589,7 @@ _.extend(LocalStore.prototype, {
             // And close ourselves up
             self.$el.removeClass('note-active', app.config.animSpeed,
                                  function() {
-                                    self.deactivating = false;
+                                    self._deactivating = false;
                                     if ($.isFunction(cb))   { cb.call(self); }
             });
 
@@ -16559,10 +16644,9 @@ _.extend(LocalStore.prototype, {
         },
 
         /** @brief  Focus on the input area.
-         *
-         *  @return this    for a fluent interface
+         *  @param  e   If provided, the triggering event;
          */
-        focus: function() {
+        focus: function(e) {
             var self    = this,
                 opts    = self.options;
 
@@ -16571,13 +16655,9 @@ _.extend(LocalStore.prototype, {
             // */
 
             self.$reply.trigger('focus');
-
-            return self;
         },
 
         /** @brief  Adjust our position.
-         *
-         *  @return this    for a fluent interface
          */
         reposition: function() {
             var self    = this,
@@ -16588,8 +16668,6 @@ _.extend(LocalStore.prototype, {
             // */
 
             self.$el.position( opts.position );
-
-            return self;
         },
 
         /** @brief  Does this note currently have focus?
@@ -16600,17 +16678,20 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options;
 
-            /* If our $input is hidden, we're currently editing a comment and
-             * so vicariously have focus
+            /* We have focus if $reply has focus OR any of our comments are
+             * being edited.
              */
-            return ( self.$input.is(':hidden') ||
-                     self.$reply.is(':focus') );
+            return ( self.$reply.is(':focus') ||
+                     _.reduce(self.$body.find('.comment'),
+                              function(res, comment) {
+                                var view    = $(comment).data('View:Comment');
+
+                                return (res || view.isEditing());
+                              }, false, self) );
         },
 
         /** @brief  Activate editing on the targeted comment.
          *  @param  comment     The desired comment (by index) [ 0 ];
-         *
-         *  @return this    for a fluent interface
          */
         editComment: function(comment) {
             var self        = this,
@@ -16628,14 +16709,29 @@ _.extend(LocalStore.prototype, {
                     $comment.trigger('comment:edit');
                 });
             }
-
-            return self;
         },
 
         /**********************************************************************
          * "Private" methods.
          *
          */
+
+        /** @brief  Squelch the triggering event.
+         *  @param  e   The triggering event;
+         *
+         */
+        _squelch: function(e) {
+            var self    = this;
+
+            /*
+            console.log("View:Note::_squelch()[%s]: event[ %s ]",
+                        self.model.cid, e.type);
+            // */
+
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        },
 
         /** @brief  Over-ride our super-class so we can also activate the note. 
          *  @param  coords      An object of { x: , y: } coordinates;
@@ -16766,32 +16862,34 @@ _.extend(LocalStore.prototype, {
                 opts    = self.options,
                 $reply  = self.$buttons.filter('[name=reply]');
 
-            /*
-            console.log("View:Note::_focusChange()[%s]: type[ %s ]",
-                        self.model.cid, e.type);
-            // */
-
             switch (e.type)
             {
             case 'focusin':
             case 'focus':
-                if (! self.hasFocus())
-                {
-                    if (self.$reply.hasClass('hint'))
-                    {
-                        self.$reply.val('')
-                                   .removeClass('hint');
-                    }
+                /*
+                console.log("View:Note::_focusChange()[%s]: type[ %s ]",
+                            self.model.cid, e.type);
+                // */
 
-                    if (self.$reply.val().length > 0)
-                    {
-                        $reply.button('enable');
-                    }
-                    else
-                    {
-                        $reply.button('disable');
-                    }
-                    self.$buttons.show();
+                if (self.$reply.hasClass('hint'))
+                {
+                    self.$reply.val('')
+                               .removeClass('hint');
+                }
+
+                if (self.$reply.val().length > 0)
+                {
+                    $reply.button('enable');
+                }
+                else
+                {
+                    $reply.button('disable');
+                }
+                self.$buttons.show();
+
+                if (e.target !== self.$reply[0])
+                {
+                    self.$reply.focus();
                 }
                 break;
 
@@ -16799,10 +16897,22 @@ _.extend(LocalStore.prototype, {
             case 'blur':
                 if (self.$reply.val().length > 0)
                 {
+                    /*
+                    console.log("View:Note::_focusChange()[%s]: type[ %s ]"
+                                +   " -- enable reply button",
+                                self.model.cid, e.type);
+                    // */
+
                     $reply.button('enable');
                 }
                 else
                 {
+                    /*
+                    console.log("View:Note::_focusChange()[%s]: type[ %s ]"
+                                +   " -- disable reply button",
+                                self.model.cid, e.type);
+                    // */
+
                     self.$reply.addClass('hint')
                                .val( self.$reply.attr('title') );
 
@@ -16825,7 +16935,12 @@ _.extend(LocalStore.prototype, {
         _buttonClick: function(e) {
             var self    = this,
                 opts    = self.options,
-                $button = $(e.target).parent();
+                $button = $(e.target);
+
+            if (! $button.is('button'))
+            {
+                $button = $button.parents('button:first');
+            }
 
             /*
             console.log("View:Note::_buttonClick()[%s]: type[ %s ]",
@@ -16852,6 +16967,9 @@ _.extend(LocalStore.prototype, {
                 }
                 break;
             }
+
+            // Squelch this button click so our note is not deactivated
+            if (e)  { self._squelch(e); }
         },
 
         /** @brief  Handle click events on our range-control element.
@@ -17042,16 +17160,37 @@ _.extend(LocalStore.prototype, {
 
             /* :NOTE: Do NOT bind 'click' since it will be fired following
              *        mousedown when selecting (at least in Chrome).  Instead,
-             *        we bind to 'mousedown' and 'mouseup'.
+             *        we bind to 'mousedown' and 'mouseup' and if we see a
+             *        'mouseup' following a 'mousedown', establish a selection.
              */
-            if (e && (e.type === 'mousedown'))
+            if (e)
             {
-                self._mousedownE = e;
-                return;
-            }
-            else if (e && (e.type === 'mouseup') && (! self._mousedownE))
-            {
-                return;
+                if ( (e.type === 'mouseup') && (! self._mousedownE) )
+                {
+                    // 'mouseup' without a 'mousedown' -- IGNORE
+                    return;
+                }
+
+                // Did this event occurred within a '.note' element?
+                var $note   = $(e.target).parents('.note');
+                if ($note.length > 0)
+                {
+                    // Yes -- IGNORE
+                    return;
+                }
+
+                if (e.type === 'mousedown')
+                {
+                    // Remember this 'mousedown' event
+                    self._mousedownE = e;
+                    return;
+                }
+
+                /**************************************************
+                 * This is either a 'mouseup' event following a
+                 * 'mousedown' OR a 'dblclick' event.  In either
+                 * case, continue to check for a current selection.
+                 */
             }
             self._mousedownE = null;
 

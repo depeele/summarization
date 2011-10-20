@@ -111,16 +111,37 @@
 
             /* :NOTE: Do NOT bind 'click' since it will be fired following
              *        mousedown when selecting (at least in Chrome).  Instead,
-             *        we bind to 'mousedown' and 'mouseup'.
+             *        we bind to 'mousedown' and 'mouseup' and if we see a
+             *        'mouseup' following a 'mousedown', establish a selection.
              */
-            if (e && (e.type === 'mousedown'))
+            if (e)
             {
-                self._mousedownE = e;
-                return;
-            }
-            else if (e && (e.type === 'mouseup') && (! self._mousedownE))
-            {
-                return;
+                if ( (e.type === 'mouseup') && (! self._mousedownE) )
+                {
+                    // 'mouseup' without a 'mousedown' -- IGNORE
+                    return;
+                }
+
+                // Did this event occurred within a '.note' element?
+                var $note   = $(e.target).parents('.note');
+                if ($note.length > 0)
+                {
+                    // Yes -- IGNORE
+                    return;
+                }
+
+                if (e.type === 'mousedown')
+                {
+                    // Remember this 'mousedown' event
+                    self._mousedownE = e;
+                    return;
+                }
+
+                /**************************************************
+                 * This is either a 'mouseup' event following a
+                 * 'mousedown' OR a 'dblclick' event.  In either
+                 * case, continue to check for a current selection.
+                 */
             }
             self._mousedownE = null;
 

@@ -277,37 +277,35 @@
          */
         deactivate: function(e, cb) {
             var self    = this,
-                opts    = self.options,
-                $note   = ( e && (e.type === 'click')
-                              ? $(e.target).parents('.note')
-                              : [] );
+                opts    = self.options;
 
-            if ($note[0] === self.$el[0])
+            /*
+            console.log("View:Note::deactivate()[%s]: "
+                        + "%sactive, %sdeactivating, %sfocused",
+                        self.model.cid,
+                        (self.$el.hasClass('note-active') ? '' : '!'),
+                        (self._deactivating               ? '' : '!'),
+                        (self.hasFocus()                  ? '' : '!'));
+            // */
+
+            if ((! self.$el.hasClass('note-active')) ||
+                self._deactivating                   ||
+                self.hasFocus())
             {
-                /* This is from a click event that originated within THIS note
-                 * and has propagated up to our _docClick handler (established
-                 * in initialize()).  Ignore it.
-                 */
+                // Already deactived (or has active focus)
                 /*
                 console.log("View:Note::deactivate()[%s]: -- ignore",
                             self.model.cid);
                 // */
-                return;
+
+                if ($.isFunction(cb))   { cb.call(self); }
+                return self;
             }
+            self._deactivating = true;
 
             /*
             console.log("View:Note::deactivate()[%s]", self.model.cid);
             // */
-
-            if ((! self.$el.hasClass('note-active')) ||
-                self.deactivating ||
-                self.hasFocus())
-            {
-                // Already deactived (or has active focus)
-                if ($.isFunction(cb))   { cb.call(self); }
-                return self;
-            }
-            self.deactivating = true;
 
             // Cancel any comment that is currently being edited
             self.$body.find('.comment').trigger('cancel');
@@ -315,7 +313,7 @@
             // And close ourselves up
             self.$el.removeClass('note-active', app.config.animSpeed,
                                  function() {
-                                    self.deactivating = false;
+                                    self._deactivating = false;
                                     if ($.isFunction(cb))   { cb.call(self); }
             });
 
@@ -370,10 +368,9 @@
         },
 
         /** @brief  Focus on the input area.
-         *
-         *  @return this    for a fluent interface
+         *  @param  e   If provided, the triggering event;
          */
-        focus: function() {
+        focus: function(e) {
             var self    = this,
                 opts    = self.options;
 
@@ -382,13 +379,9 @@
             // */
 
             self.$reply.trigger('focus');
-
-            return self;
         },
 
         /** @brief  Adjust our position.
-         *
-         *  @return this    for a fluent interface
          */
         reposition: function() {
             var self    = this,
@@ -399,8 +392,6 @@
             // */
 
             self.$el.position( opts.position );
-
-            return self;
         },
 
         /** @brief  Does this note currently have focus?
@@ -411,17 +402,20 @@
             var self    = this,
                 opts    = self.options;
 
-            /* If our $input is hidden, we're currently editing a comment and
-             * so vicariously have focus
+            /* We have focus if $reply has focus OR any of our comments are
+             * being edited.
              */
-            return ( self.$input.is(':hidden') ||
-                     self.$reply.is(':focus') );
+            return ( self.$reply.is(':focus') ||
+                     _.reduce(self.$body.find('.comment'),
+                              function(res, comment) {
+                                var view    = $(comment).data('View:Comment');
+
+                                return (res || view.isEditing());
+                              }, false, self) );
         },
 
         /** @brief  Activate editing on the targeted comment.
          *  @param  comment     The desired comment (by index) [ 0 ];
-         *
-         *  @return this    for a fluent interface
          */
         editComment: function(comment) {
             var self        = this,
@@ -439,14 +433,29 @@
                     $comment.trigger('comment:edit');
                 });
             }
-
-            return self;
         },
 
         /**********************************************************************
          * "Private" methods.
          *
          */
+
+        /** @brief  Squelch the triggering event.
+         *  @param  e   The triggering event;
+         *
+         */
+        _squelch: function(e) {
+            var self    = this;
+
+            /*
+            console.log("View:Note::_squelch()[%s]: event[ %s ]",
+                        self.model.cid, e.type);
+            // */
+
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        },
 
         /** @brief  Over-ride our super-class so we can also activate the note. 
          *  @param  coords      An object of { x: , y: } coordinates;
@@ -577,32 +586,34 @@
                 opts    = self.options,
                 $reply  = self.$buttons.filter('[name=reply]');
 
-            /*
-            console.log("View:Note::_focusChange()[%s]: type[ %s ]",
-                        self.model.cid, e.type);
-            // */
-
             switch (e.type)
             {
             case 'focusin':
             case 'focus':
-                if (! self.hasFocus())
-                {
-                    if (self.$reply.hasClass('hint'))
-                    {
-                        self.$reply.val('')
-                                   .removeClass('hint');
-                    }
+                /*
+                console.log("View:Note::_focusChange()[%s]: type[ %s ]",
+                            self.model.cid, e.type);
+                // */
 
-                    if (self.$reply.val().length > 0)
-                    {
-                        $reply.button('enable');
-                    }
-                    else
-                    {
-                        $reply.button('disable');
-                    }
-                    self.$buttons.show();
+                if (self.$reply.hasClass('hint'))
+                {
+                    self.$reply.val('')
+                               .removeClass('hint');
+                }
+
+                if (self.$reply.val().length > 0)
+                {
+                    $reply.button('enable');
+                }
+                else
+                {
+                    $reply.button('disable');
+                }
+                self.$buttons.show();
+
+                if (e.target !== self.$reply[0])
+                {
+                    self.$reply.focus();
                 }
                 break;
 
@@ -610,10 +621,22 @@
             case 'blur':
                 if (self.$reply.val().length > 0)
                 {
+                    /*
+                    console.log("View:Note::_focusChange()[%s]: type[ %s ]"
+                                +   " -- enable reply button",
+                                self.model.cid, e.type);
+                    // */
+
                     $reply.button('enable');
                 }
                 else
                 {
+                    /*
+                    console.log("View:Note::_focusChange()[%s]: type[ %s ]"
+                                +   " -- disable reply button",
+                                self.model.cid, e.type);
+                    // */
+
                     self.$reply.addClass('hint')
                                .val( self.$reply.attr('title') );
 
@@ -636,7 +659,12 @@
         _buttonClick: function(e) {
             var self    = this,
                 opts    = self.options,
-                $button = $(e.target).parent();
+                $button = $(e.target);
+
+            if (! $button.is('button'))
+            {
+                $button = $button.parents('button:first');
+            }
 
             /*
             console.log("View:Note::_buttonClick()[%s]: type[ %s ]",
@@ -663,6 +691,9 @@
                 }
                 break;
             }
+
+            // Squelch this button click so our note is not deactivated
+            if (e)  { self._squelch(e); }
         },
 
         /** @brief  Handle click events on our range-control element.

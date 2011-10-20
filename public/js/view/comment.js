@@ -28,6 +28,9 @@
             'cancel':                   '_cancelEdit',
 
             'keyup .edit':              '_keyup',
+            'focus .edit':              '_focusChange',
+            'blur  .edit':              '_focusChange',
+
             'click .buttons button':    '_buttonClick',
 
             'comment:edit':             '_edit',
@@ -52,14 +55,16 @@
             self.$el.html( self.template( self.model.toJSON() ) );
 
             // Store a reference to this view instance
-            self.$el.data('View:Doc', self);
+            self.$el.data('View:Comment', self);
 
             self.$created     = self.$el.find('.created');
             self.$text        = self.$el.find('.text');
             self.$editArea    = self.$el.find('.edit');
             self.$edit        = self.$editArea.find('textarea');
             self.$buttons     = self.$el.find('.buttons button');
-            self.$mainButtons = self.$el.find('.buttons:last');
+
+            self.$editButtons = self.$el.find('.buttons.editing');
+            self.$viewButtons = self.$el.find('.buttons.viewing');
 
             self.$buttons.button();
 
@@ -95,6 +100,16 @@
             return self;
         },
 
+        /** @brief  Is this comment currently being edited?
+         *
+         *  @return true | false
+         */
+        isEditing: function() {
+            var self    = this;
+
+            return self._editing;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
@@ -108,7 +123,7 @@
             var self    = this,
                 opts    = self.options;
 
-            if (! self.editing) { return self; }
+            if (! self._editing) { return self; }
             
             /*
             console.log("View:Comment::_focus()[%s]",
@@ -126,20 +141,25 @@
             var self    = this,
                 opts    = self.options;
 
-            if (self.editing)   { return self; }
+            if (self._editing)  { return self; }
 
             /*
             console.log("View:Comment::_edit()[%s]",
                         self.model.cid);
             // */
 
-            self.editing = true;
-
-            self.$text.hide( );
-            self.$mainButtons.hide( );
+            self._editing = true;
 
             self.$edit.val( self.$text.text() );
+
+            self.$text.hide( );
             self.$editArea.show();
+
+            /* We use CSS and inherent z-index to hide/present the edit
+             * buttons, which SHOULD occur BEFORE the view buttons in the HTML.
+             */
+            self.$viewButtons.hide( );
+            //self.$editButtons.show( );
 
             return self._focus(e);
         },
@@ -194,24 +214,28 @@
             var self    = this,
                 opts    = self.options;
 
-            if (! self.editing) { return self; }
+            if (! self._editing)    { return self; }
 
             /*
             console.log("View:Comment::_cancelEdit()[%s]",
                         self.model.cid);
             // */
 
-            self.editing = false;
+            self._editing = false;
 
             self.$editArea.hide();
             self.$text.show( );
 
-            /* Note: Do NOT use show() -- it will add a direct style setting
-             *       which will override any CSS rules.  We simply want to
-             *       remove the 'display:none' style added by .hide() in
-             *       edit().
+            /* We use CSS and inherent z-index to hide/present the edit
+             * buttons, which SHOULD occur BEFORE the view buttons in the HTML.
+             *
+             * Because of this, do NOT use self.$viewButtons.show() since it
+             * will add direct styling which will override our CSS rules.  We
+             * simply want to remove the 'display:none' direct style added by
+             * .hide() in _edit().
              */
-            self.$mainButtons.css('display', '');
+            //self.$editButtons.hide();
+            self.$viewButtons.css('display', '');
 
             return self;
         },
@@ -221,7 +245,8 @@
          */
         _keyup: function(e) {
             var self    = this,
-                opts    = self.options;
+                opts    = self.options,
+                $save   = self.$buttons.filter('[name=save]');
 
             // Special keys
             switch (e.keyCode)
@@ -230,7 +255,65 @@
                 self._cancelEdit();
                 break;
             }
+
+            // If the current value differs from the model, enable save.
+            var valEdit = self.$edit.val(),
+                valCur  = self.model.get('text');
+            if ( self._editing          && 
+                 (valEdit.length > 0)       &&
+                 (valEdit !== valCur) )
+            {
+                $save.button('enable');
+            }
+            else
+            {
+                $save.button('disable');
+            }
         },
+
+        /** @brief  Handle 'focus/blur' within the edit area.
+         *  @param  e       The triggering event.
+         */
+        _focusChange: function(e) {
+            var self    = this,
+                opts    = self.options,
+                $save   = self.$buttons.filter('[name=save]'),
+                valEdit = self.$edit.val(),
+                valCur  = self.model.get('text');
+
+            switch (e.type)
+            {
+            case 'focusin':
+            case 'focus':
+                /*
+                console.log("View:Comment::_focusChange()[%s]: type[ %s ]",
+                            self.model.cid, e.type);
+                // */
+                if ( (valEdit.length > 0) && (valEdit !== valCur) )
+                {
+                    $save.button('enable');
+                }
+                else
+                {
+                    $save.button('disable');
+                }
+                break;
+
+            case 'focusout':
+            case 'blur':
+                if ( (valEdit.length > 0) && (valEdit !== valCur) )
+                {
+                    // Leave the save/cancel buttons visible
+                }
+                else
+                {
+                    // cancel editing
+                    self._cancelEdit();
+                }
+                break;
+            }
+        },
+
 
         /** @brief  Handle a button click (save/cancel).
          *  @param  e       The triggering event.
@@ -238,7 +321,12 @@
         _buttonClick: function(e) {
             var self    = this,
                 opts    = self.options,
-                $button = $(e.target).parent();
+                $button = $(e.target);
+            
+            if (! $button.is('button'))
+            {
+                $button = $button.parents('button:first');
+            }
 
             /*
             console.log("View:Comment::_buttonClick()[%s]: button[ %s ]",

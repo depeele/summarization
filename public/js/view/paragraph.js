@@ -60,15 +60,26 @@
          */
         toggle: function(e) {
             var self    = this,
-                $s      = self.$el.find('.sentence:not(.expanded)');
+                $s      = $(e.target).parents('.sentence');
+
+            if ($s.hasClass('expanded'))
+            {
+                // Ignore clicks within an expanded sentence.
+                return;
+            }
+
+            /* This was NOT a click on an expanded sentence so grab all
+             * sentences that are NOT 'expanded'
+             */
+            $s = self.$el.find('.sentence:not(.expanded)');
             if ($s.filter('.expansion').length > 0)
             {
-                // Some are expansions, collapse all
+                // There are some sentences that are expansions -- collapse all
                 $s.trigger('sentence:expansionCollapse');
             }
             else
             {
-                // There are no expansions, expand all
+                // There are no sentences that are expansions -- expand all
                 $s.trigger('sentence:expansionExpand');
             }
 

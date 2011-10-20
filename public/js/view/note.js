@@ -659,7 +659,12 @@
         _buttonClick: function(e) {
             var self    = this,
                 opts    = self.options,
-                $button = $(e.target).parent();
+                $button = $(e.target);
+
+            if (! $button.is('button'))
+            {
+                $button = $button.parents('button:first');
+            }
 
             /*
             console.log("View:Note::_buttonClick()[%s]: type[ %s ]",
