@@ -15349,7 +15349,8 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el    = $(this.el);
 
@@ -15364,6 +15365,25 @@ _.extend(LocalStore.prototype, {
                 if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
 
                 self.$el.html( self.template( self.model.toJSON() ) );
+            }
+            else
+            {
+                /* Modify the rendering for this sentence to conform to our
+                 * template
+                 */
+                var data        = {
+                        id:     self.$el.data('id'),
+                        rank:   self.$el.data('rank'),
+                        tokens: []
+                    },
+                    $el         = $( self.template( data ) ),
+                    $content    = self.$el.children().detach();
+
+                $el.filter('.content').append( $content );
+
+                self.$el.empty()
+                        .addClass( self.className )
+                        .append( $el );
             }
 
             return self;
@@ -15493,10 +15513,10 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el        = $(this.el);
-            self.$sentences = self.$el.find('.sentences:first');
 
             self.$el.data('View:Paragraph', self);
 
@@ -15510,13 +15530,31 @@ _.extend(LocalStore.prototype, {
 
                 self.$el.html( self.template( self.model.toJSON() ) );
 
-                self.$sentences = self.$el.find('.sentences:first');
+                var $sentences  = self.$el.find('.sentences:first');
 
                 // Append a view of each paragraph
                 self.model.get('sentences').each(function(model) {
                     var view = new app.View.Sentence({model:model});
 
-                    self.$sentences.append( view.render().el );
+                    $sentences.append( view.render().el );
+                });
+            }
+            else
+            {
+                /* Include the paragraph template and "render" all paragraphs
+                 * into the paragraphs container.
+                 */
+                self.$el.append( self.template() )
+                        .addClass( self.className );
+
+                var $sentences  = self.$el.find('.paragraphs:first');
+
+                self.$el.children('.sentence,[data-type=sentence]').each(
+                                  function() {
+                    var view    = new app.View.Sentence({el:this}),
+                        $s      = $(view.render().el);
+
+                    $sentences.append( $s );
                 });
             }
 
@@ -15595,10 +15633,10 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  (Re)render the contents of the section item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el         = $(this.el);
-            self.$paragraphs = self.$el.find('.paragraphs:first');
 
             self.$el.data('View:Section', self);
 
@@ -15612,13 +15650,30 @@ _.extend(LocalStore.prototype, {
 
                 self.$el.html( self.template( self.model.toJSON() ) );
 
-                self.$paragraphs = self.$el.find('.paragraphs:first');
+                var $paragraphs = self.$el.find('.paragraphs:first');
 
                 // Append a view of each paragraph
                 self.model.get('paragraphs').each(function(model) {
                     var view = new app.View.Paragraph({model:model});
 
-                    self.$paragraphs.append( view.render().el );
+                    $paragraphs.append( view.render().el );
+                });
+            }
+            else
+            {
+                /* Include the section template and "render" all paragraphs
+                 * into the paragraphs container.
+                 */
+                self.$el.append( self.template() )
+                        .addClass( self.className );
+
+                var $paragraphs = self.$el.find('.paragraphs:first');
+
+                self.$el.children('p,[data-type=paragraph]').each(function() {
+                    var view    = new app.View.Paragraph({el:this}),
+                        $p      = $(view.render().el);
+
+                    $paragraphs.append( $p );
                 });
             }
 
@@ -17323,7 +17378,8 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  (Re)render the contents of the document item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el.attr('id', self.model.cid);
             self.$el.html( self.template( self.model.toJSON() ) );
@@ -17331,14 +17387,27 @@ _.extend(LocalStore.prototype, {
             // Store a reference to this view instance
             self.$el.data('View:Doc', self);
 
-            self.$sections = self.$el.find('.sections:first');
+            var $sections   = self.$el.find('.sections:first'),
+                sections    = self.model.get('sections');
 
-            // Append a view of each section
-            self.model.get('sections').each(function(model) {
-                var view    = new app.View.Section({model:model});
+            if (sections.length > 0)
+            {
+                // Append a view of each section
+                sections.each(function(model) {
+                    var view    = new app.View.Section({model:model});
 
-                self.$sections.append( view.render().el );
-            });
+                    $sections.append( view.render().el );
+                });
+            }
+            else if (opts.$sections)
+            {
+                // Instantiate a view for each contained section
+                opts.$sections.each(function() {
+                    var view    = new app.View.Section({el:this});
+
+                    $sections.append( view.render().el );
+                });
+            }
 
             self.$s = self.$el.find('.sentence');
 
@@ -20336,8 +20405,8 @@ $.Summary = Backbone.View.extend({
 
     /** @brief  Initialize the app. */
     initialize: function() {
-        var self    = this;
-        var opts    = self.options;
+        var self    = this,
+            opts    = self.options;
 
         self._initialize_controlPane();
         self._initialize_contentPane();
@@ -20347,18 +20416,46 @@ $.Summary = Backbone.View.extend({
         self.$paneContent  = self.el.find('.content-pane');
         self.$paneContent.addClass('loading');
 
+        var getDoc;
         if (opts.doc instanceof app.Model.Doc)
         {
             self.render();    
         }
-        else
+        else if (opts.doc.match(/\.json$/))
         {
-            var getDoc  = $.getJSON(opts.doc);
+            getDoc = $.getJSON(opts.doc);
 
             getDoc.success(function( data ) {
                 opts.doc = new app.Model.Doc( data );
             });
+        }
+        else if (opts.doc.match(/\.xml$/))
+        {
+            getDoc = $.ajax({
+                url:        opts.doc,
+                dataType:   'xml'
+            });
 
+            getDoc.success(function( xml ) {
+                // Process the XML
+                self._parseXml(xml);
+            });
+        }
+        else if (opts.doc.match(/\.html$/))
+        {
+            getDoc = $.ajax({
+                url:        opts.doc,
+                dataType:   'html'
+            });
+
+            getDoc.success(function( html ) {
+                // Process the HTML
+                self._parseHtml(html);
+            });
+        }
+
+        if (getDoc)
+        {
             getDoc.error(function() {
                 alert("Cannot retrieve document data '"+ opts.doc +"'");
             });
@@ -20380,13 +20477,14 @@ $.Summary = Backbone.View.extend({
 
     /** @brief  (Re)render the application. */
     render: function() {
-        var self    = this;
-        var opts    = self.options;
+        var self    = this,
+            opts    = self.options;
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view    = new app.View.Doc({model:  opts.doc,
-                                            $notes: self.$paneNotes});
+            var view = new app.View.Doc({model:     opts.doc,
+                                         $sections: self.$sections,
+                                         $notes:    self.$paneNotes});
 
             self.$paneContent.html( view.render().el );
 
@@ -20592,6 +20690,88 @@ $.Summary = Backbone.View.extend({
      * "Private" methods
      *
      */
+
+    /** @brief  Given HTML, attempt to construct a simple Model.Doc instance
+     *          extracting the pre-formatted 'section' elements from the
+     *          contained 'article'.
+     *  @param  html    The HTML string to parse;
+     */
+    _parseHtml: function(html) {
+        var self    = this,
+            opts    = self.options,
+            $html   = $( html ),
+            $article;
+
+        // Process the HTML
+        $article = $html.find('article');
+        if ($article.length < 1)    { $article = $html.filter('article'); }
+        if ($article.length < 1)    { return; }
+
+        // Generate a simplified model from $article.
+        var $header     = $article.find('header'),
+            $title      = $article.find('h1'),
+            $author     = $article.find('author'),
+            $published  = $article.find('[pubdate]'),
+            $keywords   = $article.find('keywords keyword'),
+            model       = {
+                type:       'text/html',
+                url:        $title.find('a').attr('href'),
+                title:      $title.text(),
+                author:     $author.text(),
+                published:  $published.attr('datetime'),
+                keywords:   _.map($keywords, function(kw) {
+                    var $kw = $(kw);
+                    return {
+                        id:     $kw.data('id'),
+                        name:   $kw.text(),
+                        value:  $kw.data('value')
+                    }
+                })
+            };
+
+        self.$sections = $article.find('section');
+        opts.doc = new app.Model.Doc( model );
+    },
+
+    /** @brief  Given XML, attempt to construct a simple Model.Doc instance
+     *          extracting the pre-formatted 'section' elements from the
+     *          contained 'article'.
+     *  @param  xml     The XML string to parse;
+     */
+    _parseXml: function(xml) {
+        var self    = this,
+            opts    = self.options,
+            $xml    = $( xml ),
+            $article;
+
+        // Process the HTML
+        $article = $xml.find('body');
+        if ($article.length < 1)    { return; }
+
+        // Generate a simplified model from $article.
+        var $title      = $xml.find('title'),
+            $author     = $xml.find('author'),
+            $published  = $xml.find('[pubdate]'),
+            $keywords   = $xml.find('keywords keyword'),
+            model       = {
+                type:       'text/html',
+                url:        $xml.find('document').attr('src'),
+                title:      $title.text(),
+                author:     $author.text(),
+                published:  $published.attr('datetime'),
+                keywords:   _.map($keywords, function(kw) {
+                    var $kw = $(kw);
+                    return {
+                        id:     $kw.data('id'),
+                        name:   $kw.text(),
+                        value:  $kw.data('value')
+                    }
+                })
+            };
+
+        self.$sections = $article.find('section');
+        opts.doc = new app.Model.Doc( model );
+    },
 
     /** @brief  Initialize the control pane */
     _initialize_controlPane: function() {
@@ -20804,8 +20984,8 @@ $.Summary = Backbone.View.extend({
 
     /** @brief  Initialize the app. */
     initialize: function() {
-        var self    = this;
-        var opts    = self.options;
+        var self    = this,
+            opts    = self.options;
 
         self._initialize_controlPane();
         self._initialize_contentPane();
@@ -20815,18 +20995,46 @@ $.Summary = Backbone.View.extend({
         self.$paneContent  = self.el.find('.content-pane');
         self.$paneContent.addClass('loading');
 
+        var getDoc;
         if (opts.doc instanceof app.Model.Doc)
         {
             self.render();    
         }
-        else
+        else if (opts.doc.match(/\.json$/))
         {
-            var getDoc  = $.getJSON(opts.doc);
+            getDoc = $.getJSON(opts.doc);
 
             getDoc.success(function( data ) {
                 opts.doc = new app.Model.Doc( data );
             });
+        }
+        else if (opts.doc.match(/\.xml$/))
+        {
+            getDoc = $.ajax({
+                url:        opts.doc,
+                dataType:   'xml'
+            });
 
+            getDoc.success(function( xml ) {
+                // Process the XML
+                self._parseXml(xml);
+            });
+        }
+        else if (opts.doc.match(/\.html$/))
+        {
+            getDoc = $.ajax({
+                url:        opts.doc,
+                dataType:   'html'
+            });
+
+            getDoc.success(function( html ) {
+                // Process the HTML
+                self._parseHtml(html);
+            });
+        }
+
+        if (getDoc)
+        {
             getDoc.error(function() {
                 alert("Cannot retrieve document data '"+ opts.doc +"'");
             });
@@ -20848,13 +21056,14 @@ $.Summary = Backbone.View.extend({
 
     /** @brief  (Re)render the application. */
     render: function() {
-        var self    = this;
-        var opts    = self.options;
+        var self    = this,
+            opts    = self.options;
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view    = new app.View.Doc({model:  opts.doc,
-                                            $notes: self.$paneNotes});
+            var view = new app.View.Doc({model:     opts.doc,
+                                         $sections: self.$sections,
+                                         $notes:    self.$paneNotes});
 
             self.$paneContent.html( view.render().el );
 
@@ -21060,6 +21269,88 @@ $.Summary = Backbone.View.extend({
      * "Private" methods
      *
      */
+
+    /** @brief  Given HTML, attempt to construct a simple Model.Doc instance
+     *          extracting the pre-formatted 'section' elements from the
+     *          contained 'article'.
+     *  @param  html    The HTML string to parse;
+     */
+    _parseHtml: function(html) {
+        var self    = this,
+            opts    = self.options,
+            $html   = $( html ),
+            $article;
+
+        // Process the HTML
+        $article = $html.find('article');
+        if ($article.length < 1)    { $article = $html.filter('article'); }
+        if ($article.length < 1)    { return; }
+
+        // Generate a simplified model from $article.
+        var $header     = $article.find('header'),
+            $title      = $article.find('h1'),
+            $author     = $article.find('author'),
+            $published  = $article.find('[pubdate]'),
+            $keywords   = $article.find('keywords keyword'),
+            model       = {
+                type:       'text/html',
+                url:        $title.find('a').attr('href'),
+                title:      $title.text(),
+                author:     $author.text(),
+                published:  $published.attr('datetime'),
+                keywords:   _.map($keywords, function(kw) {
+                    var $kw = $(kw);
+                    return {
+                        id:     $kw.data('id'),
+                        name:   $kw.text(),
+                        value:  $kw.data('value')
+                    }
+                })
+            };
+
+        self.$sections = $article.find('section');
+        opts.doc = new app.Model.Doc( model );
+    },
+
+    /** @brief  Given XML, attempt to construct a simple Model.Doc instance
+     *          extracting the pre-formatted 'section' elements from the
+     *          contained 'article'.
+     *  @param  xml     The XML string to parse;
+     */
+    _parseXml: function(xml) {
+        var self    = this,
+            opts    = self.options,
+            $xml    = $( xml ),
+            $article;
+
+        // Process the HTML
+        $article = $xml.find('body');
+        if ($article.length < 1)    { return; }
+
+        // Generate a simplified model from $article.
+        var $title      = $xml.find('title'),
+            $author     = $xml.find('author'),
+            $published  = $xml.find('[pubdate]'),
+            $keywords   = $xml.find('keywords keyword'),
+            model       = {
+                type:       'text/html',
+                url:        $xml.find('document').attr('src'),
+                title:      $title.text(),
+                author:     $author.text(),
+                published:  $published.attr('datetime'),
+                keywords:   _.map($keywords, function(kw) {
+                    var $kw = $(kw);
+                    return {
+                        id:     $kw.data('id'),
+                        name:   $kw.text(),
+                        value:  $kw.data('value')
+                    }
+                })
+            };
+
+        self.$sections = $article.find('section');
+        opts.doc = new app.Model.Doc( model );
+    },
 
     /** @brief  Initialize the control pane */
     _initialize_controlPane: function() {

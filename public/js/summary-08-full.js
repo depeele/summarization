@@ -15199,7 +15199,8 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el    = $(this.el);
 
@@ -15214,6 +15215,25 @@ _.extend(LocalStore.prototype, {
                 if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
 
                 self.$el.html( self.template( self.model.toJSON() ) );
+            }
+            else
+            {
+                /* Modify the rendering for this sentence to conform to our
+                 * template
+                 */
+                var data        = {
+                        id:     self.$el.data('id'),
+                        rank:   self.$el.data('rank'),
+                        tokens: []
+                    },
+                    $el         = $( self.template( data ) ),
+                    $content    = self.$el.children().detach();
+
+                $el.filter('.content').append( $content );
+
+                self.$el.empty()
+                        .addClass( self.className )
+                        .append( $el );
             }
 
             return self;
@@ -15343,10 +15363,10 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el        = $(this.el);
-            self.$sentences = self.$el.find('.sentences:first');
 
             self.$el.data('View:Paragraph', self);
 
@@ -15360,13 +15380,31 @@ _.extend(LocalStore.prototype, {
 
                 self.$el.html( self.template( self.model.toJSON() ) );
 
-                self.$sentences = self.$el.find('.sentences:first');
+                var $sentences  = self.$el.find('.sentences:first');
 
                 // Append a view of each paragraph
                 self.model.get('sentences').each(function(model) {
                     var view = new app.View.Sentence({model:model});
 
-                    self.$sentences.append( view.render().el );
+                    $sentences.append( view.render().el );
+                });
+            }
+            else
+            {
+                /* Include the paragraph template and "render" all paragraphs
+                 * into the paragraphs container.
+                 */
+                self.$el.append( self.template() )
+                        .addClass( self.className );
+
+                var $sentences  = self.$el.find('.paragraphs:first');
+
+                self.$el.children('.sentence,[data-type=sentence]').each(
+                                  function() {
+                    var view    = new app.View.Sentence({el:this}),
+                        $s      = $(view.render().el);
+
+                    $sentences.append( $s );
                 });
             }
 
@@ -15445,10 +15483,10 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  (Re)render the contents of the section item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el         = $(this.el);
-            self.$paragraphs = self.$el.find('.paragraphs:first');
 
             self.$el.data('View:Section', self);
 
@@ -15462,13 +15500,30 @@ _.extend(LocalStore.prototype, {
 
                 self.$el.html( self.template( self.model.toJSON() ) );
 
-                self.$paragraphs = self.$el.find('.paragraphs:first');
+                var $paragraphs = self.$el.find('.paragraphs:first');
 
                 // Append a view of each paragraph
                 self.model.get('paragraphs').each(function(model) {
                     var view = new app.View.Paragraph({model:model});
 
-                    self.$paragraphs.append( view.render().el );
+                    $paragraphs.append( view.render().el );
+                });
+            }
+            else
+            {
+                /* Include the section template and "render" all paragraphs
+                 * into the paragraphs container.
+                 */
+                self.$el.append( self.template() )
+                        .addClass( self.className );
+
+                var $paragraphs = self.$el.find('.paragraphs:first');
+
+                self.$el.children('p,[data-type=paragraph]').each(function() {
+                    var view    = new app.View.Paragraph({el:this}),
+                        $p      = $(view.render().el);
+
+                    $paragraphs.append( $p );
                 });
             }
 
