@@ -32,10 +32,10 @@
 
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el        = $(this.el);
-            self.$sentences = self.$el.find('.sentences:first');
 
             self.$el.data('View:Paragraph', self);
 
@@ -49,13 +49,31 @@
 
                 self.$el.html( self.template( self.model.toJSON() ) );
 
-                self.$sentences = self.$el.find('.sentences:first');
+                var $sentences  = self.$el.find('.sentences:first');
 
                 // Append a view of each paragraph
                 self.model.get('sentences').each(function(model) {
                     var view = new app.View.Sentence({model:model});
 
-                    self.$sentences.append( view.render().el );
+                    $sentences.append( view.render().el );
+                });
+            }
+            else
+            {
+                /* Include the paragraph template and "render" all paragraphs
+                 * into the paragraphs container.
+                 */
+                self.$el.append( self.template() )
+                        .addClass( self.className );
+
+                var $sentences  = self.$el.find('.paragraphs:first');
+
+                self.$el.children('.sentence,[data-type=sentence]').each(
+                                  function() {
+                    var view    = new app.View.Sentence({el:this}),
+                        $s      = $(view.render().el);
+
+                    $sentences.append( $s );
                 });
             }
 

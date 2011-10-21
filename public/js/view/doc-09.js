@@ -70,7 +70,8 @@
 
         /** @brief  (Re)render the contents of the document item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el.attr('id', self.model.cid);
             self.$el.html( self.template( self.model.toJSON() ) );
@@ -78,14 +79,27 @@
             // Store a reference to this view instance
             self.$el.data('View:Doc', self);
 
-            self.$sections = self.$el.find('.sections:first');
+            var $sections   = self.$el.find('.sections:first'),
+                sections    = self.model.get('sections');
 
-            // Append a view of each section
-            self.model.get('sections').each(function(model) {
-                var view    = new app.View.Section({model:model});
+            if (sections.length > 0)
+            {
+                // Append a view of each section
+                sections.each(function(model) {
+                    var view    = new app.View.Section({model:model});
 
-                self.$sections.append( view.render().el );
-            });
+                    $sections.append( view.render().el );
+                });
+            }
+            else if (opts.$sections)
+            {
+                // Instantiate a view for each contained section
+                opts.$sections.each(function() {
+                    var view    = new app.View.Section({el:this});
+
+                    $sections.append( view.render().el );
+                });
+            }
 
             self.$s = self.$el.find('.sentence');
 

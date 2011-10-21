@@ -36,7 +36,8 @@
 
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el    = $(this.el);
 
@@ -51,6 +52,25 @@
                 if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
 
                 self.$el.html( self.template( self.model.toJSON() ) );
+            }
+            else
+            {
+                /* Modify the rendering for this sentence to conform to our
+                 * template
+                 */
+                var data        = {
+                        id:     self.$el.data('id'),
+                        rank:   self.$el.data('rank'),
+                        tokens: []
+                    },
+                    $el         = $( self.template( data ) ),
+                    $content    = self.$el.children().detach();
+
+                $el.filter('.content').append( $content );
+
+                self.$el.empty()
+                        .addClass( self.className )
+                        .append( $el );
             }
 
             return self;

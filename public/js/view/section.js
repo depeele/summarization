@@ -20,10 +20,10 @@
 
         /** @brief  (Re)render the contents of the section item. */
         render:     function() {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             self.$el         = $(this.el);
-            self.$paragraphs = self.$el.find('.paragraphs:first');
 
             self.$el.data('View:Section', self);
 
@@ -37,13 +37,30 @@
 
                 self.$el.html( self.template( self.model.toJSON() ) );
 
-                self.$paragraphs = self.$el.find('.paragraphs:first');
+                var $paragraphs = self.$el.find('.paragraphs:first');
 
                 // Append a view of each paragraph
                 self.model.get('paragraphs').each(function(model) {
                     var view = new app.View.Paragraph({model:model});
 
-                    self.$paragraphs.append( view.render().el );
+                    $paragraphs.append( view.render().el );
+                });
+            }
+            else
+            {
+                /* Include the section template and "render" all paragraphs
+                 * into the paragraphs container.
+                 */
+                self.$el.append( self.template() )
+                        .addClass( self.className );
+
+                var $paragraphs = self.$el.find('.paragraphs:first');
+
+                self.$el.children('p,[data-type=paragraph]').each(function() {
+                    var view    = new app.View.Paragraph({el:this}),
+                        $p      = $(view.render().el);
+
+                    $paragraphs.append( $p );
                 });
             }
 

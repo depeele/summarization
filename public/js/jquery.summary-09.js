@@ -42,8 +42,8 @@ $.Summary = Backbone.View.extend({
 
     /** @brief  Initialize the app. */
     initialize: function() {
-        var self    = this;
-        var opts    = self.options;
+        var self    = this,
+            opts    = self.options;
 
         self._initialize_controlPane();
         self._initialize_contentPane();
@@ -53,18 +53,46 @@ $.Summary = Backbone.View.extend({
         self.$paneContent  = self.el.find('.content-pane');
         self.$paneContent.addClass('loading');
 
+        var getDoc;
         if (opts.doc instanceof app.Model.Doc)
         {
             self.render();    
         }
-        else
+        else if (opts.doc.match(/\.json$/))
         {
-            var getDoc  = $.getJSON(opts.doc);
+            getDoc = $.getJSON(opts.doc);
 
             getDoc.success(function( data ) {
                 opts.doc = new app.Model.Doc( data );
             });
+        }
+        else if (opts.doc.match(/\.xml$/))
+        {
+            getDoc = $.ajax({
+                url:        opts.doc,
+                dataType:   'xml'
+            });
 
+            getDoc.success(function( xml ) {
+                // Process the XML
+                self._parseXml(xml);
+            });
+        }
+        else if (opts.doc.match(/\.html$/))
+        {
+            getDoc = $.ajax({
+                url:        opts.doc,
+                dataType:   'html'
+            });
+
+            getDoc.success(function( html ) {
+                // Process the HTML
+                self._parseHtml(html);
+            });
+        }
+
+        if (getDoc)
+        {
             getDoc.error(function() {
                 alert("Cannot retrieve document data '"+ opts.doc +"'");
             });
@@ -86,13 +114,14 @@ $.Summary = Backbone.View.extend({
 
     /** @brief  (Re)render the application. */
     render: function() {
-        var self    = this;
-        var opts    = self.options;
+        var self    = this,
+            opts    = self.options;
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view    = new app.View.Doc({model:  opts.doc,
-                                            $notes: self.$paneNotes});
+            var view = new app.View.Doc({model:     opts.doc,
+                                         $sections: self.$sections,
+                                         $notes:    self.$paneNotes});
 
             self.$paneContent.html( view.render().el );
 
@@ -298,6 +327,88 @@ $.Summary = Backbone.View.extend({
      * "Private" methods
      *
      */
+
+    /** @brief  Given HTML, attempt to construct a simple Model.Doc instance
+     *          extracting the pre-formatted 'section' elements from the
+     *          contained 'article'.
+     *  @param  html    The HTML string to parse;
+     */
+    _parseHtml: function(html) {
+        var self    = this,
+            opts    = self.options,
+            $html   = $( html ),
+            $article;
+
+        // Process the HTML
+        $article = $html.find('article');
+        if ($article.length < 1)    { $article = $html.filter('article'); }
+        if ($article.length < 1)    { return; }
+
+        // Generate a simplified model from $article.
+        var $header     = $article.find('header'),
+            $title      = $article.find('h1'),
+            $author     = $article.find('author'),
+            $published  = $article.find('[pubdate]'),
+            $keywords   = $article.find('keywords keyword'),
+            model       = {
+                type:       'text/html',
+                url:        $title.find('a').attr('href'),
+                title:      $title.text(),
+                author:     $author.text(),
+                published:  $published.attr('datetime'),
+                keywords:   _.map($keywords, function(kw) {
+                    var $kw = $(kw);
+                    return {
+                        id:     $kw.data('id'),
+                        name:   $kw.text(),
+                        value:  $kw.data('value')
+                    }
+                })
+            };
+
+        self.$sections = $article.find('section');
+        opts.doc = new app.Model.Doc( model );
+    },
+
+    /** @brief  Given XML, attempt to construct a simple Model.Doc instance
+     *          extracting the pre-formatted 'section' elements from the
+     *          contained 'article'.
+     *  @param  xml     The XML string to parse;
+     */
+    _parseXml: function(xml) {
+        var self    = this,
+            opts    = self.options,
+            $xml    = $( xml ),
+            $article;
+
+        // Process the HTML
+        $article = $xml.find('body');
+        if ($article.length < 1)    { return; }
+
+        // Generate a simplified model from $article.
+        var $title      = $xml.find('title'),
+            $author     = $xml.find('author'),
+            $published  = $xml.find('[pubdate]'),
+            $keywords   = $xml.find('keywords keyword'),
+            model       = {
+                type:       'text/html',
+                url:        $xml.find('document').attr('src'),
+                title:      $title.text(),
+                author:     $author.text(),
+                published:  $published.attr('datetime'),
+                keywords:   _.map($keywords, function(kw) {
+                    var $kw = $(kw);
+                    return {
+                        id:     $kw.data('id'),
+                        name:   $kw.text(),
+                        value:  $kw.data('value')
+                    }
+                })
+            };
+
+        self.$sections = $article.find('section');
+        opts.doc = new app.Model.Doc( model );
+    },
 
     /** @brief  Initialize the control pane */
     _initialize_controlPane: function() {
