@@ -316,6 +316,8 @@ textarea {
 
   /* font-family: Georgia, serif;  */
 
+  font-family: "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 /* Headers (h1, h2, etc) have no default font-size or margin; define those yourself */
 h1,
