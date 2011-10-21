@@ -336,16 +336,42 @@
          *
          */
         keywordExpand: function(keyword) {
-            var self    = this,
-                $tokens = self.$s.find('.word[data-value="'+ keyword +'"]');
+            var self        = this,
+                $tokens     = self.$s.find('.word[data-value="'+ keyword +'"]'),
+                $collection = $(),
+                firstS;
 
-            $tokens.each(function() {
+            /* Highlight the keywords and collect the containing sentences,
+             * noting which one occurs first.
+             */
+            $tokens.each(function(idex) {
                 var $token  = $(this),
-                    $s      = $token.parents('.sentence:first');
+                    $s      = $token.parents('.sentence:first'),
+                    sdex    = self.$s.index($s);
 
                 $token.addClass('highlight');
-                $s.addClass('keyworded', app.config.animSpeed);
+
+                if ( (firstS === undefined) || (sdex < firstS) )
+                {
+                    firstS = sdex;
+                }
+                $collection = $collection.add( $s );
             });
+
+            /* Expand the collected sentences and, upon completion of the
+             * *final* animation, trigger repositioning of all ranges from the
+             * *first* sentence on.
+             */
+            var needed      = $collection.length,
+                completed   = 0,
+                posE        = {target: self.$s.eq(firstS)};
+            $collection.addClass('keyworded', app.config.animSpeed,
+                                 function() {
+                                    if ( ++completed >= needed)
+                                    {
+                                        self._adjustPositions( posE );
+                                    }
+                                 });
         },
 
         /** @brief  Collapse sentences that are only presented due to a
@@ -354,10 +380,16 @@
          *
          */
         keywordCollapse: function(keyword) {
-            var self    = this,
-                $tokens = self.$s.find('.word[data-value="'+ keyword +'"]');
+            var self        = this,
+                $tokens     = self.$s.find('.word[data-value="'+ keyword +'"]'),
+                $collection = $(),
+                firstS;
 
-            $tokens.each(function() {
+            /* UnHighlight the keywords.  If no more keywords remain in the
+             * containing sentence, add it to our collection of sentences,
+             * noting which one occurs first.
+             */
+            $tokens.each(function(idex) {
                 var $token  = $(this),
                     $s      = $token.parents('.sentence:first');
 
@@ -367,9 +399,29 @@
                 if (nLeft < 1)
                 {
                     // No more keywords in this sentence
-                    $s.removeClass('keyworded', app.config.animSpeed);
+                    var sdex    = self.$s.index($s);
+                    if ( (firstS === undefined) || (sdex < firstS) )
+                    {
+                        firstS = sdex;
+                    }
+                    $collection = $collection.add( $s );
                 }
             });
+
+            /* Collapse the collected sentences and, upon completion of the
+             * *final* animation, trigger repositioning of all ranges from the
+             * *first* sentence on.
+             */
+            var needed      = $collection.length,
+                completed   = 0,
+                posE        = {target: self.$s.eq(firstS)};
+            $collection.removeClass('keyworded', app.config.animSpeed,
+                                    function() {
+                                        if ( ++completed >= needed)
+                                        {
+                                            self._adjustPositions( posE );
+                                        }
+                                    });
         },
 
         /**********************************************************************
@@ -432,7 +484,7 @@
             var self    = this,
                 opts    = self.options,
                 $el     = $(e.target),
-                keyword = $el.attr('value');
+                keyword = $el.data('value');
 
             if ($el.data('keywordsExpanded'))   { return; }
 
@@ -456,7 +508,7 @@
             var self    = this,
                 opts    = self.options,
                 $el     = $(e.target),
-                keyword = $el.attr('value');
+                keyword = $el.data('value');
 
             if ($el.data('keywordsExpanded'))
             {

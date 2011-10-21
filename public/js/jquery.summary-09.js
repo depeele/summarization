@@ -102,7 +102,7 @@ $.Summary = Backbone.View.extend({
             self.$s     = self.$paneContent.find('.sentence');
             self.$s.each(function() {
                 var $s      = $(this);
-                var rank    = $s.attr('rank');
+                var rank    = $s.data('rank');
                 if (rank === undefined) { return; }
 
                 rank = Math.floor(rank * (rank < 1 ? 100 : 1));

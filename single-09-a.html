@@ -78,8 +78,8 @@
    <div class="keywords">
     <% _.each(keywords, function(keyword) { %>
         <div class="keyword"
-             rank="<%= Math.floor(keyword.rank * 100) %>"
-            value="<%= keyword.value %>"><%= keyword.name %></div>
+             data-rank="<%= Math.floor(keyword.rank * 100) %>"
+             data-value="<%= keyword.value %>"><%= keyword.name %></div>
     <% }); %>
    </div>
   </header>
@@ -98,7 +98,7 @@
  <script id='template-sentence' type='text/template'
   ><span class="rank"><%= Math.floor(rank * 100) %></span
   ><span class="content"><% _.each(tokens, function(token) {
-  	%><span class="<%= token.type %>"<%
+  	%><span class="<%= token.type %>" data-type="<%= token.type %>"<%
         if (token.value && (token.value.length > 0))
         {
             %> data-value="<%= token.value %>"<%

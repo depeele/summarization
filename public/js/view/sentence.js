@@ -37,15 +37,21 @@
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this;
-            var rank    = Math.floor( self.model.get('rank') * 100 );
 
             self.$el    = $(this.el);
-            self.$el.attr('id',   self.model.cid);
-            self.$el.attr('rank', rank);
-            self.$el.html( self.template( self.model.toJSON() ) );
 
-            // Store a reference to this view instance
             self.$el.data('View:Sentence', self);
+
+            if (self.model)
+            {
+                var rank    = Math.floor( self.model.get('rank') * 100 );
+
+                self.$el.attr('data-id',   self.model.cid);
+                self.$el.attr('data-type', 'sentence');
+                if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
+
+                self.$el.html( self.template( self.model.toJSON() ) );
+            }
 
             return self;
         },

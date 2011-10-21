@@ -33,24 +33,31 @@
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this;
-            var rank    = Math.floor( self.model.get('rank') * 100 );
 
-            self.$el    = $(this.el);
-            self.$el.attr('id',   self.model.cid);
-            self.$el.attr('rank', rank);
-            self.$el.html( self.template( self.model.toJSON() ) );
-
-            // Store a reference to this view instance
-            self.$el.data('View:Paragraph', self);
-
+            self.$el        = $(this.el);
             self.$sentences = self.$el.find('.sentences:first');
 
-            // Append a view of each paragraph
-            self.model.get('sentences').each(function(model) {
-                var view = new app.View.Sentence({model:model});
+            self.$el.data('View:Paragraph', self);
 
-                self.$sentences.append( view.render().el );
-            });
+            if (self.model)
+            {
+                var rank    = Math.floor( self.model.get('rank') * 100 );
+
+                self.$el.attr('data-id',   self.model.cid);
+                self.$el.attr('data-type', 'paragraph');
+                if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
+
+                self.$el.html( self.template( self.model.toJSON() ) );
+
+                self.$sentences = self.$el.find('.sentences:first');
+
+                // Append a view of each paragraph
+                self.model.get('sentences').each(function(model) {
+                    var view = new app.View.Sentence({model:model});
+
+                    self.$sentences.append( view.render().el );
+                });
+            }
 
             return self;
         },

@@ -29,8 +29,13 @@ function bootApp()
 
     app.config.docId = (window.location.search
                             ? window.location.search
-                                .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.json|\.xml)?$/, '$1')
+                                .replace(/^\?(?:\/?samples\/)?([^\.\/]+)(\.(?:json|xml|html))?$/, '$1$2')
                             : '0001c');
+    if (! app.config.docId.match(/\.(json|xml|html)$/))
+    {
+        app.config.docId += '.json';
+    }
+
 
     $(document).ready(function() {
         /* Startup the application (js/jquery.summary-09.js)
@@ -38,7 +43,7 @@ function bootApp()
          */
         app.main = new $.Summary({
             el:     $('#app-Summary'),
-            doc:    'samples/'+ app.config.docId +'.json'
+            doc:    'samples/'+ app.config.docId
         });
     });
 }

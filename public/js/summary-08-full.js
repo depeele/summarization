@@ -15200,15 +15200,21 @@ _.extend(LocalStore.prototype, {
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this;
-            var rank    = Math.floor( self.model.get('rank') * 100 );
 
             self.$el    = $(this.el);
-            self.$el.attr('id',   self.model.cid);
-            self.$el.attr('rank', rank);
-            self.$el.html( self.template( self.model.toJSON() ) );
 
-            // Store a reference to this view instance
             self.$el.data('View:Sentence', self);
+
+            if (self.model)
+            {
+                var rank    = Math.floor( self.model.get('rank') * 100 );
+
+                self.$el.attr('data-id',   self.model.cid);
+                self.$el.attr('data-type', 'sentence');
+                if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
+
+                self.$el.html( self.template( self.model.toJSON() ) );
+            }
 
             return self;
         },
@@ -15338,24 +15344,31 @@ _.extend(LocalStore.prototype, {
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this;
-            var rank    = Math.floor( self.model.get('rank') * 100 );
 
-            self.$el    = $(this.el);
-            self.$el.attr('id',   self.model.cid);
-            self.$el.attr('rank', rank);
-            self.$el.html( self.template( self.model.toJSON() ) );
-
-            // Store a reference to this view instance
-            self.$el.data('View:Paragraph', self);
-
+            self.$el        = $(this.el);
             self.$sentences = self.$el.find('.sentences:first');
 
-            // Append a view of each paragraph
-            self.model.get('sentences').each(function(model) {
-                var view = new app.View.Sentence({model:model});
+            self.$el.data('View:Paragraph', self);
 
-                self.$sentences.append( view.render().el );
-            });
+            if (self.model)
+            {
+                var rank    = Math.floor( self.model.get('rank') * 100 );
+
+                self.$el.attr('data-id',   self.model.cid);
+                self.$el.attr('data-type', 'paragraph');
+                if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
+
+                self.$el.html( self.template( self.model.toJSON() ) );
+
+                self.$sentences = self.$el.find('.sentences:first');
+
+                // Append a view of each paragraph
+                self.model.get('sentences').each(function(model) {
+                    var view = new app.View.Sentence({model:model});
+
+                    self.$sentences.append( view.render().el );
+                });
+            }
 
             return self;
         },
@@ -15433,24 +15446,31 @@ _.extend(LocalStore.prototype, {
         /** @brief  (Re)render the contents of the section item. */
         render:     function() {
             var self    = this;
-            var rank    = Math.floor( self.model.get('rank') * 100 );
 
-            self.$el    = $(this.el);
-            self.$el.attr('id',   self.model.cid);
-            self.$el.attr('rank', rank);
-            self.$el.html( self.template( self.model.toJSON() ) );
-
-            // Store a reference to this view instance
-            self.$el.data('View:Section', self);
-
+            self.$el         = $(this.el);
             self.$paragraphs = self.$el.find('.paragraphs:first');
 
-            // Append a view of each paragraph
-            self.model.get('paragraphs').each(function(model) {
-                var view = new app.View.Paragraph({model:model});
+            self.$el.data('View:Section', self);
 
-                self.$paragraphs.append( view.render().el );
-            });
+            if (self.model)
+            {
+                var rank    = Math.floor( self.model.get('rank') * 100 );
+
+                self.$el.attr('data-id',   self.model.cid);
+                self.$el.attr('data-type', 'section');
+                if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
+
+                self.$el.html( self.template( self.model.toJSON() ) );
+
+                self.$paragraphs = self.$el.find('.paragraphs:first');
+
+                // Append a view of each paragraph
+                self.model.get('paragraphs').each(function(model) {
+                    var view = new app.View.Paragraph({model:model});
+
+                    self.$paragraphs.append( view.render().el );
+                });
+            }
 
             return self;
         }
@@ -20260,7 +20280,7 @@ $.Summary = Backbone.View.extend({
             self.$s     = self.$paneContent.find('.sentence');
             self.$s.each(function() {
                 var $s      = $(this);
-                var rank    = $s.attr('rank');
+                var rank    = $s.data('rank');
                 if (rank === undefined) { return; }
 
                 rank = Math.floor(rank * (rank < 1 ? 100 : 1));
@@ -20740,7 +20760,7 @@ $.Summary = Backbone.View.extend({
             self.$s     = self.$paneContent.find('.sentence');
             self.$s.each(function() {
                 var $s      = $(this);
-                var rank    = $s.attr('rank');
+                var rank    = $s.data('rank');
                 if (rank === undefined) { return; }
 
                 rank = Math.floor(rank * (rank < 1 ? 100 : 1));

@@ -21,24 +21,31 @@
         /** @brief  (Re)render the contents of the section item. */
         render:     function() {
             var self    = this;
-            var rank    = Math.floor( self.model.get('rank') * 100 );
 
-            self.$el    = $(this.el);
-            self.$el.attr('id',   self.model.cid);
-            self.$el.attr('rank', rank);
-            self.$el.html( self.template( self.model.toJSON() ) );
-
-            // Store a reference to this view instance
-            self.$el.data('View:Section', self);
-
+            self.$el         = $(this.el);
             self.$paragraphs = self.$el.find('.paragraphs:first');
 
-            // Append a view of each paragraph
-            self.model.get('paragraphs').each(function(model) {
-                var view = new app.View.Paragraph({model:model});
+            self.$el.data('View:Section', self);
 
-                self.$paragraphs.append( view.render().el );
-            });
+            if (self.model)
+            {
+                var rank    = Math.floor( self.model.get('rank') * 100 );
+
+                self.$el.attr('data-id',   self.model.cid);
+                self.$el.attr('data-type', 'section');
+                if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
+
+                self.$el.html( self.template( self.model.toJSON() ) );
+
+                self.$paragraphs = self.$el.find('.paragraphs:first');
+
+                // Append a view of each paragraph
+                self.model.get('paragraphs').each(function(model) {
+                    var view = new app.View.Paragraph({model:model});
+
+                    self.$paragraphs.append( view.render().el );
+                });
+            }
 
             return self;
         }
