@@ -29,6 +29,7 @@
         className:  'selection',
         template:   _.template($('#template-selection').html()),
         rangeViews: null,
+        hoverDelay: 250,
 
         events: {
             'mouseenter .range-control':    '_controlMouse',
@@ -203,11 +204,15 @@
          *
          */
         _controlMouse: function(e) {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             /*
-            console.log('View.%s::_controlMouse(): type[ %s ]',
-                        self.viewName, e.type);
+            console.log('View.%s::_controlMouse(): type[ %s ]: '
+                        + '%spendingHover, %spendingLeave',
+                        self.viewName, e.type,
+                        (self._pendingHover ? '' : '!'),
+                        (self._pendingLeave ? '' : '!'));
             // */
 
             switch (e.type)
@@ -227,9 +232,16 @@
                  */
                 self._pendingLeave = setTimeout(function() {
                     // Hide the range controls
-                    self.$control.hide();
+                    self._hideControl();
                     self._pendingLeave = null;
-                }, 100);
+
+                    if (self._pendingHover)
+                    {
+                        // Cancel any pending hover
+                        clearTimeout( self._pendingHover );
+                        self._pendingHover = null;
+                    }
+                }, self.hoverDelay / 2);
                 break;
             }
         },
@@ -239,25 +251,38 @@
          *
          */
         _rangeMouse: function(e) {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             /*
-            console.log('View.Selection::_rangeMouse(): '
-                        + 'type[ '+ e.type +' ]');
+            console.log('View.%s::_rangeMouse(): type[ %s ]: '
+                        + '%spendingHover, %spendingLeave',
+                        self.viewName, e.type,
+                        (self._pendingHover ? '' : '!'),
+                        (self._pendingLeave ? '' : '!'));
             // */
+
+            // Cancel any pendings...
+            if (self._pendingLeave)
+            {
+                // Cancel any pending leave
+                clearTimeout( self._pendingLeave );
+                self._pendingLeave = null;
+            }
+            if (self._pendingHover)
+            {
+                // Cancel any pending hover
+                clearTimeout( self._pendingHover );
+                self._pendingHover = null;
+            }
 
             switch (e.type)
             {
             case 'mouseenter':
                 var $token  = $(e.target);
-                if (self._pendingLeave)
-                {
-                    // Cancel any pending leave
-                    clearTimeout( self._pendingLeave );
-                    self._pendingLeave = null;
-                }
-
-                self._showControl( $token, {x: e.pageX, y: e.pageY} );
+                self._pendingHover = setTimeout(function() {
+                    self._showControl( $token, {x: e.pageX, y: e.pageY} );
+                }, self.hoverDelay);
                 break;
 
             case 'mouseleave':
@@ -268,7 +293,14 @@
                     // Hide the range controls
                     self._hideControl();
                     self._pendingLeave = null;
-                }, 100);
+
+                    if (self._pendingHover)
+                    {
+                        // Cancel any pending hover
+                        clearTimeout( self._pendingHover );
+                        self._pendingHover = null;
+                    }
+                }, self.hoverDelay / 2);
                 break;
             }
         },

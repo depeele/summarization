@@ -1,45 +1,44 @@
-/**
-* hoverIntent is similar to jQuery's built-in "hover" function except that
-* instead of firing the onMouseOver event immediately, hoverIntent checks
-* to see if the user's mouse has slowed down (beneath the sensitivity
-* threshold) before firing the onMouseOver event.
-* 
-* hoverIntent r6 // 2011.02.26 // jQuery 1.5.1+
-* <http://cherne.net/brian/resources/jquery.hoverIntent.html>
-* 
-* hoverIntent is currently available for use in all personal or commercial 
-* projects under both MIT and GPL licenses. This means that you can choose 
-* the license that best suits your project, and use it accordingly.
-* 
-* // basic usage (just like .hover) receives onMouseOver and onMouseOut functions
-* $("ul li").hoverIntent( showNav , hideNav );
-* 
-* // advanced usage receives configuration object only
-* $("ul li").hoverIntent({
-*	sensitivity:    7,          // number   = sensitivity threshold (>= 1)
-*	interval:       100,        // number   = milliseconds of polling interval
-*	timeout:        0,          // number   = milliseconds delay before
-*	                            //            onMouseOut function call
-*	over:           showNav,    // function = onMouseOver callback (required)
-*	out:            hideNav     // function = onMouseOut callback (required)
-* });
-* 
-* @param  over  onMouseOver function || An object with configuration options
-* @param  out   onMouseOut function  || Nothing
-*                                       (use configuration object)
-*
-* @author    Brian Cherne brian(at)cherne(dot)net
-*/
+/** @file
+ *
+ *  hoverIntent will fire a hoverIntentOver/hoverIntentOut event on the
+ *  targeted element iff the user's mouse has slowed down (beneath the
+ *  sensitivity threshold) over the element.
+ *
+ *  Based upon hoverIntent r6 // 2011.02.26 // jQuery 1.5.1+
+ *      <http://cherne.net/brian/resources/jquery.hoverIntent.html>
+ * 
+ *      hoverIntent is currently available for use in all personal or
+ *      commercial projects under both MIT and GPL licenses. This means that
+ *      you can choose the license that best suits your project, and use it
+ *      accordingly.
+ *
+ *      @author    Brian Cherne brian(at)cherne(dot)net
+ * 
+ *  basic usage:
+ *      $("ul li").hoverIntent( );
+ *
+ *      'hoverIntentOver/hoverIntentOut' events will be fired on $("ul li")
+ *      elements.
+ * 
+ *  advanced usage receives configuration object only
+ *      $("ul li").hoverIntent({
+ *	        sensitivity:    7,          // sensitivity threshold (>= 1)
+ *	        interval:       100,        // milliseconds of polling interval
+ *	        timeout:        0,          // milliseconds delay before
+ *	                                    // "hoverIntentOut" is triggered.
+ *	        over:           showNav,    // onHoverIntentOver callback
+ *	        out:            hideNav     // onHoverIntentOut  callback
+ *      });
+ */
 (function($) {
-	$.fn.hoverIntent = function(over,out) {
+	$.fn.hoverIntent = function(opts) {
 		// default configuration options
 		var cfg = {
-			sensitivity: 7,
-			interval: 100,
-			timeout: 0
+			sensitivity:7,
+			interval:   100,
+			timeout:    0
 		};
-		// override configuration options with user supplied object
-		cfg = $.extend(true, cfg, { over: over, out: (out ? out : over) });
+        if (opts)   { cfg = $.extend(true, cfg, opts); }
 
 		/* instantiate variables
          * cX, cY = current X and Y position of mouse, updated by mousemove
@@ -62,9 +61,13 @@
 			// compare mouse positions to see if they've crossed the threshold
 			if ( ( Math.abs(pX-cX) + Math.abs(pY-cY) ) < cfg.sensitivity ) {
 				$(ob).unbind("mousemove",track);
-				// set hoverIntent state to true (so mouseOut can be called)
+                /* set hoverIntent state to true (so hoverIntentOut can be
+                 * called)
+                 */
 				ob.hoverIntent_s = 1;
-				return cfg.over.apply(ob,[ev]);
+
+                ev.type = 'hoverIntentOver';
+                $(ob).trigger(ev);
 			} else {
 				// set previous coordinates for next time
 				pX = cX; pY = cY;
@@ -76,11 +79,13 @@
 			}
 		};
 
-		// A private function for delaying the mouseOut function
+		// A private function for delaying the hoverIntentOut function
 		var delay = function(ev,ob) {
 			ob.hoverIntent_t = clearTimeout(ob.hoverIntent_t);
 			ob.hoverIntent_s = 0;
-			return cfg.out.apply(ob,[ev]);
+
+            ev.type = 'hoverIntentOut';
+            $(ob).trigger(ev);
 		};
 
 		// A private function for handling mouse 'hovering'
@@ -115,7 +120,7 @@
 				// unbind expensive mousemove event
 				$(ob).unbind("mousemove",track);
 
-                /* if hoverIntent state is true, then call the mouseOut
+                /* if hoverIntent state is true, then call the hoverIntentOut
                  * function after the specified delay
                  */
 				if (ob.hoverIntent_s == 1) {
@@ -124,6 +129,14 @@
                 }
 			}
 		};
+
+        // Bind any configuration-provided handlers
+        if ($.isFunction(cfg.over)) {
+            this.bind('hoverIntentOver.hoverIntent',cfg.over);
+        }
+        if ($.isFunction(cfg.out)) {
+            this.bind('hoverIntentOut.hoverIntent',cfg.out);
+        }
 
 		// bind the function to the two event listeners
 		return this.bind('mouseenter.hoverIntent',handleHover)

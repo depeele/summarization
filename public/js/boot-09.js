@@ -79,6 +79,8 @@ if (app.config.mode === 'development')
             }
         },
         'utils':        { src: 'js/jquery.utils.js',  req:['jquery']},
+        'hoverIntent':  { src: 'js/jquery.hoverIntent.js',
+                          req: ['jquery']},
 
         // Rangy and plugins
         'rangy':        { src: 'js/rangy.js' },
@@ -137,7 +139,7 @@ if (app.config.mode === 'development')
     
         // Final suummary app
         'summary':      { src: 'js/jquery.summary-09.js',
-                          req: [ 'jquery', 'utils',
+                          req: [ 'jquery', 'utils', 'hoverIntent',
                                  'rangy',
                                  'ui.checkbox',
                                  'model.options', 'model.user',

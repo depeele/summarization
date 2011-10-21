@@ -15365,7 +15365,9 @@ _.extend(LocalStore.prototype, {
          */
         toggle: function(e) {
             var self    = this,
-                $s      = $(e.target).parents('.sentence');
+                $s      = $(e.target);
+
+            if (! $s.hasClass('sentence'))  { $s = $s.parents('.sentence'); }
 
             if ($s.hasClass('expanded'))
             {
@@ -15592,6 +15594,7 @@ _.extend(LocalStore.prototype, {
         className:  'selection',
         template:   _.template($('#template-selection').html()),
         rangeViews: null,
+        hoverDelay: 250,
 
         events: {
             'mouseenter .range-control':    '_controlMouse',
@@ -15766,11 +15769,15 @@ _.extend(LocalStore.prototype, {
          *
          */
         _controlMouse: function(e) {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             /*
-            console.log('View.%s::_controlMouse(): type[ %s ]',
-                        self.viewName, e.type);
+            console.log('View.%s::_controlMouse(): type[ %s ]: '
+                        + '%spendingHover, %spendingLeave',
+                        self.viewName, e.type,
+                        (self._pendingHover ? '' : '!'),
+                        (self._pendingLeave ? '' : '!'));
             // */
 
             switch (e.type)
@@ -15790,9 +15797,16 @@ _.extend(LocalStore.prototype, {
                  */
                 self._pendingLeave = setTimeout(function() {
                     // Hide the range controls
-                    self.$control.hide();
+                    self._hideControl();
                     self._pendingLeave = null;
-                }, 100);
+
+                    if (self._pendingHover)
+                    {
+                        // Cancel any pending hover
+                        clearTimeout( self._pendingHover );
+                        self._pendingHover = null;
+                    }
+                }, self.hoverDelay / 2);
                 break;
             }
         },
@@ -15802,25 +15816,38 @@ _.extend(LocalStore.prototype, {
          *
          */
         _rangeMouse: function(e) {
-            var self    = this;
+            var self    = this,
+                opts    = self.options;
 
             /*
-            console.log('View.Selection::_rangeMouse(): '
-                        + 'type[ '+ e.type +' ]');
+            console.log('View.%s::_rangeMouse(): type[ %s ]: '
+                        + '%spendingHover, %spendingLeave',
+                        self.viewName, e.type,
+                        (self._pendingHover ? '' : '!'),
+                        (self._pendingLeave ? '' : '!'));
             // */
+
+            // Cancel any pendings...
+            if (self._pendingLeave)
+            {
+                // Cancel any pending leave
+                clearTimeout( self._pendingLeave );
+                self._pendingLeave = null;
+            }
+            if (self._pendingHover)
+            {
+                // Cancel any pending hover
+                clearTimeout( self._pendingHover );
+                self._pendingHover = null;
+            }
 
             switch (e.type)
             {
             case 'mouseenter':
                 var $token  = $(e.target);
-                if (self._pendingLeave)
-                {
-                    // Cancel any pending leave
-                    clearTimeout( self._pendingLeave );
-                    self._pendingLeave = null;
-                }
-
-                self._showControl( $token, {x: e.pageX, y: e.pageY} );
+                self._pendingHover = setTimeout(function() {
+                    self._showControl( $token, {x: e.pageX, y: e.pageY} );
+                }, self.hoverDelay);
                 break;
 
             case 'mouseleave':
@@ -15831,7 +15858,14 @@ _.extend(LocalStore.prototype, {
                     // Hide the range controls
                     self._hideControl();
                     self._pendingLeave = null;
-                }, 100);
+
+                    if (self._pendingHover)
+                    {
+                        // Cancel any pending hover
+                        clearTimeout( self._pendingHover );
+                        self._pendingHover = null;
+                    }
+                }, self.hoverDelay / 2);
                 break;
             }
         },
@@ -17076,6 +17110,8 @@ _.extend(LocalStore.prototype, {
             'sentence:expansionExpanded .sentence': '_adjustPositions',
             'sentence:expansionCollapsed .sentence':'_adjustPositions',
 
+            'hoverIntentOver header .keyword':      '_keywordHover',
+            'hoverIntentOut  header .keyword':      '_keywordHover',
             'click header .keyword':                '_keywordClick'
         },
 
@@ -17105,7 +17141,12 @@ _.extend(LocalStore.prototype, {
         /** @brief  Override so we can unbind events bound in initialize().
          */
         remove: function() {
+            var self    = this;
+
             $(document).unbind('.viewDoc');
+
+            // Deactivate hoverIntent for any keywords in our header
+            self.$el.find('header .keyword').unhoverIntent();
 
             return Backbone.View.prototype.remove.call(this);
         },
@@ -17130,6 +17171,9 @@ _.extend(LocalStore.prototype, {
             });
 
             self.$s = self.$el.find('.sentence');
+
+            // Activate hoverIntent for any keywords in our header
+            self.$el.find('header .keyword').hoverIntent();
 
             // Give each sentence an indexed-based id
             self.$s.each(function(idex) {
@@ -17356,13 +17400,26 @@ _.extend(LocalStore.prototype, {
             // */
         },
 
+        /** @brief  Within sentences, (un)highlight all keywords matching the
+         *          target keyword.
+         *  @param  keyword The target keyword;
+         *  @param  on          Turn highlighting on or off [ true ];
+         *
+         */
+        keywordHighlight: function(keyword, on) {
+            var self    = this,
+                $tokens = self.$s.find('.word[data-value="'+ keyword +'"]'),
+                op      = (on === false ? 'removeClass' : 'addClass');
+
+            $tokens[op]('highlight');
+        },
+
         /** @brief  Expand all sentences containing the target keyword.
          *  @param  keyword The target keyword;
          *
          */
         keywordExpand: function(keyword) {
             var self    = this,
-                opts    = self.options;
                 $tokens = self.$s.find('.word[data-value="'+ keyword +'"]');
 
             $tokens.each(function() {
@@ -17381,7 +17438,6 @@ _.extend(LocalStore.prototype, {
          */
         keywordCollapse: function(keyword) {
             var self    = this,
-                opts    = self.options,
                 $tokens = self.$s.find('.word[data-value="'+ keyword +'"]');
 
             $tokens.each(function() {
@@ -17451,7 +17507,31 @@ _.extend(LocalStore.prototype, {
             return self;
         },
 
-        /** @brief  Expand all sentences containing the target keyword.
+        /** @brief  (Un)Highlight all keywords matching the target keyword.
+         *  @param  e       The triggering event;
+         *
+         */
+        _keywordHover: function(e) {
+            var self    = this,
+                opts    = self.options,
+                $el     = $(e.target),
+                keyword = $el.attr('value');
+
+            if ($el.data('keywordsExpanded'))   { return; }
+
+            if (e.type === 'hoverIntentOut')
+            {
+                self.keywordHighlight( keyword, false );
+                $el.removeClass('highlight');
+            }
+            else
+            {
+                $el.addClass('highlight');
+                self.keywordHighlight( keyword );
+            }
+        },
+
+        /** @brief  Expand/Collapse all sentences containing the target keyword.
          *  @param  e       The triggering event;
          *
          */
@@ -17461,13 +17541,15 @@ _.extend(LocalStore.prototype, {
                 $el     = $(e.target),
                 keyword = $el.attr('value');
 
-            if ($el.hasClass('highlight'))
+            if ($el.data('keywordsExpanded'))
             {
                 self.keywordCollapse( keyword );
                 $el.removeClass('highlight');
+                $el.removeData('keywordsExpanded');
             }
             else
             {
+                $el.data('keywordsExpanded', true);
                 $el.addClass('highlight');
                 self.keywordExpand( keyword );
             }

@@ -27,6 +27,8 @@
             'sentence:expansionExpanded .sentence': '_adjustPositions',
             'sentence:expansionCollapsed .sentence':'_adjustPositions',
 
+            'hoverIntentOver header .keyword':      '_keywordHover',
+            'hoverIntentOut  header .keyword':      '_keywordHover',
             'click header .keyword':                '_keywordClick'
         },
 
@@ -56,7 +58,12 @@
         /** @brief  Override so we can unbind events bound in initialize().
          */
         remove: function() {
+            var self    = this;
+
             $(document).unbind('.viewDoc');
+
+            // Deactivate hoverIntent for any keywords in our header
+            self.$el.find('header .keyword').unhoverIntent();
 
             return Backbone.View.prototype.remove.call(this);
         },
@@ -81,6 +88,9 @@
             });
 
             self.$s = self.$el.find('.sentence');
+
+            // Activate hoverIntent for any keywords in our header
+            self.$el.find('header .keyword').hoverIntent();
 
             // Give each sentence an indexed-based id
             self.$s.each(function(idex) {
@@ -307,13 +317,26 @@
             // */
         },
 
+        /** @brief  Within sentences, (un)highlight all keywords matching the
+         *          target keyword.
+         *  @param  keyword The target keyword;
+         *  @param  on          Turn highlighting on or off [ true ];
+         *
+         */
+        keywordHighlight: function(keyword, on) {
+            var self    = this,
+                $tokens = self.$s.find('.word[data-value="'+ keyword +'"]'),
+                op      = (on === false ? 'removeClass' : 'addClass');
+
+            $tokens[op]('highlight');
+        },
+
         /** @brief  Expand all sentences containing the target keyword.
          *  @param  keyword The target keyword;
          *
          */
         keywordExpand: function(keyword) {
             var self    = this,
-                opts    = self.options;
                 $tokens = self.$s.find('.word[data-value="'+ keyword +'"]');
 
             $tokens.each(function() {
@@ -332,7 +355,6 @@
          */
         keywordCollapse: function(keyword) {
             var self    = this,
-                opts    = self.options,
                 $tokens = self.$s.find('.word[data-value="'+ keyword +'"]');
 
             $tokens.each(function() {
@@ -402,7 +424,31 @@
             return self;
         },
 
-        /** @brief  Expand all sentences containing the target keyword.
+        /** @brief  (Un)Highlight all keywords matching the target keyword.
+         *  @param  e       The triggering event;
+         *
+         */
+        _keywordHover: function(e) {
+            var self    = this,
+                opts    = self.options,
+                $el     = $(e.target),
+                keyword = $el.attr('value');
+
+            if ($el.data('keywordsExpanded'))   { return; }
+
+            if (e.type === 'hoverIntentOut')
+            {
+                self.keywordHighlight( keyword, false );
+                $el.removeClass('highlight');
+            }
+            else
+            {
+                $el.addClass('highlight');
+                self.keywordHighlight( keyword );
+            }
+        },
+
+        /** @brief  Expand/Collapse all sentences containing the target keyword.
          *  @param  e       The triggering event;
          *
          */
@@ -412,13 +458,15 @@
                 $el     = $(e.target),
                 keyword = $el.attr('value');
 
-            if ($el.hasClass('highlight'))
+            if ($el.data('keywordsExpanded'))
             {
                 self.keywordCollapse( keyword );
                 $el.removeClass('highlight');
+                $el.removeData('keywordsExpanded');
             }
             else
             {
+                $el.data('keywordsExpanded', true);
                 $el.addClass('highlight');
                 self.keywordExpand( keyword );
             }

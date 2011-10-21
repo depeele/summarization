@@ -15365,7 +15365,9 @@ _.extend(LocalStore.prototype, {
          */
         toggle: function(e) {
             var self    = this,
-                $s      = $(e.target).parents('.sentence');
+                $s      = $(e.target);
+
+            if (! $s.hasClass('sentence'))  { $s = $s.parents('.sentence'); }
 
             if ($s.hasClass('expanded'))
             {

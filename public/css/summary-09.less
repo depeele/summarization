@@ -43,6 +43,7 @@
 @colorActiveNoteBorder:         darken(@colorActiveNoteBackground, 20%);
 
 @colorSentenceHidden:           lighten(@colorText, 60%);
+@colorSentenceExpansion:        lighten(@colorText, 35%);
 
 @colorControls:                 lighten(@colorText, 40%);
 
@@ -160,15 +161,14 @@ a {
       .keyword {
         .inlineBlock();
         cursor:     pointer;
-        border:     1px solid @colorArticleBackground;
 
         &.highlight {
-          border-color: lighten(@colorKeyword, 30%);
           color:        @colorKeyword;
         }
       }
       .keyword:before {
         content:      ' / ';
+        color:        @colorTextLight;
       }
     }
   }
@@ -294,12 +294,13 @@ a {
           cursor:       text;
           color:        @colorText;
         }
-        .keyworded {
-          .highlight {
-            border:           none;
-            color:            @colorKeyword !important;
-            background-color: none !important;
-          }
+        .expansion {
+          color:        @colorSentenceExpansion;
+        }
+        .highlight {
+          border:           none;
+          color:            @colorKeyword !important;
+          background-color: none !important;
         }
 
         &:hover {
@@ -313,7 +314,7 @@ a {
             color:      @colorTextDarkest;
           }
           .expansion {
-            color:      darken(@colorSentenceHidden, 10%);
+            color:      darken(@colorSentenceExpansion, 10%);
           }
         }
 
