@@ -65,6 +65,7 @@ SRC_08	= $(BACKBONE)			\
 
 SRC_09	= $(BACKBONE)			\
 	  $(BB_MODELS)			\
+	  jquery.hoverIntent.js		\
 	  view/sentence.js		\
 	  view/paragraph.js		\
 	  view/section.js		\
