@@ -78,8 +78,11 @@
           pubdate="true"><%= jQuery.date2str(published) %></time>
    <div class="keywords">
     <% _.each(keywords, function(keyword) { %>
-        <div class="keyword"
-             data-rank="<%= Math.floor(keyword.rank * 100) %>"
+        <div class="keyword"<%
+            if (keyword.rank > 0)
+            {
+                print(' data-rank="'+ Math.floor(keyword.rank * 100) +'"')
+            }%>
              data-value="<%= keyword.value %>"><%= keyword.name %></div>
     <% }); %>
    </div>
@@ -97,14 +100,16 @@
  </script>
 
  <script id='template-sentence' type='text/template'
-  ><span class="rank"><%= Math.floor(rank * 100) %></span
+  ><span class="rank"><%= (rank > 0 ? Math.floor(rank * 100) : 0) %></span
   ><span class="content"><% _.each(tokens, function(token) {
-  	%><span class="<%= token.type %>" data-type="<%= token.type %>"<%
+  	%><span   data-id="<%= token.id %>"
+            data-type="<%= token.type %>"
+                class="<%= token.type %>"<%
         if (token.value && (token.value.length > 0))
         {
-            %> data-value="<%= token.value %>"<%
-        }
-    %>><%= token.content %></span><%
+            print(' data-value="'+ token.value +'"')
+
+        }%>><%= token.content %></span><%
   }); %></span></script>
 
  <script id='template-selection' type='text/template'>

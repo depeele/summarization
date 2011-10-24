@@ -29,9 +29,9 @@ function bootApp()
 
     app.config.docId = (window.location.search
                             ? window.location.search
-                                .replace(/^\?(?:\/?samples\/)?([^\.\/]+)(\.(?:json|xml|html))?$/, '$1$2')
+                                .replace(/^\?(?:\/?samples\/)?([^\.\/]+)(\.(?:json|html))?$/, '$1$2')
                             : '0001c');
-    if (! app.config.docId.match(/\.(json|xml|html)$/))
+    if (! app.config.docId.match(/\.(json|html)$/))
     {
         app.config.docId += '.json';
     }

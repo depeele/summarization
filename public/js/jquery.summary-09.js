@@ -66,18 +66,6 @@ $.Summary = Backbone.View.extend({
                 opts.doc = new app.Model.Doc( data );
             });
         }
-        else if (opts.doc.match(/\.xml$/))
-        {
-            getDoc = $.ajax({
-                url:        opts.doc,
-                dataType:   'xml'
-            });
-
-            getDoc.success(function( xml ) {
-                // Process the XML
-                self._parseXml(xml);
-            });
-        }
         else if (opts.doc.match(/\.html$/))
         {
             getDoc = $.ajax({
@@ -353,46 +341,6 @@ $.Summary = Backbone.View.extend({
             model       = {
                 type:       'text/html',
                 url:        $title.find('a').attr('href'),
-                title:      $title.text(),
-                author:     $author.text(),
-                published:  $published.attr('datetime'),
-                keywords:   _.map($keywords, function(kw) {
-                    var $kw = $(kw);
-                    return {
-                        id:     $kw.data('id'),
-                        name:   $kw.text(),
-                        value:  $kw.data('value')
-                    }
-                })
-            };
-
-        self.$sections = $article.find('section');
-        opts.doc = new app.Model.Doc( model );
-    },
-
-    /** @brief  Given XML, attempt to construct a simple Model.Doc instance
-     *          extracting the pre-formatted 'section' elements from the
-     *          contained 'article'.
-     *  @param  xml     The XML string to parse;
-     */
-    _parseXml: function(xml) {
-        var self    = this,
-            opts    = self.options,
-            $xml    = $( xml ),
-            $article;
-
-        // Process the HTML
-        $article = $xml.find('body');
-        if ($article.length < 1)    { return; }
-
-        // Generate a simplified model from $article.
-        var $title      = $xml.find('title'),
-            $author     = $xml.find('author'),
-            $published  = $xml.find('[pubdate]'),
-            $keywords   = $xml.find('keywords keyword'),
-            model       = {
-                type:       'text/html',
-                url:        $xml.find('document').attr('src'),
                 title:      $title.text(),
                 author:     $author.text(),
                 published:  $published.attr('datetime'),
