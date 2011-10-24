@@ -452,14 +452,12 @@
                 opts    = self.options,
                 notes   = self.model.get('notes');
 
-            self._initialRendering = true;
             notes.each(function(note) {
                 /* Invoke the routing that is normally triggered when a new
                  * note is added.
                  */
-                self._noteAdded(note, notes);
+                self._noteAdded(note, notes, {initialRendering: true});
             });
-            self._initialRendering = false;
 
             return self;
         },
@@ -547,8 +545,9 @@
          *  @param  options Any options used with add();
          */
         _noteAdded: function(note, notes, options) {
-            var self    = this,
-                opts    = self.options;
+            var self                = this,
+                opts                = self.options,
+                initialRendering    = (options && options.initialRendering);
 
             /* Create a new View.Note to associate with this new model
              *
@@ -560,7 +559,7 @@
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
-            view.show( ((! self._initialRendering) &&
+            view.show( ((! initialRendering) &&
                         (app.options.get('quickTag') !== true)
                             ? function() {  view.editComment(); }
                             : undefined) );
