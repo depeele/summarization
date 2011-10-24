@@ -15229,6 +15229,14 @@ _.extend(LocalStore.prototype, {
                     $el         = $( self.template( data ) ),
                     $content    = self.$el.children().detach();
 
+                // Make sure each token has an appropriate CSS class
+                $content.each(function() {
+                    var $token  = $(this),
+                        type    = $token.data('type');
+
+                    $token.addClass( type );
+                });
+
                 $el.filter('.content').append( $content );
 
                 self.$el.empty()
