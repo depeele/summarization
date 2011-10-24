@@ -867,8 +867,11 @@ a {
   -o-opacity: 1;
   -khtml-opacity: 1;
 }
-.content-pane article section p .sentence .content .word, .content-pane article section p .sentence .content .ws, .content-pane article section p .sentence .content .punc {
+.content-pane article section p .sentence .content .word, .content-pane article section p .sentence .content .ws {
   padding: 0.0625em;
+}
+.content-pane article section p .sentence .content .punc {
+  padding: 0.0625em 0;
 }
 .content-pane article section p .sentence .content .selection {
   background-color: #444444;
