@@ -17767,12 +17767,15 @@ _.extend(LocalStore.prototype, {
             var self    = this,
                 opts    = self.options,
                 notes   = self.model.get('notes');
+
+            self._initialRendering = true;
             notes.each(function(note) {
                 /* Invoke the routing that is normally triggered when a new
                  * note is added.
                  */
                 self._noteAdded(note, notes);
             });
+            self._initialRendering = false;
 
             return self;
         },
@@ -17873,11 +17876,10 @@ _.extend(LocalStore.prototype, {
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
-            //setTimeout(function() {
-                view.show( (app.options.get('quickTag') !== true
-                                ? function() {  view.editComment(); }
-                                : undefined) );
-            //}, 100);
+            view.show( ((! self._initialRendering) &&
+                        (app.options.get('quickTag') !== true)
+                            ? function() {  view.editComment(); }
+                            : undefined) );
         },
 
         /** @brief  A note has been removed from our underlying model.
