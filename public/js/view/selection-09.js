@@ -54,8 +54,10 @@
             this.rangeViews = this.options.rangeViews;
         },
 
-        /** @brief  Render this view. */
-        render: function() {
+        /** @brief  Render this view.
+         *  @param  e       The event that triggered this rendering;
+         */
+        render: function(e) {
             var self    = this;
 
             self.$el = $(self.el);
@@ -105,6 +107,69 @@
                  * self.$el.append( view.render().el );
                  */
             });
+
+            if (e && (e.type === 'mouseup'))
+            {
+                var coords  = {x: e.pageX, y: e.pageY},
+                    $token,
+                    nearest;
+
+                /* Find the .range element ($token) nearest the pageX/pageY
+                 * coordinates
+                 */
+                $.each(self.rangeViews, function() {
+                    $.each(this.$el.find('.range'), function() {
+                        var $target = $(this),
+                            offset  = $target.offset(),
+                            center  = {
+                                x:  offset.left + ($target.outerWidth()  / 2),
+                                y:  offset.top  + ($target.outerHeight() / 2)
+                            },
+                            delta   = {
+                                x:  Math.abs(coords.x - center.x),
+                                y:  Math.abs(coords.y - center.y)
+                            };
+
+                        if ( (! nearest) ||
+                             ( (delta.x + delta.y) < (nearest.x + nearest.y) ) )
+                        {
+                            $token  = $target;
+                            nearest = delta;
+                        }
+                    });
+                });
+
+                if ($token)
+                {
+                    /* Invoke _showControl() with the identified $token and the
+                     * x/y coordinates of the triggering event.
+                     */
+                    var offset  = $token.offset(),
+                        right   = offset.left + $token.outerWidth(),
+                        bottom  = offset.top  + $token.outerHeight();
+
+                    /*
+                    console.log('View.%s::render(): token[ %s ], '
+                                + 'offset[ %d, %d - %d, %d ], '
+                                + 'coords[ %d, %d ]...',
+                                self.viewName, $token.data('id'),
+                                offset.left, offset.top,
+                                right, bottom,
+                                coords.x, coords.y);
+                    // */
+
+                    if (coords.x < offset.left) { coords.x = offset.left; }
+                    else if (coords.x > right)  { coords.x = right; }
+
+                    if (coords.y < offset.top)  { coords.y = offset.top; }
+                    else if (coords.y > bottom) { coords.y = bottom; }
+
+                    // Give a bit of time for the DOM to be updated.
+                    setTimeout(function() {
+                                self._showControl( $token, coords );
+                               }, 100);
+                }
+            }
 
             return self;
         },
@@ -357,6 +422,15 @@
                 self.$control.removeClass('ui-corner-bottom')
                              .addClass('ui-corner-top');
             }
+
+            /*
+            console.log('View.%s::_showControl(): token[ %s ], '
+                        + 'position[ %d, %d ], my[ %s ], at[ %s ]',
+                        self.viewName, $token.data('id'),
+                        coords.x, coords.y,
+                        position.my, position.at);
+            // */
+
 
             /* Mark whether or not to animate the position based upon the
              * current visibility of the control, ensure that it is visible,
