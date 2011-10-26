@@ -14607,12 +14607,13 @@ _.extend(LocalStore.prototype, {
         },
 
         initialize: function() {
-            var author  = this.get('author');
-            var created = this.get('created');
+            var self    = this,
+                author  = self.get('author'),
+                created = self.get('created');
             if ( ! (author instanceof app.Model.User) )
             {
                 author = new app.Model.User(author);
-                this.set({'author': author});
+                self.set({'author': author});
             }
 
             if ( ! (created instanceof Date) )
@@ -14621,8 +14622,42 @@ _.extend(LocalStore.prototype, {
                             ? new Date(created)
                             : new Date());
 
-                this.set({'created': created});
+                self.set({'created': created});
             }
+        },
+
+        /** @brief  Retrieve an array of hashTags within the text of this
+         *          comment.
+         *
+         *  @return An array of hashTags strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                hashTags    = self.get('text').match(/(?:#)([^#\s,;\.]+)/g);
+
+            hashTags = (hashTags === null
+                            ? []
+                            : hashTags);
+
+            return _.map(hashTags, function(hashTag) {
+                        return hashTag.substr(1);
+                   });
+        },
+
+        /** @brief  Does this comment have any of the given hashTags?
+         *  @param  hashTags    An array of hashTag strings;
+         *
+         *  @return true | false
+         */
+        hasHashtag: function(hashTags) {
+            var self    = this,
+                myTags  = self.getHashtags();
+
+            return (myTags.length < 1
+                        ? false
+                        : _.reduce(hashTags, function(res, hashTag) {
+                                return (res || (myTags.indexOf(hashTag) >= 0));
+                          }, false, self));
         }
     });
 
@@ -14780,8 +14815,8 @@ _.extend(LocalStore.prototype, {
                 self.fetch({id: id});
             }
 
-            var comments    = self.get('comments');
-            var ranges      = self.get('ranges');
+            var comments    = self.get('comments'),
+                ranges      = self.get('ranges');
             if ((! comments) || ! (comments instanceof app.Model.Comments))
             {
                 comments = new app.Model.Comments( comments );
@@ -14810,8 +14845,8 @@ _.extend(LocalStore.prototype, {
          *  @param  comment     The new Model.Comment instance to add.
          */
         addComment: function(comment) {
-            var self        = this;
-            var comments    = self.get('comments');
+            var self        = this,
+                comments    = self.get('comments');
 
             /*
             console.log("Model:Note::addComment()[%s]: comment[ %s ]",
@@ -14821,6 +14856,22 @@ _.extend(LocalStore.prototype, {
             comments.add( comment );
         },
 
+        /** @brief  Retrieve all hash tags from the comments of this note.
+         *
+         *  @return An array of hashTag strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                comments    = self.get('comments'),
+                hashTags    = [];
+        
+            comments.each(function(comment) {
+                hashTags = hashTags.concat( comment.getHashtags() );
+            });
+
+            return hashTags;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
@@ -14828,8 +14879,11 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  Proxy any events from our comments instance.
          *  @param  eventName   The event;
+         *  @param  model       The model triggering this event;
+         *  @param  val         ASSUMING set(), the new value;
+         *  @param  options     ASSUMING set(), the set options;
          */
-        _commentsProxy: function(eventName) {
+        _commentsProxy: function(eventName, model, val, options) {
             var self    = this;
 
             switch (eventName)
@@ -14837,11 +14891,6 @@ _.extend(LocalStore.prototype, {
             case 'add':
             case 'change':
             case 'destroy':
-                /*
-                console.log("Model:Note::_commentsProxy()[%s]: event[ %s ]",
-                            self.cid, eventName);
-                // */
-
                 self.trigger( 'change', self, self.collection );
                 break;
             }
@@ -15034,10 +15083,10 @@ _.extend(LocalStore.prototype, {
         },
 
         initialize: function() {
-            var self        = this;
-            var published   = self.get('published');
-            var sections    = self.get('sections');
-            var notes       = self.get('notes');
+            var self        = this,
+                published   = self.get('published'),
+                sections    = self.get('sections'),
+                notes       = self.get('notes');
             if ((! published) || ! (published instanceof Date) )
             {
                 published = (published
@@ -15062,16 +15111,18 @@ _.extend(LocalStore.prototype, {
                 self.set({notes: notes}, {silent: true});
             }
 
-            notes.bind('add',    _.bind(self._notesChanged, self));
-            notes.bind('change', _.bind(self._notesChanged, self));
+            self.__notesChanged    = _.bind(self._notesChanged,    self);
+
+            notes.bind('add',             self.__notesChanged);
+            notes.bind('change',          self.__notesChanged);
         },
 
         /** @brief  Add a new Model.Note instance to the notes collection.
          *  @param  note    The Model.Note instance to add;
          */
         addNote: function(note) {
-            var self    = this;
-            var notes   = self.get('notes');
+            var self    = this,
+                notes   = self.get('notes');
 
             /*
             console.log("Model:Doc::addNote()[%s]",
@@ -15094,13 +15145,34 @@ _.extend(LocalStore.prototype, {
             notes.add( note );
         },
 
+        /** @brief  Retrieve all hash tags from the comments of every note
+         *          currently attached to this document.
+         *
+         *  @return An array of hashTag strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                notes       = self.get('notes'),
+                hashTags    = [];
+        
+            notes.each(function(note) {
+                hashTags = _.union(hashTags, note.getHashtags() );
+            });
+
+            
+
+            return hashTags;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
          */
 
         /** @brief  Proxy any events from our notes instance.
-         *  @param  eventName   The event;
+         *  @param  note    The note that was changed;
+         *  @param  notes   The notes collection containing 'note';
+         *  @param  options Options passed with the set that caused the change;
          */
         _notesChanged: function(note, notes, options) {
             var self    = this;
@@ -15112,6 +15184,8 @@ _.extend(LocalStore.prototype, {
 
             // For any change, save the note
             note.save();
+
+            // :TODO: Grab hashTags from all notes
         }
     });
 
@@ -15852,8 +15926,10 @@ _.extend(LocalStore.prototype, {
             this.rangeViews = this.options.rangeViews;
         },
 
-        /** @brief  Render this view. */
-        render: function() {
+        /** @brief  Render this view.
+         *  @param  e       The event that triggered this rendering;
+         */
+        render: function(e) {
             var self    = this;
 
             self.$el = $(self.el);
@@ -15903,6 +15979,69 @@ _.extend(LocalStore.prototype, {
                  * self.$el.append( view.render().el );
                  */
             });
+
+            if (e && (e.type === 'mouseup'))
+            {
+                var coords  = {x: e.pageX, y: e.pageY},
+                    $token,
+                    nearest;
+
+                /* Find the .range element ($token) nearest the pageX/pageY
+                 * coordinates
+                 */
+                $.each(self.rangeViews, function() {
+                    $.each(this.$el.find('.range'), function() {
+                        var $target = $(this),
+                            offset  = $target.offset(),
+                            center  = {
+                                x:  offset.left + ($target.outerWidth()  / 2),
+                                y:  offset.top  + ($target.outerHeight() / 2)
+                            },
+                            delta   = {
+                                x:  Math.abs(coords.x - center.x),
+                                y:  Math.abs(coords.y - center.y)
+                            };
+
+                        if ( (! nearest) ||
+                             ( (delta.x + delta.y) < (nearest.x + nearest.y) ) )
+                        {
+                            $token  = $target;
+                            nearest = delta;
+                        }
+                    });
+                });
+
+                if ($token)
+                {
+                    /* Invoke _showControl() with the identified $token and the
+                     * x/y coordinates of the triggering event.
+                     */
+                    var offset  = $token.offset(),
+                        right   = offset.left + $token.outerWidth(),
+                        bottom  = offset.top  + $token.outerHeight();
+
+                    /*
+                    console.log('View.%s::render(): token[ %s ], '
+                                + 'offset[ %d, %d - %d, %d ], '
+                                + 'coords[ %d, %d ]...',
+                                self.viewName, $token.data('id'),
+                                offset.left, offset.top,
+                                right, bottom,
+                                coords.x, coords.y);
+                    // */
+
+                    if (coords.x < offset.left) { coords.x = offset.left; }
+                    else if (coords.x > right)  { coords.x = right; }
+
+                    if (coords.y < offset.top)  { coords.y = offset.top; }
+                    else if (coords.y > bottom) { coords.y = bottom; }
+
+                    // Give a bit of time for the DOM to be updated.
+                    setTimeout(function() {
+                                self._showControl( $token, coords );
+                               }, 100);
+                }
+            }
 
             return self;
         },
@@ -16156,6 +16295,15 @@ _.extend(LocalStore.prototype, {
                              .addClass('ui-corner-top');
             }
 
+            /*
+            console.log('View.%s::_showControl(): token[ %s ], '
+                        + 'position[ %d, %d ], my[ %s ], at[ %s ]',
+                        self.viewName, $token.data('id'),
+                        coords.x, coords.y,
+                        position.my, position.at);
+            // */
+
+
             /* Mark whether or not to animate the position based upon the
              * current visibility of the control, ensure that it is visible,
              * and perform positioning.
@@ -16225,9 +16373,14 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  Initialize this view. */
         initialize: function() {
+            var self    = this;
+
             // Bind to changes to our underlying model
-            this.model.bind('destroy', _.bind(this.remove,  this));
-            this.model.bind('change',  _.bind(this.refresh, this));
+            self.__destroy = _.bind(self.remove,  self);
+            self.__change  = _.bind(self.refresh, self);
+
+            self.model.bind('destroy', self.__destroy);
+            self.model.bind('change',  self.__change);
         },
 
         /** @brief  Render this view. */
@@ -16260,6 +16413,9 @@ _.extend(LocalStore.prototype, {
         remove: function() {
             var self    = this,
                 opts    = self.options;
+
+            self.model.unbind('destroy', self.__destroy);
+            self.model.unbind('change',  self.__change);
 
             self.$el.slideUp(function() {
                 self.$buttons.button('destroy');
@@ -16632,11 +16788,15 @@ _.extend(LocalStore.prototype, {
             self.rangeViews = null;
 
             // Bind to changes to our underlying model
-            self.model.bind('destroy', _.bind(self.remove,  self));
+            self.comments         = self.model.get('comments');
+            self.__destroy        = _.bind(self.remove,          self);
+            self.__commentAdded   = _.bind(self._commentAdded,   self);
+            self.__commentRemoved = _.bind(self._commentRemoved, self);
 
-            var comments    = self.model.get('comments');
-            comments.bind('add',    _.bind(self._commentAdded,   self));
-            comments.bind('remove', _.bind(self._commentRemoved, self));
+            self.model.bind('destroy',   self.__destroy);
+
+            self.comments.bind('add',    self.__commentAdded);
+            self.comments.bind('remove', self.__commentRemoved);
 
             if (opts.position.using === null)
             {
@@ -16739,6 +16899,12 @@ _.extend(LocalStore.prototype, {
             // */
 
             $(document).unbind('click.viewNote', self._docClick);
+
+            self.model.unbind('destroy',   self.__destroy);
+
+            self.comments.unbind('add',    self.__commentAdded);
+            self.comments.unbind('remove', self.__commentRemoved);
+
 
             if ($.isArray(self.rangeViews))
             {
@@ -16976,6 +17142,25 @@ _.extend(LocalStore.prototype, {
                     $comment.trigger('comment:edit');
                 });
             }
+        },
+
+        /** @brief  Does this note have any of the given hashTags?
+         *  @param  hashTags    An array of hashTag strings;
+         *
+         *  @return true | false
+         */
+        hasHashtag: function(hashTags) {
+            var self    = this,
+                opts    = self.options;
+
+            /* We have focus if $reply has focus OR any of our comments are
+             * being edited.
+             */
+            return self.comments
+                        .reduce(function(res, comment) {
+                                    return (res ||
+                                            comment.hasHashtag(hashTags));
+                                }, false, self);
         },
 
         /**********************************************************************
@@ -17349,13 +17534,19 @@ _.extend(LocalStore.prototype, {
         },
 
         initialize: function() {
-            this.$el = $(this.el);
+            var self    = this;
+
+            self.$el = $(this.el);
 
             // Bind to changes to our underlying model
-            var notes   = this.model.get('notes');
+            self.notes             = self.model.get('notes');
+            self.__noteAdded       = _.bind(self._noteAdded,       self);
+            self.__noteChanged     = _.bind(self._noteChanged,     self);
+            self.__noteRemoved     = _.bind(self._noteRemoved,     self);
 
-            notes.bind('add',    _.bind(this._noteAdded,   this));
-            notes.bind('remove', _.bind(this._noteRemoved, this));
+            self.notes.bind('add',             self.__noteAdded);
+            self.notes.bind('change',          self.__noteChanged);
+            self.notes.bind('remove',          self.__noteRemoved);
 
             rangy.init();
 
@@ -17365,10 +17556,11 @@ _.extend(LocalStore.prototype, {
              *        mousedown when selecting (at least in Chrome).  Instead,
              *        we bind to 'mousedown' and 'mouseup'.
              */
+            self.__setSelection = _.bind(self.setSelection, self);
             $(document).bind( ['mousedown.viewDoc',
                                'mouseup.viewDoc',
                                'dblclick.viewDoc'].join(' '),
-                             _.bind(this.setSelection, this));
+                             self.__setSelection);
         },
 
         /** @brief  Override so we can unbind events bound in initialize().
@@ -17376,7 +17568,11 @@ _.extend(LocalStore.prototype, {
         remove: function() {
             var self    = this;
 
-            $(document).unbind('.viewDoc');
+            $(document).unbind( '.viewDoc', self.__setSelection);
+
+            self.notes.unbind('add',             self.__noteAdded);
+            self.notes.unbind('change',          self.__noteChanged);
+            self.notes.unbind('remove',          self.__noteRemoved);
 
             // Deactivate hoverIntent for any keywords in our header
             self.$el.find('header .keyword').unhoverIntent();
@@ -17428,7 +17624,33 @@ _.extend(LocalStore.prototype, {
                 $s.attr('id', 'sentence-'+ idex);
             });
 
+            if (opts.$tags)
+            {
+                /* Add a click delegate for hashTags in the specified tags
+                 * container
+                 */
+                self.__tagClick = _.bind(self._tagClick, self);
+
+                opts.$tags.delegate('.hashTag', 'click.viewDoc',
+                                    self.__tagClick);
+            }
+
             return self;
+        },
+
+        /** @brief  Override so we can unbind events bound via render().
+         */
+        remove: function() {
+            var self    = this,
+                opts    = self.options;
+
+            if (opts.$tags)
+            {
+                opts.$tags.undelegate('.hashTag', 'click.viewDoc',
+                                      self.__tagClick);
+            }
+
+            return Backbone.View.prototype.remove.call(this);
         },
 
         /** @brief  On mouseup, check to see if we have a rangy selection.
@@ -17635,7 +17857,7 @@ _.extend(LocalStore.prototype, {
                  * model.
                  */
                 self.selection = new app.View.Selection( {ranges: ranges} );
-                opts.$notes.append( self.selection.render().el );
+                opts.$notes.append( self.selection.render(e).el );
             }
 
             // De-select any rangy ranges
@@ -17754,6 +17976,59 @@ _.extend(LocalStore.prototype, {
                                     });
         },
 
+        /** @brief  Update the presentation of hashTags.
+         */
+        updateHashtags: function() {
+            var self        = this,
+                opts        = self.options;
+            if (! opts.$tags) { return; }
+
+            var hashTags    = self.model.getHashtags();
+
+            // /*
+            console.log('View::Doc:updateHashtags()[%s]: %d hashTags[ %s ]',
+                        self.model.cid,
+                        hashTags.length,
+                        hashTags.join(', '));
+            // */
+
+            opts.$tags.empty();
+
+            $.each(hashTags, function() {
+                $('<span />')
+                    .addClass('hashTag')
+                    .text( this.toString() )
+                    .appendTo( opts.$tags );
+            });
+        },
+
+        /** @brief  (Un)Highlight notes/comments with the given hash tag(s).
+         *  @param  hashTags    An array of one or more hashTag strings;
+         */
+        highlightHashtags: function(hashTags) {
+            var self        = this,
+                opts        = self.options;
+            if (! opts.$notes)  { return; }
+
+            // Locate all notes that have the target tag.
+            opts.$notes.find('.note').each(function() {
+                var $note   = $(this),
+                    view    = $note.data('View:Note');
+
+                if (! view) { return; }
+
+                if (view.hasHashtag( hashTags ))
+                {
+                    // Activate this view and highlight the tag(s)
+                    view.activate();
+                }
+                else
+                {
+                    view.deactivate();
+                }
+            });
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
@@ -17775,7 +18050,30 @@ _.extend(LocalStore.prototype, {
                 self._noteAdded(note, notes, {initialRendering: true});
             });
 
+            self.updateHashtags();
+
             return self;
+        },
+
+        /** @brief  Handle a click on a hashTag.
+         *  @param  e   The triggering event.
+         */
+        _tagClick: function(e) {
+            var self    = this,
+                opts    = self.options;
+
+            if (! opts.$notes)  { return; }
+
+            var $tag    = $(e.target).toggleClass('ui-state-active'),
+                $tags   = opts.$tags.find('.hashTag.ui-state-active');
+                tags    = $tags.map(function() {
+                                        return $(this).text();
+                                    });
+
+            self.highlightHashtags(tags);
+
+            e.stopPropagation();
+            return false;
         },
 
         /** @brief  Rendering has changed in such a way that overlays MAY need
@@ -17865,6 +18163,12 @@ _.extend(LocalStore.prototype, {
                 opts                = self.options,
                 initialRendering    = (options && options.initialRendering);
 
+            /*
+            console.log('View::Doc:_noteAdded()[%s]: note[ %s ]',
+                        self.model.cid,
+                        note.cid);
+            // */
+
             /* Create a new View.Note to associate with this new model
              *
              * This should only occur when a user clicks on the 'add-note'
@@ -17881,6 +18185,21 @@ _.extend(LocalStore.prototype, {
                             : undefined) );
         },
 
+        /** @brief  A note has been changed in our underlying model.
+         *  @param  note    The Model.Note instance being changed;
+         *  @param  notes   The containing collection (Model.Notes);
+         *  @param  options Any options used with set();
+         */
+        _noteChanged: function(note, notes, options) {
+            var self                = this,
+                opts                = self.options,
+                initialRendering    = (options && options.initialRendering);
+
+            if (initialRendering)   { return; }
+
+            self.updateHashtags();
+        },
+
         /** @brief  A note has been removed from our underlying model.
          *  @param  note    The Model.Note instance being removed;
          *  @param  notes   The containing collection (Model.Notes);
@@ -17888,6 +18207,12 @@ _.extend(LocalStore.prototype, {
          */
         _noteRemoved: function(note, notes, options) {
             var self    = this;
+
+            /*
+            console.log('View::Doc:_noteRemoved()[%s]: note[ %s ]',
+                        self.model.cid,
+                        note.cid);
+            // */
 
             /* The associated View.Note instance should notice the deletion of
              * it's underlying model and remove itself.
@@ -20408,8 +20733,8 @@ $.Summary = Backbone.View.extend({
     },
 
     events: {
-        'click .controls :input':   'controlClick',
-        'change .controls :input':  'controlClick',
+        'click .controls :input':       'controlClick',
+        'change .controls :input':      'controlClick'
     },
 
     /** @brief  Initialize the app. */
@@ -20479,11 +20804,12 @@ $.Summary = Backbone.View.extend({
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view = new app.View.Doc({model:     opts.doc,
-                                         $sections: self.$sections,
-                                         $notes:    self.$paneNotes});
+            self.viewDoc = new app.View.Doc({model:     opts.doc,
+                                             $sections: self.$sections,
+                                             $notes:    self.$paneNotes,
+                                             $tags:     self.$paneTags});
 
-            self.$paneContent.html( view.render().el );
+            self.$paneContent.html( self.viewDoc.render().el );
 
             // Gather the ranks
             self.ranks  = [];
@@ -20514,7 +20840,7 @@ $.Summary = Backbone.View.extend({
             /* Now that the document is fully rendered, signal it to render any
              * associated notes.
              */
-            $(view.el).trigger('doc:ready');
+            $(self.viewDoc.el).trigger('doc:ready');
         }
 
         self.$paneContent.removeClass('loading');
@@ -20792,7 +21118,7 @@ $.Summary = Backbone.View.extend({
         var self    = this;
         var opts    = self.options;
 
-        self.$contentNotes = self.el.find('.contents-pane');
+        self.$paneContent = self.el.find('.contents-pane');
     },
 
     /** @brief  Initialize the tags pane */
@@ -20800,7 +21126,7 @@ $.Summary = Backbone.View.extend({
         var self    = this;
         var opts    = self.options;
 
-        self.$tagsNotes = self.el.find('.tags-pane');
+        self.$paneTags = self.el.find('.tags-pane');
     },
 
     /** @brief  Initialize the notes pane */
@@ -20935,8 +21261,8 @@ $.Summary = Backbone.View.extend({
     },
 
     events: {
-        'click .controls :input':   'controlClick',
-        'change .controls :input':  'controlClick',
+        'click .controls :input':       'controlClick',
+        'change .controls :input':      'controlClick'
     },
 
     /** @brief  Initialize the app. */
@@ -21006,11 +21332,12 @@ $.Summary = Backbone.View.extend({
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view = new app.View.Doc({model:     opts.doc,
-                                         $sections: self.$sections,
-                                         $notes:    self.$paneNotes});
+            self.viewDoc = new app.View.Doc({model:     opts.doc,
+                                             $sections: self.$sections,
+                                             $notes:    self.$paneNotes,
+                                             $tags:     self.$paneTags});
 
-            self.$paneContent.html( view.render().el );
+            self.$paneContent.html( self.viewDoc.render().el );
 
             // Gather the ranks
             self.ranks  = [];
@@ -21041,7 +21368,7 @@ $.Summary = Backbone.View.extend({
             /* Now that the document is fully rendered, signal it to render any
              * associated notes.
              */
-            $(view.el).trigger('doc:ready');
+            $(self.viewDoc.el).trigger('doc:ready');
         }
 
         self.$paneContent.removeClass('loading');
@@ -21319,7 +21646,7 @@ $.Summary = Backbone.View.extend({
         var self    = this;
         var opts    = self.options;
 
-        self.$contentNotes = self.el.find('.contents-pane');
+        self.$paneContent = self.el.find('.contents-pane');
     },
 
     /** @brief  Initialize the tags pane */
@@ -21327,7 +21654,7 @@ $.Summary = Backbone.View.extend({
         var self    = this;
         var opts    = self.options;
 
-        self.$tagsNotes = self.el.find('.tags-pane');
+        self.$paneTags = self.el.find('.tags-pane');
     },
 
     /** @brief  Initialize the notes pane */

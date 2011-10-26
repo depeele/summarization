@@ -14607,12 +14607,13 @@ _.extend(LocalStore.prototype, {
         },
 
         initialize: function() {
-            var author  = this.get('author');
-            var created = this.get('created');
+            var self    = this,
+                author  = self.get('author'),
+                created = self.get('created');
             if ( ! (author instanceof app.Model.User) )
             {
                 author = new app.Model.User(author);
-                this.set({'author': author});
+                self.set({'author': author});
             }
 
             if ( ! (created instanceof Date) )
@@ -14621,8 +14622,42 @@ _.extend(LocalStore.prototype, {
                             ? new Date(created)
                             : new Date());
 
-                this.set({'created': created});
+                self.set({'created': created});
             }
+        },
+
+        /** @brief  Retrieve an array of hashTags within the text of this
+         *          comment.
+         *
+         *  @return An array of hashTags strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                hashTags    = self.get('text').match(/(?:#)([^#\s,;\.]+)/g);
+
+            hashTags = (hashTags === null
+                            ? []
+                            : hashTags);
+
+            return _.map(hashTags, function(hashTag) {
+                        return hashTag.substr(1);
+                   });
+        },
+
+        /** @brief  Does this comment have any of the given hashTags?
+         *  @param  hashTags    An array of hashTag strings;
+         *
+         *  @return true | false
+         */
+        hasHashtag: function(hashTags) {
+            var self    = this,
+                myTags  = self.getHashtags();
+
+            return (myTags.length < 1
+                        ? false
+                        : _.reduce(hashTags, function(res, hashTag) {
+                                return (res || (myTags.indexOf(hashTag) >= 0));
+                          }, false, self));
         }
     });
 
@@ -14780,8 +14815,8 @@ _.extend(LocalStore.prototype, {
                 self.fetch({id: id});
             }
 
-            var comments    = self.get('comments');
-            var ranges      = self.get('ranges');
+            var comments    = self.get('comments'),
+                ranges      = self.get('ranges');
             if ((! comments) || ! (comments instanceof app.Model.Comments))
             {
                 comments = new app.Model.Comments( comments );
@@ -14810,8 +14845,8 @@ _.extend(LocalStore.prototype, {
          *  @param  comment     The new Model.Comment instance to add.
          */
         addComment: function(comment) {
-            var self        = this;
-            var comments    = self.get('comments');
+            var self        = this,
+                comments    = self.get('comments');
 
             /*
             console.log("Model:Note::addComment()[%s]: comment[ %s ]",
@@ -14821,6 +14856,22 @@ _.extend(LocalStore.prototype, {
             comments.add( comment );
         },
 
+        /** @brief  Retrieve all hash tags from the comments of this note.
+         *
+         *  @return An array of hashTag strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                comments    = self.get('comments'),
+                hashTags    = [];
+        
+            comments.each(function(comment) {
+                hashTags = hashTags.concat( comment.getHashtags() );
+            });
+
+            return hashTags;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
@@ -14828,8 +14879,11 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  Proxy any events from our comments instance.
          *  @param  eventName   The event;
+         *  @param  model       The model triggering this event;
+         *  @param  val         ASSUMING set(), the new value;
+         *  @param  options     ASSUMING set(), the set options;
          */
-        _commentsProxy: function(eventName) {
+        _commentsProxy: function(eventName, model, val, options) {
             var self    = this;
 
             switch (eventName)
@@ -14837,11 +14891,6 @@ _.extend(LocalStore.prototype, {
             case 'add':
             case 'change':
             case 'destroy':
-                /*
-                console.log("Model:Note::_commentsProxy()[%s]: event[ %s ]",
-                            self.cid, eventName);
-                // */
-
                 self.trigger( 'change', self, self.collection );
                 break;
             }
@@ -15034,10 +15083,10 @@ _.extend(LocalStore.prototype, {
         },
 
         initialize: function() {
-            var self        = this;
-            var published   = self.get('published');
-            var sections    = self.get('sections');
-            var notes       = self.get('notes');
+            var self        = this,
+                published   = self.get('published'),
+                sections    = self.get('sections'),
+                notes       = self.get('notes');
             if ((! published) || ! (published instanceof Date) )
             {
                 published = (published
@@ -15062,16 +15111,18 @@ _.extend(LocalStore.prototype, {
                 self.set({notes: notes}, {silent: true});
             }
 
-            notes.bind('add',    _.bind(self._notesChanged, self));
-            notes.bind('change', _.bind(self._notesChanged, self));
+            self.__notesChanged    = _.bind(self._notesChanged,    self);
+
+            notes.bind('add',             self.__notesChanged);
+            notes.bind('change',          self.__notesChanged);
         },
 
         /** @brief  Add a new Model.Note instance to the notes collection.
          *  @param  note    The Model.Note instance to add;
          */
         addNote: function(note) {
-            var self    = this;
-            var notes   = self.get('notes');
+            var self    = this,
+                notes   = self.get('notes');
 
             /*
             console.log("Model:Doc::addNote()[%s]",
@@ -15094,13 +15145,34 @@ _.extend(LocalStore.prototype, {
             notes.add( note );
         },
 
+        /** @brief  Retrieve all hash tags from the comments of every note
+         *          currently attached to this document.
+         *
+         *  @return An array of hashTag strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                notes       = self.get('notes'),
+                hashTags    = [];
+        
+            notes.each(function(note) {
+                hashTags = _.union(hashTags, note.getHashtags() );
+            });
+
+            
+
+            return hashTags;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
          */
 
         /** @brief  Proxy any events from our notes instance.
-         *  @param  eventName   The event;
+         *  @param  note    The note that was changed;
+         *  @param  notes   The notes collection containing 'note';
+         *  @param  options Options passed with the set that caused the change;
          */
         _notesChanged: function(note, notes, options) {
             var self    = this;
@@ -15112,6 +15184,8 @@ _.extend(LocalStore.prototype, {
 
             // For any change, save the note
             note.save();
+
+            // :TODO: Grab hashTags from all notes
         }
     });
 
@@ -16169,9 +16243,14 @@ _.extend(LocalStore.prototype, {
 
         /** @brief  Initialize this view. */
         initialize: function() {
+            var self    = this;
+
             // Bind to changes to our underlying model
-            this.model.bind('destroy', _.bind(this.remove,  this));
-            this.model.bind('change',  _.bind(this.refresh, this));
+            self.__destroy = _.bind(self.remove,  self);
+            self.__change  = _.bind(self.refresh, self);
+
+            self.model.bind('destroy', self.__destroy);
+            self.model.bind('change',  self.__change);
         },
 
         /** @brief  Render this view. */
@@ -16204,6 +16283,9 @@ _.extend(LocalStore.prototype, {
         remove: function() {
             var self    = this,
                 opts    = self.options;
+
+            self.model.unbind('destroy', self.__destroy);
+            self.model.unbind('change',  self.__change);
 
             self.$el.slideUp(function() {
                 self.$buttons.button('destroy');

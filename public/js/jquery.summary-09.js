@@ -36,8 +36,8 @@ $.Summary = Backbone.View.extend({
     },
 
     events: {
-        'click .controls :input':   'controlClick',
-        'change .controls :input':  'controlClick',
+        'click .controls :input':       'controlClick',
+        'change .controls :input':      'controlClick'
     },
 
     /** @brief  Initialize the app. */
@@ -107,11 +107,12 @@ $.Summary = Backbone.View.extend({
 
         if (opts.doc instanceof app.Model.Doc)
         {
-            var view = new app.View.Doc({model:     opts.doc,
-                                         $sections: self.$sections,
-                                         $notes:    self.$paneNotes});
+            self.viewDoc = new app.View.Doc({model:     opts.doc,
+                                             $sections: self.$sections,
+                                             $notes:    self.$paneNotes,
+                                             $tags:     self.$paneTags});
 
-            self.$paneContent.html( view.render().el );
+            self.$paneContent.html( self.viewDoc.render().el );
 
             // Gather the ranks
             self.ranks  = [];
@@ -142,7 +143,7 @@ $.Summary = Backbone.View.extend({
             /* Now that the document is fully rendered, signal it to render any
              * associated notes.
              */
-            $(view.el).trigger('doc:ready');
+            $(self.viewDoc.el).trigger('doc:ready');
         }
 
         self.$paneContent.removeClass('loading');
@@ -420,7 +421,7 @@ $.Summary = Backbone.View.extend({
         var self    = this;
         var opts    = self.options;
 
-        self.$contentNotes = self.el.find('.contents-pane');
+        self.$paneContent = self.el.find('.contents-pane');
     },
 
     /** @brief  Initialize the tags pane */
@@ -428,7 +429,7 @@ $.Summary = Backbone.View.extend({
         var self    = this;
         var opts    = self.options;
 
-        self.$tagsNotes = self.el.find('.tags-pane');
+        self.$paneTags = self.el.find('.tags-pane');
     },
 
     /** @brief  Initialize the notes pane */

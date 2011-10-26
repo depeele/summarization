@@ -55,8 +55,8 @@
                 self.fetch({id: id});
             }
 
-            var comments    = self.get('comments');
-            var ranges      = self.get('ranges');
+            var comments    = self.get('comments'),
+                ranges      = self.get('ranges');
             if ((! comments) || ! (comments instanceof app.Model.Comments))
             {
                 comments = new app.Model.Comments( comments );
@@ -85,8 +85,8 @@
          *  @param  comment     The new Model.Comment instance to add.
          */
         addComment: function(comment) {
-            var self        = this;
-            var comments    = self.get('comments');
+            var self        = this,
+                comments    = self.get('comments');
 
             /*
             console.log("Model:Note::addComment()[%s]: comment[ %s ]",
@@ -96,6 +96,22 @@
             comments.add( comment );
         },
 
+        /** @brief  Retrieve all hash tags from the comments of this note.
+         *
+         *  @return An array of hashTag strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                comments    = self.get('comments'),
+                hashTags    = [];
+        
+            comments.each(function(comment) {
+                hashTags = hashTags.concat( comment.getHashtags() );
+            });
+
+            return hashTags;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
@@ -103,8 +119,11 @@
 
         /** @brief  Proxy any events from our comments instance.
          *  @param  eventName   The event;
+         *  @param  model       The model triggering this event;
+         *  @param  val         ASSUMING set(), the new value;
+         *  @param  options     ASSUMING set(), the set options;
          */
-        _commentsProxy: function(eventName) {
+        _commentsProxy: function(eventName, model, val, options) {
             var self    = this;
 
             switch (eventName)
@@ -112,11 +131,6 @@
             case 'add':
             case 'change':
             case 'destroy':
-                /*
-                console.log("Model:Note::_commentsProxy()[%s]: event[ %s ]",
-                            self.cid, eventName);
-                // */
-
                 self.trigger( 'change', self, self.collection );
                 break;
             }

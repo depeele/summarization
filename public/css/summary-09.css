@@ -1040,6 +1040,30 @@ a {
   -khtml-opacity: 0.9;
   z-index: 11;
 }
+.tags-pane .hashTag {
+  display: -moz-inline-stack;
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+  font-size: 0.8em;
+  padding: 0.1em 0.5em;
+  margin: 0.2em;
+  border: 1px solid #d5d5d5;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  cursor: pointer;
+}
+.tags-pane .hashTag:hover {
+  background-color: #444444;
+  color: #ffffff;
+}
+.tags-pane .hashTag.ui-state-active:hover {
+  color: #000000;
+}
 /**************************************************************************
  * Notes Pane (within .margin-right)
  *

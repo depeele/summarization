@@ -33,12 +33,13 @@
         },
 
         initialize: function() {
-            var author  = this.get('author');
-            var created = this.get('created');
+            var self    = this,
+                author  = self.get('author'),
+                created = self.get('created');
             if ( ! (author instanceof app.Model.User) )
             {
                 author = new app.Model.User(author);
-                this.set({'author': author});
+                self.set({'author': author});
             }
 
             if ( ! (created instanceof Date) )
@@ -47,8 +48,42 @@
                             ? new Date(created)
                             : new Date());
 
-                this.set({'created': created});
+                self.set({'created': created});
             }
+        },
+
+        /** @brief  Retrieve an array of hashTags within the text of this
+         *          comment.
+         *
+         *  @return An array of hashTags strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                hashTags    = self.get('text').match(/(?:#)([^#\s,;\.]+)/g);
+
+            hashTags = (hashTags === null
+                            ? []
+                            : hashTags);
+
+            return _.map(hashTags, function(hashTag) {
+                        return hashTag.substr(1);
+                   });
+        },
+
+        /** @brief  Does this comment have any of the given hashTags?
+         *  @param  hashTags    An array of hashTag strings;
+         *
+         *  @return true | false
+         */
+        hasHashtag: function(hashTags) {
+            var self    = this,
+                myTags  = self.getHashtags();
+
+            return (myTags.length < 1
+                        ? false
+                        : _.reduce(hashTags, function(res, hashTag) {
+                                return (res || (myTags.indexOf(hashTag) >= 0));
+                          }, false, self));
         }
     });
 

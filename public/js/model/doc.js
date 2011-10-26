@@ -45,10 +45,10 @@
         },
 
         initialize: function() {
-            var self        = this;
-            var published   = self.get('published');
-            var sections    = self.get('sections');
-            var notes       = self.get('notes');
+            var self        = this,
+                published   = self.get('published'),
+                sections    = self.get('sections'),
+                notes       = self.get('notes');
             if ((! published) || ! (published instanceof Date) )
             {
                 published = (published
@@ -73,16 +73,18 @@
                 self.set({notes: notes}, {silent: true});
             }
 
-            notes.bind('add',    _.bind(self._notesChanged, self));
-            notes.bind('change', _.bind(self._notesChanged, self));
+            self.__notesChanged    = _.bind(self._notesChanged,    self);
+
+            notes.bind('add',             self.__notesChanged);
+            notes.bind('change',          self.__notesChanged);
         },
 
         /** @brief  Add a new Model.Note instance to the notes collection.
          *  @param  note    The Model.Note instance to add;
          */
         addNote: function(note) {
-            var self    = this;
-            var notes   = self.get('notes');
+            var self    = this,
+                notes   = self.get('notes');
 
             /*
             console.log("Model:Doc::addNote()[%s]",
@@ -105,13 +107,34 @@
             notes.add( note );
         },
 
+        /** @brief  Retrieve all hash tags from the comments of every note
+         *          currently attached to this document.
+         *
+         *  @return An array of hashTag strings (may be empty).
+         */
+        getHashtags: function() {
+            var self        = this,
+                notes       = self.get('notes'),
+                hashTags    = [];
+        
+            notes.each(function(note) {
+                hashTags = _.union(hashTags, note.getHashtags() );
+            });
+
+            
+
+            return hashTags;
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
          */
 
         /** @brief  Proxy any events from our notes instance.
-         *  @param  eventName   The event;
+         *  @param  note    The note that was changed;
+         *  @param  notes   The notes collection containing 'note';
+         *  @param  options Options passed with the set that caused the change;
          */
         _notesChanged: function(note, notes, options) {
             var self    = this;
@@ -123,6 +146,8 @@
 
             // For any change, save the note
             note.save();
+
+            // :TODO: Grab hashTags from all notes
         }
     });
 

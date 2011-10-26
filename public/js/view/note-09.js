@@ -89,11 +89,15 @@
             self.rangeViews = null;
 
             // Bind to changes to our underlying model
-            self.model.bind('destroy', _.bind(self.remove,  self));
+            self.comments         = self.model.get('comments');
+            self.__destroy        = _.bind(self.remove,          self);
+            self.__commentAdded   = _.bind(self._commentAdded,   self);
+            self.__commentRemoved = _.bind(self._commentRemoved, self);
 
-            var comments    = self.model.get('comments');
-            comments.bind('add',    _.bind(self._commentAdded,   self));
-            comments.bind('remove', _.bind(self._commentRemoved, self));
+            self.model.bind('destroy',   self.__destroy);
+
+            self.comments.bind('add',    self.__commentAdded);
+            self.comments.bind('remove', self.__commentRemoved);
 
             if (opts.position.using === null)
             {
@@ -196,6 +200,12 @@
             // */
 
             $(document).unbind('click.viewNote', self._docClick);
+
+            self.model.unbind('destroy',   self.__destroy);
+
+            self.comments.unbind('add',    self.__commentAdded);
+            self.comments.unbind('remove', self.__commentRemoved);
+
 
             if ($.isArray(self.rangeViews))
             {
@@ -433,6 +443,25 @@
                     $comment.trigger('comment:edit');
                 });
             }
+        },
+
+        /** @brief  Does this note have any of the given hashTags?
+         *  @param  hashTags    An array of hashTag strings;
+         *
+         *  @return true | false
+         */
+        hasHashtag: function(hashTags) {
+            var self    = this,
+                opts    = self.options;
+
+            /* We have focus if $reply has focus OR any of our comments are
+             * being edited.
+             */
+            return self.comments
+                        .reduce(function(res, comment) {
+                                    return (res ||
+                                            comment.hasHashtag(hashTags));
+                                }, false, self);
         },
 
         /**********************************************************************

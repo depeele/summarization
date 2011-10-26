@@ -473,6 +473,28 @@ a {
   .opacity(90);
 
   z-index:          11;
+
+  .hashTag {
+    .inlineBlock();
+
+    font-size:      0.8em;
+    padding:        0.1em 0.5em;
+    margin:         0.2em;
+
+    border:         1px solid @colorBorder;
+    .corners(5px);
+
+    cursor:         pointer;
+
+    &:hover {
+      background-color: @colorText;
+      color:            @colorArticleBackground;
+    }
+
+    &.ui-state-active:hover {
+      color:            @colorTextDarkest;
+    }
+  }
 }
 
 /**************************************************************************

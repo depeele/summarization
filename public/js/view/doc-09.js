@@ -33,13 +33,19 @@
         },
 
         initialize: function() {
-            this.$el = $(this.el);
+            var self    = this;
+
+            self.$el = $(this.el);
 
             // Bind to changes to our underlying model
-            var notes   = this.model.get('notes');
+            self.notes             = self.model.get('notes');
+            self.__noteAdded       = _.bind(self._noteAdded,       self);
+            self.__noteChanged     = _.bind(self._noteChanged,     self);
+            self.__noteRemoved     = _.bind(self._noteRemoved,     self);
 
-            notes.bind('add',    _.bind(this._noteAdded,   this));
-            notes.bind('remove', _.bind(this._noteRemoved, this));
+            self.notes.bind('add',             self.__noteAdded);
+            self.notes.bind('change',          self.__noteChanged);
+            self.notes.bind('remove',          self.__noteRemoved);
 
             rangy.init();
 
@@ -49,10 +55,11 @@
              *        mousedown when selecting (at least in Chrome).  Instead,
              *        we bind to 'mousedown' and 'mouseup'.
              */
+            self.__setSelection = _.bind(self.setSelection, self);
             $(document).bind( ['mousedown.viewDoc',
                                'mouseup.viewDoc',
                                'dblclick.viewDoc'].join(' '),
-                             _.bind(this.setSelection, this));
+                             self.__setSelection);
         },
 
         /** @brief  Override so we can unbind events bound in initialize().
@@ -60,7 +67,11 @@
         remove: function() {
             var self    = this;
 
-            $(document).unbind('.viewDoc');
+            $(document).unbind( '.viewDoc', self.__setSelection);
+
+            self.notes.unbind('add',             self.__noteAdded);
+            self.notes.unbind('change',          self.__noteChanged);
+            self.notes.unbind('remove',          self.__noteRemoved);
 
             // Deactivate hoverIntent for any keywords in our header
             self.$el.find('header .keyword').unhoverIntent();
@@ -112,7 +123,33 @@
                 $s.attr('id', 'sentence-'+ idex);
             });
 
+            if (opts.$tags)
+            {
+                /* Add a click delegate for hashTags in the specified tags
+                 * container
+                 */
+                self.__tagClick = _.bind(self._tagClick, self);
+
+                opts.$tags.delegate('.hashTag', 'click.viewDoc',
+                                    self.__tagClick);
+            }
+
             return self;
+        },
+
+        /** @brief  Override so we can unbind events bound via render().
+         */
+        remove: function() {
+            var self    = this,
+                opts    = self.options;
+
+            if (opts.$tags)
+            {
+                opts.$tags.undelegate('.hashTag', 'click.viewDoc',
+                                      self.__tagClick);
+            }
+
+            return Backbone.View.prototype.remove.call(this);
         },
 
         /** @brief  On mouseup, check to see if we have a rangy selection.
@@ -319,7 +356,7 @@
                  * model.
                  */
                 self.selection = new app.View.Selection( {ranges: ranges} );
-                opts.$notes.append( self.selection.render().el );
+                opts.$notes.append( self.selection.render(e).el );
             }
 
             // De-select any rangy ranges
@@ -438,6 +475,59 @@
                                     });
         },
 
+        /** @brief  Update the presentation of hashTags.
+         */
+        updateHashtags: function() {
+            var self        = this,
+                opts        = self.options;
+            if (! opts.$tags) { return; }
+
+            var hashTags    = self.model.getHashtags();
+
+            // /*
+            console.log('View::Doc:updateHashtags()[%s]: %d hashTags[ %s ]',
+                        self.model.cid,
+                        hashTags.length,
+                        hashTags.join(', '));
+            // */
+
+            opts.$tags.empty();
+
+            $.each(hashTags, function() {
+                $('<span />')
+                    .addClass('hashTag')
+                    .text( this.toString() )
+                    .appendTo( opts.$tags );
+            });
+        },
+
+        /** @brief  (Un)Highlight notes/comments with the given hash tag(s).
+         *  @param  hashTags    An array of one or more hashTag strings;
+         */
+        highlightHashtags: function(hashTags) {
+            var self        = this,
+                opts        = self.options;
+            if (! opts.$notes)  { return; }
+
+            // Locate all notes that have the target tag.
+            opts.$notes.find('.note').each(function() {
+                var $note   = $(this),
+                    view    = $note.data('View:Note');
+
+                if (! view) { return; }
+
+                if (view.hasHashtag( hashTags ))
+                {
+                    // Activate this view and highlight the tag(s)
+                    view.activate();
+                }
+                else
+                {
+                    view.deactivate();
+                }
+            });
+        },
+
         /**********************************************************************
          * "Private" methods.
          *
@@ -459,7 +549,30 @@
                 self._noteAdded(note, notes, {initialRendering: true});
             });
 
+            self.updateHashtags();
+
             return self;
+        },
+
+        /** @brief  Handle a click on a hashTag.
+         *  @param  e   The triggering event.
+         */
+        _tagClick: function(e) {
+            var self    = this,
+                opts    = self.options;
+
+            if (! opts.$notes)  { return; }
+
+            var $tag    = $(e.target).toggleClass('ui-state-active'),
+                $tags   = opts.$tags.find('.hashTag.ui-state-active');
+                tags    = $tags.map(function() {
+                                        return $(this).text();
+                                    });
+
+            self.highlightHashtags(tags);
+
+            e.stopPropagation();
+            return false;
         },
 
         /** @brief  Rendering has changed in such a way that overlays MAY need
@@ -549,6 +662,12 @@
                 opts                = self.options,
                 initialRendering    = (options && options.initialRendering);
 
+            /*
+            console.log('View::Doc:_noteAdded()[%s]: note[ %s ]',
+                        self.model.cid,
+                        note.cid);
+            // */
+
             /* Create a new View.Note to associate with this new model
              *
              * This should only occur when a user clicks on the 'add-note'
@@ -565,6 +684,21 @@
                             : undefined) );
         },
 
+        /** @brief  A note has been changed in our underlying model.
+         *  @param  note    The Model.Note instance being changed;
+         *  @param  notes   The containing collection (Model.Notes);
+         *  @param  options Any options used with set();
+         */
+        _noteChanged: function(note, notes, options) {
+            var self                = this,
+                opts                = self.options,
+                initialRendering    = (options && options.initialRendering);
+
+            if (initialRendering)   { return; }
+
+            self.updateHashtags();
+        },
+
         /** @brief  A note has been removed from our underlying model.
          *  @param  note    The Model.Note instance being removed;
          *  @param  notes   The containing collection (Model.Notes);
@@ -572,6 +706,12 @@
          */
         _noteRemoved: function(note, notes, options) {
             var self    = this;
+
+            /*
+            console.log('View::Doc:_noteRemoved()[%s]: note[ %s ]',
+                        self.model.cid,
+                        note.cid);
+            // */
 
             /* The associated View.Note instance should notice the deletion of
              * it's underlying model and remove itself.

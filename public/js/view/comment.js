@@ -41,9 +41,14 @@
 
         /** @brief  Initialize this view. */
         initialize: function() {
+            var self    = this;
+
             // Bind to changes to our underlying model
-            this.model.bind('destroy', _.bind(this.remove,  this));
-            this.model.bind('change',  _.bind(this.refresh, this));
+            self.__destroy = _.bind(self.remove,  self);
+            self.__change  = _.bind(self.refresh, self);
+
+            self.model.bind('destroy', self.__destroy);
+            self.model.bind('change',  self.__change);
         },
 
         /** @brief  Render this view. */
@@ -76,6 +81,9 @@
         remove: function() {
             var self    = this,
                 opts    = self.options;
+
+            self.model.unbind('destroy', self.__destroy);
+            self.model.unbind('change',  self.__change);
 
             self.$el.slideUp(function() {
                 self.$buttons.button('destroy');
