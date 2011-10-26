@@ -519,7 +519,7 @@
                 if (view.hasHashtag( hashTags ))
                 {
                     // Activate this view and highlight the tag(s)
-                    view.activate();
+                    view.activate( true );
                 }
                 else
                 {

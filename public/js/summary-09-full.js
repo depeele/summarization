@@ -16749,7 +16749,7 @@ _.extend(LocalStore.prototype, {
 
         // Make sure we include the events of our super-class
         events: _.extend({}, app.View.Selection.prototype.events, {
-            'click':                    'activate',
+            'click':                    '_activate',
 
             'keyup .note-reply':        '_keyup',
             'focus .note-reply':        '_focusChange',
@@ -16807,7 +16807,7 @@ _.extend(LocalStore.prototype, {
              * _docClick() for THIS instance so we can unbind JUST THIS
              * handler when this instance is removed.
              */
-            self._docClick = _.bind(self.deactivate, self);
+            self._docClick = _.bind(self._deactivate, self);
             $(document).bind('click.viewNote', self._docClick);
         },
 
@@ -16929,104 +16929,33 @@ _.extend(LocalStore.prototype, {
         },
 
         /** @brief  Mark this instance as 'active'
-         *  @param  e       The triggering event.
-         *  @param  cb      If a function is provided, invoke this callback
-         *                  when the note is fully activated;
+         *  @param  sticky  Should this note remain active on external clicks?
+         *                  [ false ];
          *
          *  @return this    for a fluent interface
          */
-        activate: function(e, cb) {
+        activate: function(sticky) {
             var self    = this,
                 opts    = self.options;
 
-            if (self.$el.hasClass('note-active'))
-            {
-                // Already actived
-                /*
-                console.log("View:Note::activate()[%s]: already active",
-                            self.model.cid);
-                // */
+            self._sticky = sticky;
 
-                if ($.isFunction(cb))   { cb.call(self); }
-                return self;
-            }
-
-            /*
-            console.log("View:Note::activate()[%s]", self.model.cid);
-            // */
-
-            // Ensure proper reply input/button state by initially blurring
-            self.$reply.blur();
-
-            /* NOTE: Popping to the top immediately relies on a z-index set for
-             *       .note in both normal and activated states, with the
-             *       activated state at a higher z-index.
-             */
-            var zIndex  = parseInt(self.$el.css('z-index'), 10);
-            self.$el
-                    .css('z-index', zIndex + 1) // pop to the top immediately...
-                    .addClass('note-active', app.config.animSpeed,
-                              function() {
-                                // ...then remove the hard z-index and let
-                                //    the CSS take over.
-                                self.$el.css('z-index', '');
-
-                                if ($.isFunction(cb))   { cb.call(self); }
-                    });
+            self._activate();
 
             return self;
         },
 
         /** @brief  Mark this instance as 'inactive'
-         *  @param  e       The triggering event.
-         *  @param  cb      If a function is provided, invoke this callback
-         *                  when the note is fully deactivated;
          *
          *  @return this    for a fluent interface
          */
-        deactivate: function(e, cb) {
+        deactivate: function() {
             var self    = this,
                 opts    = self.options;
 
-            /*
-            console.log("View:Note::deactivate()[%s]: "
-                        + "%sactive, %sdeactivating, %sfocused",
-                        self.model.cid,
-                        (self.$el.hasClass('note-active') ? '' : '!'),
-                        (self._deactivating               ? '' : '!'),
-                        (self.hasFocus()                  ? '' : '!'));
-            // */
+            self._sticky = false;
 
-            if ((! self.$el.hasClass('note-active')) ||
-                self._deactivating                   ||
-                self.hasFocus())
-            {
-                // Already deactived (or has active focus)
-                /*
-                console.log("View:Note::deactivate()[%s]: -- ignore",
-                            self.model.cid);
-                // */
-
-                if ($.isFunction(cb))   { cb.call(self); }
-                return self;
-            }
-            self._deactivating = true;
-
-            /*
-            console.log("View:Note::deactivate()[%s]", self.model.cid);
-            // */
-
-            // Cancel any comment that is currently being edited
-            self.$body.find('.comment').trigger('cancel');
-
-            // And close ourselves up
-            self.$el.removeClass('note-active', app.config.animSpeed,
-                                 function() {
-                                    self._deactivating = false;
-                                    if ($.isFunction(cb))   { cb.call(self); }
-            });
-
-            return self;
+            return this._deactivate();
         },
 
         /** @brief  Show this note container.
@@ -17168,6 +17097,121 @@ _.extend(LocalStore.prototype, {
          *
          */
 
+        /** @brief  Mark this instance as 'active'
+         *  @param  e       The triggering event.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully activated;
+         *
+         *  @return this    for a fluent interface
+         */
+        _activate: function(e, cb) {
+            var self    = this,
+                opts    = self.options;
+
+            /* NOTE: Popping to the top immediately relies on a z-index set for
+             *       .note in both normal and activated states, with the
+             *       activated state at a higher z-index.
+             *
+             *       Find the note with the maximum z-index and pop this note
+             *       above it.
+             */
+            var $notes  = self.$el.parent().find('.'+ self.className),
+                zIndex  = _.reduce($notes,
+                                   function(res, note) {
+                                    var zi  = parseInt($(note).css('z-index'));
+                                    return (zi > res ? zi : res);
+                                   }, 0, self);
+            self.$el
+                    .css('z-index', zIndex + 1);
+
+            if (self.$el.hasClass('note-active'))
+            {
+                // Already actived
+                /*
+                console.log("View:Note::activate()[%s]: already active",
+                            self.model.cid);
+                // */
+
+                if ($.isFunction(cb))   { cb.call(self); }
+                return self;
+            }
+
+            /*
+            console.log("View:Note::activate()[%s]", self.model.cid);
+            // */
+
+            // Ensure proper reply input/button state by initially blurring
+            self.$reply.blur();
+
+            self.$el.addClass('note-active', app.config.animSpeed,
+                              function() {
+                                // ...then remove the hard z-index and let
+                                //    the CSS take over.
+                                self.$el.css('z-index', '');
+
+                                if ($.isFunction(cb))   { cb.call(self); }
+                    });
+
+            return self;
+        },
+
+        /** @brief  Mark this instance as 'inactive'
+         *  @param  e       The triggering event.
+         *  @param  cb      If a function is provided, invoke this callback
+         *                  when the note is fully deactivated;
+         *
+         *  @return this    for a fluent interface
+         */
+        _deactivate: function(e, cb) {
+            var self    = this,
+                opts    = self.options;
+
+            if ( self._sticky === true )    { return; }
+
+            /*
+            console.log("View:Note::deactivate()[%s]: "
+                        + "%sactive, %sdeactivating, %sfocused",
+                        self.model.cid,
+                        (self.$el.hasClass('note-active') ? '' : '!'),
+                        (self._deactivating               ? '' : '!'),
+                        (self.hasFocus()                  ? '' : '!'));
+            // */
+
+            if ((! self.$el.hasClass('note-active')) ||
+                self._deactivating                   ||
+                self.hasFocus())
+            {
+                // Already deactived (or has active focus)
+                /*
+                console.log("View:Note::deactivate()[%s]: -- ignore",
+                            self.model.cid);
+                // */
+
+                if ($.isFunction(cb))   { cb.call(self); }
+                return self;
+            }
+            self._deactivating = true;
+
+            /*
+            console.log("View:Note::deactivate()[%s]", self.model.cid);
+            // */
+
+            // Cancel any comment that is currently being edited
+            self.$body.find('.comment').trigger('cancel');
+
+            // And close ourselves up
+            self.$el.removeClass('note-active', app.config.animSpeed,
+                                 function() {
+                                    // Remove any explicit z-index
+                                    self.$el.css('z-index', '');
+
+                                    self._deactivating = false;
+                                    if ($.isFunction(cb))   { cb.call(self); }
+            });
+
+            return self;
+        },
+
         /** @brief  Squelch the triggering event.
          *  @param  e   The triggering event;
          *
@@ -17221,7 +17265,7 @@ _.extend(LocalStore.prototype, {
             // */
 
             // Deactivate this note
-            self.deactivate();
+            self._deactivate();
 
             return res;
         },
@@ -17421,7 +17465,7 @@ _.extend(LocalStore.prototype, {
             }
 
             // Squelch this button click so our note is not deactivated
-            if (e)  { self._squelch(e); }
+            if (self._sticky && e)  { self._squelch(e); }
         },
 
         /** @brief  Handle click events on our range-control element.
@@ -18020,7 +18064,7 @@ _.extend(LocalStore.prototype, {
                 if (view.hasHashtag( hashTags ))
                 {
                     // Activate this view and highlight the tag(s)
-                    view.activate();
+                    view.activate( true );
                 }
                 else
                 {
