@@ -15866,6 +15866,22 @@ _.extend(LocalStore.prototype, {
                 $token  = $tokens.eq( self.model.get('offsetEnd') );
 
             return $token;
+        },
+
+        /** @brief  Retrieve the tokens involved in this range.
+         *
+         *  @return A set of all tokens involved.
+         */
+        getElements: function() {
+            var self    = this,
+                $tokens = self.$el.children(),
+                start   = self.model.get('offsetStart'),
+                end     = self.model.get('offsetEnd'),
+                $res    = $tokens.filter(function(idex) {
+                            return ((idex >= start) && (idex <= end));
+                          });
+
+            return $res;
         }
     });
 
@@ -15951,8 +15967,7 @@ _.extend(LocalStore.prototype, {
              * ranges (Model.Ranges).
              */
             var events      = [ 'mouseenter.'+ self.viewName,
-                                'mouseleave.'+ self.viewName ].join(' '),
-                selector    = '.'+ self.className;
+                                'mouseleave.'+ self.viewName ].join(' ');
 
             self.__rangeMouse = _.bind(self._rangeMouse, self);
             self.rangeViews   = [];
@@ -15964,20 +15979,13 @@ _.extend(LocalStore.prototype, {
                               });
                 view.render();
 
-                // Delegate events for this range view
-                view.$el.delegate(selector, events, self.__rangeMouse);
+                /* :NOTE: It's not as easy as a simple delegate since we may
+                 *        have more than one range within a single sentence.
+                 *        We must bind to each element of the range.
+                 */
+                view.getElements().bind(events, self.__rangeMouse);
 
                 self.rangeViews.push( view );
-
-                /* The Range view inserts itself in the proper sentence
-                 * overlay.  Do NOT move it by appending it to our own
-                 * element.
-                 *
-                 * Instead, we maintain the 'rangeViews' array to contain a
-                 * list of our component views.
-                 *
-                 * self.$el.append( view.render().el );
-                 */
             });
 
             if (e && (e.type === 'mouseup'))
@@ -16056,13 +16064,12 @@ _.extend(LocalStore.prototype, {
                 /* Remove all component View.Range elements, which will also
                  * destroy the underlying models (Model.Range).
                  */
-                var events      = '.'+ self.viewName,
-                    selector    = '.'+ self.className;
+                var events      = '.'+ self.viewName;
                 $.each(self.rangeViews, function() {
                     var view    = this;
 
-                    // Un-bind event handlers
-                    view.$el.undelegate(selector, events, self.__rangeMouse);
+                    // Reverse the binding performed in render().
+                    view.getElements().unbind(events, self.__rangeMouse);
 
                     view.remove( (self.ranges === null) );
                 });
@@ -16295,7 +16302,7 @@ _.extend(LocalStore.prototype, {
                              .addClass('ui-corner-top');
             }
 
-            /*
+            // /*
             console.log('View.%s::_showControl(): token[ %s ], '
                         + 'position[ %d, %d ], my[ %s ], at[ %s ]',
                         self.viewName, $token.data('id'),
@@ -16868,9 +16875,15 @@ _.extend(LocalStore.prototype, {
                 $.each(self.rangeViews, function(idex, view) {
                     /* Bind the click and positioning events on the sentence
                      * associated with this range view
+                     *
+                     * :NOTE: For focus, it's not as easy as a simple delegate
+                     *        since we may have more than one range within a
+                     *        single sentence.  We must bind to each element of
+                     *        the range.
                      */
-                    view.$s.delegate(selector, events, self.__focus)
-                           .bind('overlay:position',   self.__reposition);
+                    view.getElements().bind(events, self.__focus);
+
+                    view.$s.bind('overlay:position',   self.__reposition);
                 });
             }
 
@@ -16912,11 +16925,9 @@ _.extend(LocalStore.prototype, {
                 var events      = 'click.'+ self.viewName,
                     selector    = '.'+ self.className;
                 $.each(self.rangeViews, function(idex, view) {
-                    /* Unbind the click and positioning events from the
-                     * sentence associated with this range view
-                     */
-                    view.$s.undelegate(selector, events, self.__focus)
-                           .unbind('overlay:position',   self.__reposition);
+                    // Reverse the binding performed in render().
+                    view.getElements().unbind(events, self.__focus);
+                    view.$s.unbind('overlay:position',   self.__reposition);
                 });
             }
 
@@ -17237,7 +17248,7 @@ _.extend(LocalStore.prototype, {
         _showControl: function( coords ) {
             var self    = this;
 
-            /*
+            // /*
             console.log("View:Note::_showControl()[%s]", self.model.cid);
             // */
 

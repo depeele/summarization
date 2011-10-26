@@ -79,8 +79,7 @@
              * ranges (Model.Ranges).
              */
             var events      = [ 'mouseenter.'+ self.viewName,
-                                'mouseleave.'+ self.viewName ].join(' '),
-                selector    = '.'+ self.className;
+                                'mouseleave.'+ self.viewName ].join(' ');
 
             self.__rangeMouse = _.bind(self._rangeMouse, self);
             self.rangeViews   = [];
@@ -92,20 +91,13 @@
                               });
                 view.render();
 
-                // Delegate events for this range view
-                view.$el.delegate(selector, events, self.__rangeMouse);
+                /* :NOTE: It's not as easy as a simple delegate since we may
+                 *        have more than one range within a single sentence.
+                 *        We must bind to each element of the range.
+                 */
+                view.getElements().bind(events, self.__rangeMouse);
 
                 self.rangeViews.push( view );
-
-                /* The Range view inserts itself in the proper sentence
-                 * overlay.  Do NOT move it by appending it to our own
-                 * element.
-                 *
-                 * Instead, we maintain the 'rangeViews' array to contain a
-                 * list of our component views.
-                 *
-                 * self.$el.append( view.render().el );
-                 */
             });
 
             if (e && (e.type === 'mouseup'))
@@ -184,13 +176,12 @@
                 /* Remove all component View.Range elements, which will also
                  * destroy the underlying models (Model.Range).
                  */
-                var events      = '.'+ self.viewName,
-                    selector    = '.'+ self.className;
+                var events      = '.'+ self.viewName;
                 $.each(self.rangeViews, function() {
                     var view    = this;
 
-                    // Un-bind event handlers
-                    view.$el.undelegate(selector, events, self.__rangeMouse);
+                    // Reverse the binding performed in render().
+                    view.getElements().unbind(events, self.__rangeMouse);
 
                     view.remove( (self.ranges === null) );
                 });
@@ -423,7 +414,7 @@
                              .addClass('ui-corner-top');
             }
 
-            /*
+            // /*
             console.log('View.%s::_showControl(): token[ %s ], '
                         + 'position[ %d, %d ], my[ %s ], at[ %s ]',
                         self.viewName, $token.data('id'),

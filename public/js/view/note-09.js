@@ -169,9 +169,15 @@
                 $.each(self.rangeViews, function(idex, view) {
                     /* Bind the click and positioning events on the sentence
                      * associated with this range view
+                     *
+                     * :NOTE: For focus, it's not as easy as a simple delegate
+                     *        since we may have more than one range within a
+                     *        single sentence.  We must bind to each element of
+                     *        the range.
                      */
-                    view.$s.delegate(selector, events, self.__focus)
-                           .bind('overlay:position',   self.__reposition);
+                    view.getElements().bind(events, self.__focus);
+
+                    view.$s.bind('overlay:position',   self.__reposition);
                 });
             }
 
@@ -213,11 +219,9 @@
                 var events      = 'click.'+ self.viewName,
                     selector    = '.'+ self.className;
                 $.each(self.rangeViews, function(idex, view) {
-                    /* Unbind the click and positioning events from the
-                     * sentence associated with this range view
-                     */
-                    view.$s.undelegate(selector, events, self.__focus)
-                           .unbind('overlay:position',   self.__reposition);
+                    // Reverse the binding performed in render().
+                    view.getElements().unbind(events, self.__focus);
+                    view.$s.unbind('overlay:position',   self.__reposition);
                 });
             }
 
@@ -538,7 +542,7 @@
         _showControl: function( coords ) {
             var self    = this;
 
-            /*
+            // /*
             console.log("View:Note::_showControl()[%s]", self.model.cid);
             // */
 

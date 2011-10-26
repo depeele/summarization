@@ -100,6 +100,22 @@
                 $token  = $tokens.eq( self.model.get('offsetEnd') );
 
             return $token;
+        },
+
+        /** @brief  Retrieve the tokens involved in this range.
+         *
+         *  @return A set of all tokens involved.
+         */
+        getElements: function() {
+            var self    = this,
+                $tokens = self.$el.children(),
+                start   = self.model.get('offsetStart'),
+                end     = self.model.get('offsetEnd'),
+                $res    = $tokens.filter(function(idex) {
+                            return ((idex >= start) && (idex <= end));
+                          });
+
+            return $res;
         }
     });
 
