@@ -18286,26 +18286,10 @@ _.extend(LocalStore.prototype, {
                 opts        = self.options;
             if (! opts.$notes)  { return; }
 
+            /* Trigger 'tags:activate" for all notes, passing the target
+             * hashTags.
+             */
             opts.$notes.find('.note').trigger('tags:activate', [ hashTags ]);
-
-            /* Locate all notes that have the target tag.
-            opts.$notes.find('.note').each(function() {
-                var $note   = $(this),
-                    view    = $note.data('View:Note');
-
-                if (! view) { return; }
-
-                if (view.hasHashtag( hashTags ))
-                {
-                    // Activate this view and highlight the tag(s)
-                    view.activate( true );
-                }
-                else
-                {
-                    view.deactivate();
-                }
-            });
-            // */
         },
 
         /**********************************************************************
