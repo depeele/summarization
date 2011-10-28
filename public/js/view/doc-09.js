@@ -379,7 +379,7 @@
                 $tokens = self.$s.find('.word[data-value="'+ keyword +'"]'),
                 op      = (on === false ? 'removeClass' : 'addClass');
 
-            $tokens[op]('highlight');
+            $tokens[op]('highlightKeyword');
         },
 
         /** @brief  Expand all sentences containing the target keyword.
@@ -400,7 +400,7 @@
                     $s      = $token.parents('.sentence:first'),
                     sdex    = self.$s.index($s);
 
-                $token.addClass('highlight');
+                $token.addClass('highlightKeyword');
 
                 if ( (firstS === undefined) || (sdex < firstS) )
                 {
@@ -444,9 +444,9 @@
                 var $token  = $(this),
                     $s      = $token.parents('.sentence:first');
 
-                $token.removeClass('highlight');
+                $token.removeClass('highlightKeyword');
 
-                var nLeft   = $s.find('.word.highlight').length;
+                var nLeft   = $s.find('.word.highlightKeyword').length;
                 if (nLeft < 1)
                 {
                     // No more keywords in this sentence
@@ -509,23 +509,10 @@
                 opts        = self.options;
             if (! opts.$notes)  { return; }
 
-            // Locate all notes that have the target tag.
-            opts.$notes.find('.note').each(function() {
-                var $note   = $(this),
-                    view    = $note.data('View:Note');
-
-                if (! view) { return; }
-
-                if (view.hasHashtag( hashTags ))
-                {
-                    // Activate this view and highlight the tag(s)
-                    view.activate( true );
-                }
-                else
-                {
-                    view.deactivate();
-                }
-            });
+            /* Trigger 'tags:activate" for all notes, passing the target
+             * hashTags.
+             */
+            opts.$notes.find('.note').trigger('tags:activate', [ hashTags ]);
         },
 
         /**********************************************************************
@@ -619,11 +606,11 @@
             if (e.type === 'hoverIntentOut')
             {
                 self.keywordHighlight( keyword, false );
-                $el.removeClass('highlight');
+                $el.removeClass('highlightKeyword');
             }
             else
             {
-                $el.addClass('highlight');
+                $el.addClass('highlightKeyword');
                 self.keywordHighlight( keyword );
             }
         },
@@ -641,13 +628,13 @@
             if ($el.data('keywordsExpanded'))
             {
                 self.keywordCollapse( keyword );
-                $el.removeClass('highlight');
+                $el.removeClass('highlightKeyword');
                 $el.removeData('keywordsExpanded');
             }
             else
             {
                 $el.data('keywordsExpanded', true);
-                $el.addClass('highlight');
+                $el.addClass('highlightKeyword');
                 self.keywordExpand( keyword );
             }
         },

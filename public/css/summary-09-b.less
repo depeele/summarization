@@ -163,7 +163,7 @@ a {
         .inlineBlock();
         cursor:     pointer;
 
-        &.highlight {
+        &.highlightKeyword {
           color:        @colorKeyword;
         }
       }
@@ -278,6 +278,10 @@ a {
               background-color: @colorTagBackground;
               color:            @colorTag;
             }
+            .highlightTag {
+              background-color: @colorTag;
+              color:            @colorTagBackground;
+            }
           }
         }
 
@@ -301,7 +305,7 @@ a {
         .expansion {
           color:        @colorSentenceExpansion;
         }
-        .highlight {
+        .highlightKeyword {
           border:           none;
           color:            @colorKeyword !important;
           background-color: none !important;
@@ -487,13 +491,13 @@ a {
 
     cursor:         pointer;
 
-    &:hover {
-      background-color: @colorText;
+    &:hover, &.ui-state-active {
+      background:       @colorText;
       color:            @colorArticleBackground;
     }
 
-    &.ui-state-active:hover {
-      color:            @colorTextDarkest;
+    &:hover {
+      border-color:     @colorText;
     }
   }
 }

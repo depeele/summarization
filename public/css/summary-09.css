@@ -754,7 +754,7 @@ a {
   *display: inline;
   cursor: pointer;
 }
-.content-pane header .keywords .keyword.highlight {
+.content-pane header .keywords .keyword.highlightKeyword {
   color: #f6931f;
 }
 .content-pane header .keywords .keyword:before {
@@ -898,7 +898,7 @@ a {
 .content-pane article section p .expansion {
   color: #9d9d9d;
 }
-.content-pane article section p .highlight {
+.content-pane article section p .highlightKeyword {
   border: none;
   color: #f6931f !important;
   background-color: none !important;
@@ -1057,12 +1057,12 @@ a {
   -khtml-border-radius: 5px;
   cursor: pointer;
 }
-.tags-pane .hashTag:hover {
-  background-color: #444444;
+.tags-pane .hashTag:hover, .tags-pane .hashTag.ui-state-active {
+  background: #444444;
   color: #ffffff;
 }
-.tags-pane .hashTag.ui-state-active:hover {
-  color: #000000;
+.tags-pane .hashTag:hover {
+  border-color: #444444;
 }
 /**************************************************************************
  * Notes Pane (within .margin-right)

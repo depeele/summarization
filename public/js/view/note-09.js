@@ -15,6 +15,86 @@
 
     var $           = jQuery.noConflict();
 
+    // Borrowed from jQuery-ui {
+    function styleDifference(oldStyle, newStyle) {
+        var diff = { _: 0 }, // http://dev.jquery.com/ticket/5459
+            name;
+
+        for (name in newStyle) {
+            if (oldStyle[name] != newStyle[name]) {
+                diff[name] = newStyle[name];
+            }
+        }
+
+        return diff;
+    }
+	var shorthandStyles = {
+		border: 1,
+		borderBottom: 1,
+		borderColor: 1,
+		borderLeft: 1,
+		borderRight: 1,
+		borderTop: 1,
+		borderWidth: 1,
+		margin: 1,
+		padding: 1
+	};
+    function filterStyles(styles) {
+        var name, value;
+        for (name in styles) {
+            value = styles[name];
+            if (
+                // ignore null and undefined values
+                value == null ||
+                // ignore functions (when does this occur?)
+                $.isFunction(value) ||
+                // shorthand styles that need to be expanded
+                name in shorthandStyles ||
+                // ignore scrollbars (break in IE)
+                (/scrollbar/).test(name) ||
+    
+                // only colors or values that can be converted to numbers
+                (!(/color/i).test(name) && isNaN(parseFloat(value)))
+            ) {
+                delete styles[name];
+            }
+        }
+        
+        return styles;
+    }
+    function getElementStyles() {
+        var style = document.defaultView
+                ? document.defaultView.getComputedStyle(this, null)
+                : this.currentStyle,
+            newStyle = {},
+            key,
+            camelCase;
+    
+        // webkit enumerates style porperties
+        if (style && style.length && style[0] && style[style[0]]) {
+            var len = style.length;
+            while (len--) {
+                key = style[len];
+                if (typeof style[key] == 'string') {
+                    camelCase = key.replace(/\-(\w)/g, function(all, letter){
+                        return letter.toUpperCase();
+                    });
+                    newStyle[camelCase] = style[key];
+                }
+            }
+        } else {
+            for (key in style) {
+                if (typeof style[key] === 'string') {
+                    newStyle[key] = style[key];
+                }
+            }
+        }
+        
+        return newStyle;
+    }
+    // Borrowed from jQuery-ui }
+
+
     /** @brief  A View for a combination of app.Model.Ranges and app.Model.Note
      *          instances.
      *
@@ -58,7 +138,9 @@
 
             'click .buttons button':    '_buttonClick',
 
-            'overlay:position':         'reposition'
+            'overlay:position':         'reposition',
+
+            'tags:activate':            '_tagsActivate'
         }),
 
         /** @brief  Initialize this view. */
@@ -378,6 +460,29 @@
             }
         },
 
+        /** @brief  Check all comments of this note to see if any contain
+         *          one or more of the given tags.  If so, do a sticky
+         *          activation, otherwise, deactivate.
+         *  @param  hashTags    An array of one or more hashTag strings;
+         */
+        tagsActivate: function(hashTags) {
+            var self    = this,
+                opts    = self.options;
+            
+            /*
+            console.log("View:Note::tagsActivate()[%s]", self.model.cid);
+            // */
+
+            if (self.hasHashtag( hashTags ))
+            {
+                self.activate( true );
+            }
+            else
+            {
+                self.deactivate();
+            }
+        },
+
         /** @brief  Does this note have any of the given hashTags?
          *  @param  hashTags    An array of hashTag strings;
          *
@@ -401,6 +506,18 @@
          * "Private" methods.
          *
          */
+
+        /** @brief  Check all comments of this note to see if any contain
+         *          one or more of the given tags.  If so, do a sticky
+         *          activation, otherwise, deactivate.
+         *  @param  e           The triggering event;
+         *  @param  hashTags    An array of one or more hashTag strings;
+         */
+        _tagsActivate: function(e, hashTags) {
+            var self    = this;
+
+            self.tagsActivate( hashTags );
+        },
 
         /** @brief  Mark this instance as 'active'
          *  @param  e       The triggering event.
@@ -455,7 +572,8 @@
                                 self.$el.css('z-index', '');
 
                                 if ($.isFunction(cb))   { cb.call(self); }
-                    });
+                              });
+            self._highlightRange();
 
             return self;
         },
@@ -512,9 +630,112 @@
 
                                     self._deactivating = false;
                                     if ($.isFunction(cb))   { cb.call(self); }
-            });
+                                 });
+            self._highlightRange( false );
 
             return self;
+        },
+
+        /** @brief  (Un)Highlight the elements of the range associated with
+         *          this note.
+         *  @param  state   Highlight (true), Unhighlight (false) [ true ];
+         *
+         */
+        _highlightRange: function(state) {
+            var self    = this;
+
+            if (! $.isArray(self.rangeViews))   { return; }
+
+            /* Animating the elements of each rangeView individually can result
+             * in no real animation if the range is comprised of many elements
+             * since the animation queue is then inundated with *many* elements
+             * at once.
+             *  $.each(self.rangeViews, function(idex, view) {
+             *      view.getElements()[ state === false
+             *                          ? 'removeClass'
+             *                          : 'addClass']('highlightTag',
+             *                                        app.config.animSpeed);
+             *  });
+             *
+             *
+             * Instead, impelment animation directly, applying each step to
+             * every element in rangeViews directly.
+             *
+             * Start by retrieving all elements of all rangeViews into a single
+             * jQuery container.
+             */
+            var $elements   = $();
+            _.each(self.rangeViews, function(view) {
+                $elements = $elements.add( view.getElements() );
+            });
+
+            /* Use the first element to control the queue.
+             *
+             * The general idea of this is taken directly from jQuery UI's
+             * $.effects.animateClass() with simplifications (only
+             * add/removeClass a specific class, ignoring easing and callback)
+             * and modifications to apply steps and completion to all elements.
+             */
+            $elements.eq(0).queue(function() {
+                var $el                 = $(this),
+                    action              = (state === false
+                                            ? 'removeClass'
+                                            : 'addClass'),
+                    newClass            = 'highlightTag',
+                    originalStyleAttr   = $el.attr('style') || ' ',
+                    originalStyles      = filterStyles(
+                                            getElementStyles.call(this)),
+                    className           = $el.attr('class'),
+                    newStyles;
+
+                /* Determine the new style attributes by immediately applying
+                 * the action with the newClass, retrieving the resulting
+                 * styles, and un-applying the action.
+                 */
+                $el[ action ]( newClass );
+                newStyles = filterStyles(getElementStyles.call(this));
+                $el.attr('class', className);
+
+                /* Animate the differences between the current/original and the
+                 * new/resulting styles.
+                 */
+                $el.animate(styleDifference(originalStyles, newStyles), {
+                    queue:      false,
+                    duration:   app.config.animSpeed,
+                    step:       function(now, fx) {
+                        /* At each step, apply the style <fx.prop> with value
+                         * <now> to all elements.
+                         */
+                        var elem    = fx.elem;
+                        $elements.each(function() {
+                            fx.elem = this;
+                            ($.fx.step[fx.prop]||$.fx.step._default)( fx );
+                        });
+                        fx.elem = elem;
+                    },
+                    complete:   function() {
+                        /* Perform 'action' on ALL elements in the process,
+                         * removing the animated style attributes while working
+                         * around a bug in IE by clearing the cssText before
+                         * setting it.
+                         */
+                        $elements.each(function() {
+                            var $range  = $(this);
+                            $range[ action ]( newClass );
+
+                            if (typeof $range.attr('style') === 'object') {
+                                $range.attr('style').cssText = '';
+                                $range.attr('style').cssText =
+                                                        originalStyleAttr;
+                            } else {
+                                $range.attr('style', originalStyleAttr);
+                            }
+                        });
+
+                        $.dequeue( this );
+                    }
+                });
+            });
         },
 
         /** @brief  Squelch the triggering event.
