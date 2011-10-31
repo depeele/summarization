@@ -180,10 +180,6 @@ samp {
 /**
  * Minimal base styles.
  */
-/* Always force a scrollbar in non-IE */
-html {
-  overflow-y: scroll;
-}
 /* Accessible focus treatment: people.opera.com/patrickl/experiments/keyboard/test */
 a:hover, a:active {
   outline: none;
@@ -633,6 +629,9 @@ a:hover {
  * General styles
  *
  */
+html {
+  overflow-y: scroll;
+}
 body {
   font: 16px/1.231 arial,helvetica,clean,sans-serif;
   background-color: #eeeeee;

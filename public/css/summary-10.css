@@ -637,15 +637,9 @@ a:hover {
  * General styles
  *
  */
-html {
-  overflow-y: scroll;
-}
 body {
   font: 16px/1.231 arial,helvetica,clean,sans-serif;
   background-color: #eeeeee;
-  display: table;
-  margin-left: auto;
-  margin-right: auto;
 }
 a {
   text-decoration: none;
@@ -658,7 +652,8 @@ a {
   background-image: url('images/loading.gif');
   background-repeat: no-repeat;
   background-position: 50%;
-  min-height: 25px;
+  background-color: #ffffff;
+  min-height: 50px;
 }
 .corner-top {
   border-radius: 5px 5px 0 0;
@@ -683,13 +678,36 @@ a {
  * for window decoration and vertical scrollbar
  * (i.e. a client/document width of 1000 pixels)
  */
-.margin-left, .content-pane, .margin-right {
+.page-header, .page-content {
+  position: relative;
+  width: 100%;
+}
+.page-header {
+  z-index: 2;
+  border-bottom: 2px solid #aaaaaa;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+  height: 50px;
+}
+.page-content {
+  position: absolute;
+  top: 50px;
+  bottom: 0;
+  padding-bottom: 1em;
+  z-index: 1;
+  overflow: auto;
+}
+.margin-left,
+.content-pane,
+.control-pane,
+.margin-right {
   display: table-cell;
 }
 .margin-left {
   min-width: 55px;
 }
-.content-pane {
+.content-pane, .control-pane {
   width: 700px;
   min-width: 700px;
   max-width: 700px;
@@ -702,6 +720,7 @@ a {
  *
  */
 .content-pane {
+  padding-top: 0.25em;
   /*******************
    * Header
    */
@@ -880,6 +899,10 @@ a {
   background-color: #d7ebf9;
   color: #2779aa;
 }
+.content-pane article section p .sentence .content .highlightTag {
+  background-color: #2779aa;
+  color: #d7ebf9;
+}
 .content-pane article section p .expanded, .content-pane article section p .expansion, .content-pane article section p .keyworded {
   font-size: 1em;
   line-height: 1.2em;
@@ -924,16 +947,13 @@ a {
   top: 1px;
 }
 /**************************************************************************
- * Control Pane (within .margin-right)
+ * Control Pane (within .page-header)
  *
  */
 .control-pane {
-  position: fixed;
-  top: 11em;
-  width: 55px;
   font-size: 0.7em;
   margin: 0;
-  z-index: 10;
+  text-align: right;
   /*******************
    * Controls
    *
@@ -945,10 +965,6 @@ a {
   top: 4px;
   right: 4px;
   cursor: pointer;
-}
-.control-pane .controls {
-  overflow: hidden;
-  text-align: center;
 }
 .control-pane .controls label.primary, .control-pane .controls label.values {
   display: block;
@@ -965,9 +981,11 @@ a {
   position: relative;
   padding: 0;
   vertical-align: top;
-  text-align: center;
-  display: block;
-  margin: 1em 0 0 0;
+  display: -moz-inline-stack;
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+  margin: 0.25em 1em 0.5em 0;
 }
 .control-pane .controls .filter .checkbox, .control-pane .controls .options .checkbox {
   cursor: pointer;
@@ -994,10 +1012,21 @@ a {
   -o-opacity: 1;
   -khtml-opacity: 1;
 }
+.control-pane .controls .threshold .info, .control-pane .controls .threshold .buttons {
+  display: -moz-inline-stack;
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+  vertical-align: top;
+}
 .control-pane .controls .threshold .buttons {
-  margin: 0;
+  margin: 1.25em 0 0 0;
 }
 .control-pane .controls .threshold .buttons .expansion, .control-pane .controls .threshold .buttons .global {
+  display: -moz-inline-stack;
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
   margin: 0 0.4em;
 }
 .control-pane .controls .threshold .buttons .expansion {
@@ -1010,7 +1039,7 @@ a {
   padding: 0.4em;
   line-height: 1;
 }
-.margin-left:hover .control-pane .controls label.primary {
+.control-pane:hover .controls label.primary {
   color: #999999;
   cursor: text;
 }
@@ -1020,7 +1049,7 @@ a {
  */
 .tags-pane {
   position: fixed;
-  top: 0;
+  top: 50px;
   height: 7em;
   width: 240px;
   background-color: #eeeeee;
@@ -1100,22 +1129,24 @@ a {
 .notes-pane .note {
   display: block;
   position: absolute;
-  left: 10px;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -ms-border-radius: 5px;
-  -o-border-radius: 5px;
-  -khtml-border-radius: 5px;
+  left: -4px;
+  border-radius: 0 5px 5px 0;
+  -moz-border-radius: 0 5px 5px 0;
+  -webkit-border-radius: 0 5px 5px 0;
+  -ms-border-radius: 0 5px 5px 0;
+  -o-border-radius: 0 5px 5px 0;
+  -khtml-border-radius: 0 5px 5px 0;
   font-size: 0.7em;
-  width: 210px;
+  width: 2em;
+  height: 2em;
   border: 1px solid #d5d5d5;
-  background-color: #ffffff;
+  background-color: #ffee83;
   z-index: 10;
   cursor: pointer;
 }
 .notes-pane .note .arrow-outer,
 .notes-pane .note .arrow-inner,
+.notes-pane .note .note-body,
 .notes-pane .note .note-input-pane,
 .notes-pane .note .note-body .comment .buttons,
 .notes-pane .note .note-body .comment .edit {
@@ -1164,12 +1195,23 @@ a {
 }
 .notes-pane .note-active {
   left: -10px;
+  width: 210px;
+  height: auto;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  -khtml-border-radius: 5px;
   border: 1px solid #ffee83;
   background-color: #fffce9;
   box-shadow: 2px 2px 8px #d5d5d5;
   -moz-box-shadow: 2px 2px 8px #d5d5d5;
   -webkit-box-shadow: 2px 2px 8px #d5d5d5;
   z-index: 11;
+}
+.notes-pane .note-active .note-body {
+  display: block;
 }
 .notes-pane .note-active .note-body .comment {
   border-top: 1px dashed #ffee83;

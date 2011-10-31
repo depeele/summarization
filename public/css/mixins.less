@@ -6,6 +6,14 @@
   -webkit-box-shadow: @arguments;
 }
 
+.box-shadow-alpha (@x: 0, @y: 0, @blur: 1px, @alpha: 1.0) {
+  @val: @x @y @blur rgba(0,0,0,@alpha);
+
+  box-shadow:         @val;
+  -moz-box-shadow:    @val;
+  -webkit-box-shadow: @val;
+}
+
 .cornersBottom(@radius) {
   border-radius:        0 0 @radius @radius;
   -moz-border-radius:   0 0 @radius @radius;

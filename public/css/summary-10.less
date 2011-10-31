@@ -21,8 +21,11 @@
 @widthMain:                     700px;
 @widthRight:                    240px;
 
-@noteOffset:                    10px;
-@noteWidth:                     @widthRight - (@noteOffset * 3);    // 210px
+@heightHeader:                  50px;
+
+@noteActiveOffset:              10px;
+@noteInactiveOffset:            4px;
+@noteWidth:                     @widthRight - (@noteActiveOffset * 3);  // 210px
 
 /*******************
  * Colors
@@ -58,15 +61,9 @@
  * General styles
  *
  */
-html { overflow-y: scroll; }
-
 body {
   font:             ~"@{baseFont}px/1.231 arial,helvetica,clean,sans-serif";
   background-color: @colorBackground;
-
-  display:          table;
-  margin-left:      auto;
-  margin-right:     auto;
 }
 
 a {
@@ -82,8 +79,9 @@ a {
   background-image:     url('images/loading.gif');
   background-repeat:    no-repeat;
   background-position:  50%;
+  background-color:     @colorArticleBackground;
 
-  min-height:           25px;
+  min-height:           50px;
 }
 
 .corner-top {
@@ -100,8 +98,32 @@ a {
  * for window decoration and vertical scrollbar
  * (i.e. a client/document width of 1000 pixels)
  */
+.page-header, .page-content {
+  position:       relative;
+  width:          100%;
+}
+.page-header {
+  z-index:        2;
+  border-bottom:  2px solid @colorControls;
+
+  .box-shadow-alpha(0, 0, 25px, 0.5);
+
+  height:         @heightHeader;
+}
+
+.page-content {
+  position:       absolute;
+  top:            @heightHeader;
+  bottom:         0;
+  padding-bottom: 1em;
+
+  z-index:        1;
+  overflow:       auto;
+}
+
 .margin-left,
 .content-pane,
+.control-pane,
 .margin-right {
   display:  table-cell;
 }
@@ -109,7 +131,8 @@ a {
 .margin-left {
   min-width:  @widthLeft;
 }
-.content-pane {
+.content-pane,
+.control-pane {
   width:      @widthMain;
   min-width:  @widthMain;
   max-width:  @widthMain;
@@ -123,6 +146,7 @@ a {
  *
  */
 .content-pane {
+  padding-top:      0.25em;
 
   /*******************
    * Header
@@ -279,6 +303,10 @@ a {
               background-color: @colorTagBackground;
               color:            @colorTag;
             }
+            .highlightTag {
+              background-color: @colorTag;
+              color:            @colorTagBackground;
+            }
           }
         }
 
@@ -358,19 +386,14 @@ a {
 }
 
 /**************************************************************************
- * Control Pane (within .margin-right)
+ * Control Pane (within .page-header)
  *
  */
 .control-pane {
-  position:         fixed;
-  top:              11em;
-  width:            55px;
-
   font-size:        0.7em;
 
   margin:           0;
-
-  z-index:          10;
+  text-align:       right;
 
   .toggle-controls {
     position:         absolute;
@@ -384,9 +407,6 @@ a {
    *
    */
   .controls {
-    overflow:   hidden;
-    text-align: center;
-
     label.primary,
     label.values {
       display:      block;
@@ -405,10 +425,10 @@ a {
       position:       relative;
       padding:        0;
       vertical-align: top;
-      text-align:     center;
   
-      display:        block;
-      margin:         1em 0 0 0;
+      .inlineBlock();
+
+      margin:         0.25em 1em 0.5em 0;
     }
   
     .filter,
@@ -432,11 +452,21 @@ a {
     }
 
     .threshold {
+      .info, .buttons {
+        .inlineBlock();
+
+        vertical-align: top;
+      }
+
+      .info {
+      }
       .buttons {
-        margin:       0;
+        margin:       1.25em 0 0 0;
 
         .expansion,
         .global {
+          .inlineBlock();
+
           margin:       0 0.4em;
         }
         .expansion {
@@ -452,10 +482,11 @@ a {
       }
     }
   }
-}
-.margin-left:hover .control-pane .controls label.primary {
-  color:        @colorTextLight;
-  cursor:       text;
+
+  &:hover .controls label.primary {
+    color:        @colorTextLight;
+    cursor:       text;
+  }
 }
 
 /**************************************************************************
@@ -464,7 +495,7 @@ a {
  */
 .tags-pane {
   position:         fixed;
-  top:              0;
+  top:              @heightHeader;
   height:           7em;
   width:            @widthRight;
 
@@ -540,15 +571,16 @@ a {
   .note {
     display:          block;
     position:         absolute;
-    left:             @noteOffset;
+    left:             ~"-@{noteInactiveOffset}px";
   
-    .corners(5px);
+    .cornersRight(5px);
   
     font-size:        0.7em;
-    width:            @noteWidth;
+    width:            2em;
+    height:           2em;
     
     border:           1px solid @colorBorder;
-    background-color: @colorArticleBackground;
+    background-color: @colorActiveNoteBorder;
   
     z-index:          10;
   
@@ -556,6 +588,7 @@ a {
   
     .arrow-outer,
     .arrow-inner,
+    .note-body,
     .note-input-pane,
     .note-body .comment .buttons,
     .note-body .comment .edit {
@@ -626,7 +659,10 @@ a {
    *
    */
   .note-active {
-    left:             ~"-@{noteOffset}px";
+    left:             ~"-@{noteActiveOffset}px";
+    width:            @noteWidth;
+    height:           auto;
+    .corners(5px);
   
     border:           1px solid @colorActiveNoteBorder;
     background-color: @colorActiveNoteBackground;
@@ -634,11 +670,14 @@ a {
     .box-shadow(2px, 2px, 8px, @colorBorder);
     z-index:          11;
   
-    .note-body .comment {
-      border-top:       1px dashed @colorActiveNoteBorder;
-  
-      &:first-child {
-        border-top:     none;
+    .note-body {
+      display:          block;
+
+      .comment {
+        border-top:       1px dashed @colorActiveNoteBorder;
+        &:first-child {
+          border-top:     none;
+        }
       }
     }
     

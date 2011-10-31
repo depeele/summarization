@@ -1,7 +1,7 @@
 YUI_COMP	= yui-compressor
 
 all: preloadImages.min.js summary-06-full.min.js summary-07-full.min.js	\
-	summary-08-full.min.js summary-09-full.min.js
+	summary-08-full.min.js summary-09-full.min.js summary-10-full.min.js
 
 SHARED 	= jquery.js			\
 	  jquery.utils.js		\
@@ -77,6 +77,20 @@ SRC_09	= $(BACKBONE)			\
 	  $(JQUI)			\
 	  jquery.summary-09.js
 
+SRC_10	= $(BACKBONE)			\
+	  $(BB_MODELS)			\
+	  jquery.hoverIntent.js		\
+	  view/sentence.js		\
+	  view/paragraph.js		\
+	  view/section.js		\
+	  view/range-10.js		\
+	  view/selection-10.js		\
+	  view/comment.js		\
+	  view/note-10.js		\
+	  view/doc-10.js		\
+	  $(JQUI)			\
+	  jquery.summary-10.js
+
 summary-06-full.js: $(SRC_06)
 	cat $(SRC_06) > $@
 
@@ -89,13 +103,17 @@ summary-08-full.js: $(SRC_08)
 summary-09-full.js: $(SRC_09)
 	cat $(SRC_09) jquery.summary-09.js > $@
 
+summary-10-full.js: $(SRC_10)
+	cat $(SRC_10) jquery.summary-10.js > $@
+
 #----------------------------------------------------------------------------
 clean:
 	rm -f preloadImages.min.js			\
 	      summary-06-full.js summary-06-full.min.js	\
 	      summary-07-full.js summary-07-full.min.js	\
 	      summary-08-full.js summary-08-full.min.js	\
-	      summary-09-full.js summary-09-full.min.js
+	      summary-09-full.js summary-09-full.min.js	\
+	      summary-10-full.js summary-10-full.min.js
 
 #----------------------------------------------------------------------------
 %.min.js : %.js
