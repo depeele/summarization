@@ -15159,9 +15159,8 @@ _.extend(LocalStore.prototype, {
                 hashTags = _.union(hashTags, note.getHashtags() );
             });
 
-            
-
-            return hashTags;
+            // Return a sorted array.
+            return hashTags.sort();
         },
 
         /**********************************************************************
@@ -16993,6 +16992,10 @@ _.extend(LocalStore.prototype, {
                         self.model.cid);
             // */
 
+            // Remove any range higlight
+            self._highlightRange( false );
+
+            // Unbind event handlers
             $(document).unbind('click.viewNote', self._docClick);
 
             self.model.unbind('destroy',   self.__destroy);
@@ -17387,7 +17390,7 @@ _.extend(LocalStore.prototype, {
                     action              = (state === false
                                             ? 'removeClass'
                                             : 'addClass'),
-                    newClass            = 'highlightTag',
+                    newClass            = 'highlightNote',
                     originalStyleAttr   = $el.attr('style') || ' ',
                     originalStyles      = filterStyles(
                                             getElementStyles.call(this)),
@@ -17769,6 +17772,7 @@ _.extend(LocalStore.prototype, {
              */
             if (self.model.commentCount() < 1)
             {
+                // Destroy the underlying model instance.
                 self.model.destroy();
             }
         }
@@ -18036,10 +18040,15 @@ _.extend(LocalStore.prototype, {
              * at the first un-expanded sentence and then create a Model.Range
              * entry for each sentence between $startS.$startT and $endS.$endT
              */
-            var end         = self.$s.index( $endS ),
+            var start       = ($startS.length > 0
+                                    ? self.$s.index( $startS )
+                                    : 0),
+                end         = ($endS.length > 0
+                                    ? self.$s.index( $endS )
+                                    : -1),
                 $selectable = [],
                 $s;
-            for ( var idex = self.$s.index( $startS );
+            for ( var idex = start;
                     (idex <= end) && ($s = self.$s.eq(idex) );
                         idex++)
             {
@@ -18436,14 +18445,15 @@ _.extend(LocalStore.prototype, {
              *
              * This should only occur when a user clicks on the 'add-note'
              * range-control associated with an active selection.  In this
-             * case, we need to check the value of app.options.quickTag.  If it
-             * is false, activate editing on the first comment of the new note.
+             * case, we need to check the value of app.options.quickNote.  If
+             * it is false, activate editing on the first comment of the new
+             * note.
              */
             var view    = new app.View.Note({model: note, hidden: true});
             opts.$notes.append( view.render().el );
 
             view.show( ((! initialRendering) &&
-                        (app.options.get('quickTag') !== true)
+                        (app.options.get('quickNote') !== true)
                             ? function() {  view.editComment(); }
                             : undefined) );
         },
@@ -20988,7 +20998,7 @@ $.Summary = Backbone.View.extend({
             min:        -1,         // If -1,-1, dynamically determine the
             max:        -1          //  threshold based upon 'showSentences'
         },
-        filter:         'normal',   // The initial filter (normal,tagged)
+        filter:         'normal',   // The initial filter (normal,notes)
         
         showSentences:  5           /* The minimum number of sentences to
                                      * present
@@ -21011,6 +21021,7 @@ $.Summary = Backbone.View.extend({
         self._initialize_notesPane();
 
         self.$paneContent  = self.el.find('.content-pane');
+        //self.$paneContent.addClass('loading');
         self.$paneContent.find('article').addClass('loading');
 
         var getDoc;
@@ -21106,7 +21117,7 @@ $.Summary = Backbone.View.extend({
             $(self.viewDoc.el).trigger('doc:ready');
         }
 
-        self.$paneContent.removeClass('loading');
+        //self.$paneContent.removeClass('loading');
     },
 
     /** @brief  Add a new Model.Note instance to the collection associated with
@@ -21180,7 +21191,7 @@ $.Summary = Backbone.View.extend({
         }
         else
         {
-            if (opts.filter.indexOf('tagged') >= 0)
+            if (opts.filter.indexOf('notes') >= 0)
             {
                 /* Show ALL sentences containing one or more tags regardless of
                  * threshold
@@ -21262,12 +21273,12 @@ $.Summary = Backbone.View.extend({
             self._changeFilter( $.makeArray(filter).join(',') );
             break;
 
-        case 'quickTag':
-            /* Since we use the 'quickTag' icon as an indicator, the logic
+        case 'quickNote':
+            /* Since we use the 'quickNote' icon as an indicator, the logic
              * is a little backwards.  If the checkbox is NOT checked,
              * we're in 'quick' mode, otherwise, 'normal' mode.
              */
-            app.options.set({quickTag: (! $el.checkbox('val') )}).save();
+            app.options.set({quickNote: (! $el.checkbox('val') )}).save();
             break;
         }
     },
@@ -21343,11 +21354,11 @@ $.Summary = Backbone.View.extend({
          * controls:filters
          *
          */
-        var $tagged     = self.$filters.filter('#filter-tagged');
+        var $filterNotes    = self.$filters.filter('#filter-notes');
 
-        $tagged.checkbox({
-            cssOn:      'su-icon su-icon-tag-blue',
-            cssOff:     'su-icon su-icon-tag',
+        $filterNotes.checkbox({
+            cssOn:      'su-icon su-icon-noteNormal-blue',
+            cssOff:     'su-icon su-icon-noteNormal',
             titleOn:    'click to remove filter',
             titleOff:   'click to filter',
             hideLabel:  true
@@ -21357,20 +21368,20 @@ $.Summary = Backbone.View.extend({
          * controls:options
          *
          */
-        var $quickTag   = self.$options.filter('#options-quickTag');
+        var $quickNote  = self.$options.filter('#options-quickNote');
 
-        $quickTag.checkbox({
-            cssOn:      'su-icon su-icon-tagQuick',
-            cssOff:     'su-icon su-icon-tagQuick-blue',
+        $quickNote.checkbox({
+            cssOn:      'su-icon su-icon-noteQuick',
+            cssOff:     'su-icon su-icon-noteQuick-blue',
             titleOn:    'click to enable',
             titleOff:   'click to disable',
             hideLabel:  true,
 
-            /* Since we use the 'quickTag' icon as an indicator, the logic is a
-             * little backwards.  If the checkbox is NOT checked, we're in
+            /* Since we use the 'quickNote' icon as an indicator, the logic is
+             * a little backwards.  If the checkbox is NOT checked, we're in
              * 'quick' mode, otherwise, 'normal' mode.
              */
-            checked:    (! app.options.get('quickTag') )
+            checked:    (! app.options.get('quickNote') )
         });
 
         self.$paneControls.show();
@@ -21433,7 +21444,7 @@ $.Summary = Backbone.View.extend({
     },
 
     /** @brief  Change the filter value.
-     *  @param  filter      The new value ('normal', 'tagged').
+     *  @param  filter      The new value ('normal', 'notes').
      *  @param  noRefresh   If true, do NOT perform a refresh.
      *
      *  @return this for a fluent interface.
@@ -21450,7 +21461,7 @@ $.Summary = Backbone.View.extend({
         $.each(filters, function() {
             switch (this.toString())
             {
-            case 'tagged':
+            case 'notes':
                 $buttons.button('disable');
                 break;
 
@@ -21471,7 +21482,7 @@ $.Summary = Backbone.View.extend({
 
         // Set the filter value
         opts.filter = filter;
-        self.el.removeClass('tagged normal')
+        self.el.removeClass('notes normal')
                     .addClass(filters.join(' '));
 
         if (noRefresh !== true)
@@ -21516,7 +21527,7 @@ $.Summary = Backbone.View.extend({
             min:        -1,         // If -1,-1, dynamically determine the
             max:        -1          //  threshold based upon 'showSentences'
         },
-        filter:         'normal',   // The initial filter (normal,tagged)
+        filter:         'normal',   // The initial filter (normal,notes)
         
         showSentences:  5           /* The minimum number of sentences to
                                      * present
@@ -21539,6 +21550,7 @@ $.Summary = Backbone.View.extend({
         self._initialize_notesPane();
 
         self.$paneContent  = self.el.find('.content-pane');
+        //self.$paneContent.addClass('loading');
         self.$paneContent.find('article').addClass('loading');
 
         var getDoc;
@@ -21634,7 +21646,7 @@ $.Summary = Backbone.View.extend({
             $(self.viewDoc.el).trigger('doc:ready');
         }
 
-        self.$paneContent.removeClass('loading');
+        //self.$paneContent.removeClass('loading');
     },
 
     /** @brief  Add a new Model.Note instance to the collection associated with
@@ -21708,7 +21720,7 @@ $.Summary = Backbone.View.extend({
         }
         else
         {
-            if (opts.filter.indexOf('tagged') >= 0)
+            if (opts.filter.indexOf('notes') >= 0)
             {
                 /* Show ALL sentences containing one or more tags regardless of
                  * threshold
@@ -21790,12 +21802,12 @@ $.Summary = Backbone.View.extend({
             self._changeFilter( $.makeArray(filter).join(',') );
             break;
 
-        case 'quickTag':
-            /* Since we use the 'quickTag' icon as an indicator, the logic
+        case 'quickNote':
+            /* Since we use the 'quickNote' icon as an indicator, the logic
              * is a little backwards.  If the checkbox is NOT checked,
              * we're in 'quick' mode, otherwise, 'normal' mode.
              */
-            app.options.set({quickTag: (! $el.checkbox('val') )}).save();
+            app.options.set({quickNote: (! $el.checkbox('val') )}).save();
             break;
         }
     },
@@ -21871,11 +21883,11 @@ $.Summary = Backbone.View.extend({
          * controls:filters
          *
          */
-        var $tagged     = self.$filters.filter('#filter-tagged');
+        var $filterNotes    = self.$filters.filter('#filter-notes');
 
-        $tagged.checkbox({
-            cssOn:      'su-icon su-icon-tag-blue',
-            cssOff:     'su-icon su-icon-tag',
+        $filterNotes.checkbox({
+            cssOn:      'su-icon su-icon-noteNormal-blue',
+            cssOff:     'su-icon su-icon-noteNormal',
             titleOn:    'click to remove filter',
             titleOff:   'click to filter',
             hideLabel:  true
@@ -21885,20 +21897,20 @@ $.Summary = Backbone.View.extend({
          * controls:options
          *
          */
-        var $quickTag   = self.$options.filter('#options-quickTag');
+        var $quickNote  = self.$options.filter('#options-quickNote');
 
-        $quickTag.checkbox({
-            cssOn:      'su-icon su-icon-tagQuick',
-            cssOff:     'su-icon su-icon-tagQuick-blue',
+        $quickNote.checkbox({
+            cssOn:      'su-icon su-icon-noteQuick',
+            cssOff:     'su-icon su-icon-noteQuick-blue',
             titleOn:    'click to enable',
             titleOff:   'click to disable',
             hideLabel:  true,
 
-            /* Since we use the 'quickTag' icon as an indicator, the logic is a
-             * little backwards.  If the checkbox is NOT checked, we're in
+            /* Since we use the 'quickNote' icon as an indicator, the logic is
+             * a little backwards.  If the checkbox is NOT checked, we're in
              * 'quick' mode, otherwise, 'normal' mode.
              */
-            checked:    (! app.options.get('quickTag') )
+            checked:    (! app.options.get('quickNote') )
         });
 
         self.$paneControls.show();
@@ -21961,7 +21973,7 @@ $.Summary = Backbone.View.extend({
     },
 
     /** @brief  Change the filter value.
-     *  @param  filter      The new value ('normal', 'tagged').
+     *  @param  filter      The new value ('normal', 'notes').
      *  @param  noRefresh   If true, do NOT perform a refresh.
      *
      *  @return this for a fluent interface.
@@ -21978,7 +21990,7 @@ $.Summary = Backbone.View.extend({
         $.each(filters, function() {
             switch (this.toString())
             {
-            case 'tagged':
+            case 'notes':
                 $buttons.button('disable');
                 break;
 
@@ -21999,7 +22011,7 @@ $.Summary = Backbone.View.extend({
 
         // Set the filter value
         opts.filter = filter;
-        self.el.removeClass('tagged normal')
+        self.el.removeClass('notes normal')
                     .addClass(filters.join(' '));
 
         if (noRefresh !== true)

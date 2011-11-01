@@ -15159,9 +15159,8 @@ _.extend(LocalStore.prototype, {
                 hashTags = _.union(hashTags, note.getHashtags() );
             });
 
-            
-
-            return hashTags;
+            // Return a sorted array.
+            return hashTags.sort();
         },
 
         /**********************************************************************

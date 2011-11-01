@@ -287,6 +287,10 @@
                         self.model.cid);
             // */
 
+            // Remove any range higlight
+            self._highlightRange( false );
+
+            // Unbind event handlers
             $(document).unbind('click.viewNote', self._docClick);
 
             self.model.unbind('destroy',   self.__destroy);
@@ -681,7 +685,7 @@
                     action              = (state === false
                                             ? 'removeClass'
                                             : 'addClass'),
-                    newClass            = 'highlightTag',
+                    newClass            = 'highlightNote',
                     originalStyleAttr   = $el.attr('style') || ' ',
                     originalStyles      = filterStyles(
                                             getElementStyles.call(this)),
@@ -1063,6 +1067,7 @@
              */
             if (self.model.commentCount() < 1)
             {
+                // Destroy the underlying model instance.
                 self.model.destroy();
             }
         }

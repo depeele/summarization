@@ -15159,9 +15159,8 @@ _.extend(LocalStore.prototype, {
                 hashTags = _.union(hashTags, note.getHashtags() );
             });
 
-            
-
-            return hashTags;
+            // Return a sorted array.
+            return hashTags.sort();
         },
 
         /**********************************************************************
@@ -16993,6 +16992,10 @@ _.extend(LocalStore.prototype, {
                         self.model.cid);
             // */
 
+            // Remove any range higlight
+            self._highlightRange( false );
+
+            // Unbind event handlers
             $(document).unbind('click.viewNote', self._docClick);
 
             self.model.unbind('destroy',   self.__destroy);
@@ -17387,7 +17390,7 @@ _.extend(LocalStore.prototype, {
                     action              = (state === false
                                             ? 'removeClass'
                                             : 'addClass'),
-                    newClass            = 'highlightTag',
+                    newClass            = 'highlightNote',
                     originalStyleAttr   = $el.attr('style') || ' ',
                     originalStyles      = filterStyles(
                                             getElementStyles.call(this)),
@@ -17769,6 +17772,7 @@ _.extend(LocalStore.prototype, {
              */
             if (self.model.commentCount() < 1)
             {
+                // Destroy the underlying model instance.
                 self.model.destroy();
             }
         }
@@ -18036,10 +18040,15 @@ _.extend(LocalStore.prototype, {
              * at the first un-expanded sentence and then create a Model.Range
              * entry for each sentence between $startS.$startT and $endS.$endT
              */
-            var end         = self.$s.index( $endS ),
+            var start       = ($startS.length > 0
+                                    ? self.$s.index( $startS )
+                                    : 0),
+                end         = ($endS.length > 0
+                                    ? self.$s.index( $endS )
+                                    : -1),
                 $selectable = [],
                 $s;
-            for ( var idex = self.$s.index( $startS );
+            for ( var idex = start;
                     (idex <= end) && ($s = self.$s.eq(idex) );
                         idex++)
             {

@@ -4,7 +4,7 @@
  *  lessc (http://lesscss.org/).
  */
 @import "reset";
-@import "sprites-16";
+@import "sprites-16-10";
 @import "mixins";
 
 /**************************************************************************
@@ -147,6 +147,7 @@ a {
  */
 .content-pane {
   padding-top:      0.25em;
+  margin-bottom:    2em;
 
   /*******************
    * Header
@@ -303,7 +304,7 @@ a {
               background-color: @colorTagBackground;
               color:            @colorTag;
             }
-            .highlightTag {
+            .highlightNote {
               background-color: @colorTag;
               color:            @colorTagBackground;
             }
@@ -369,12 +370,7 @@ a {
      */
 
     /*******************
-     * Article:Starred
-     *
-     */
-
-    /*******************
-     * Article:Tagged
+     * Article:Noted
      *
      */
 
@@ -495,12 +491,16 @@ a {
  */
 .tags-pane {
   position:         fixed;
-  top:              @heightHeader;
+  top:              @heightHeader - 1px;
   height:           7em;
   width:            @widthRight;
 
+  padding:          0.5em 0.25em 0.25em;
+
   background-color: @colorBackground;
   border:           1px solid @colorBorder;
+
+  .box-shadow-alpha(5px, 5px, 15px, 0.25);
 
   .cornersBottom(10px);
   .opacity(90);

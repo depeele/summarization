@@ -464,7 +464,7 @@ a:hover {
   display: block;
   width: 16px;
   height: 16px;
-  background-image: url('images/icons-16.png');
+  background-image: url('images/icons-16-10.png');
 }
 /* positioning */
 .su-icon-star {
@@ -491,10 +491,10 @@ a:hover {
 .su-icon-reset {
   background-position: -112px 0;
 }
-.su-icon-tagQuick {
+.su-icon-noteQuick {
   background-position: -128px 0;
 }
-.su-icon-tagNormal {
+.su-icon-noteNormal {
   background-position: -144px 0;
 }
 .su-icon-star-blue {
@@ -521,10 +521,10 @@ a:hover {
 .su-icon-reset-blue {
   background-position: -112px -16px;
 }
-.su-icon-tagQuick-blue {
+.su-icon-noteQuick-blue {
   background-position: -128px -16px;
 }
-.su-icon-tagNormal-blue {
+.su-icon-noteNormal-blue {
   background-position: -144px -16px;
 }
 .su-icon-star-white {
@@ -551,10 +551,10 @@ a:hover {
 .su-icon-reset-white {
   background-position: -112px -32px;
 }
-.su-icon-tagQuick-white {
+.su-icon-noteQuick-white {
   background-position: -128px -32px;
 }
-.su-icon-tagNormal-white {
+.su-icon-noteNormal-white {
   background-position: -144px -32px;
 }
 /* state-based positioning */
@@ -585,10 +585,10 @@ a:hover {
 .su-state-active.su-icon-reset {
   background-position: -112px -16px;
 }
-.su-state-active.su-icon-tagQuick {
+.su-state-active.su-icon-noteQuick {
   background-position: -128px -16px;
 }
-.su-state-active.su-icon-tagNormal {
+.su-state-active.su-icon-noteNormal {
   background-position: -144px -16px;
 }
 .su-state-reverse.su-icon-star {
@@ -615,10 +615,10 @@ a:hover {
 .su-state-reverse.su-icon-reset {
   background-position: -112px -32px;
 }
-.su-state-reverse.su-icon-tagQuick {
+.su-state-reverse.su-icon-noteQuick {
   background-position: -128px -32px;
 }
-.su-state-reverse.su-icon-tagNormal {
+.su-state-reverse.su-icon-noteNormal {
   background-position: -144px -32px;
 }
 /**************************************************************************
@@ -721,6 +721,7 @@ a {
  */
 .content-pane {
   padding-top: 0.25em;
+  margin-bottom: 2em;
   /*******************
    * Header
    */
@@ -795,12 +796,7 @@ a {
      */
 
   /*******************
-     * Article:Starred
-     *
-     */
-
-  /*******************
-     * Article:Tagged
+     * Article:Noted
      *
      */
 
@@ -899,7 +895,7 @@ a {
   background-color: #d7ebf9;
   color: #2779aa;
 }
-.content-pane article section p .sentence .content .highlightTag {
+.content-pane article section p .sentence .content .highlightNote {
   background-color: #2779aa;
   color: #d7ebf9;
 }
@@ -1049,11 +1045,15 @@ a {
  */
 .tags-pane {
   position: fixed;
-  top: 50px;
+  top: 49px;
   height: 7em;
   width: 240px;
+  padding: 0.5em 0.25em 0.25em;
   background-color: #eeeeee;
   border: 1px solid #d5d5d5;
+  box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.25);
+  -webkit-box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.25);
   border-radius: 0 0 10px 10px;
   -moz-border-radius: 0 0 10px 10px;
   -webkit-border-radius: 0 0 10px 10px;
