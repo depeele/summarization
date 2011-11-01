@@ -143,6 +143,13 @@
                 $endS       = $end.parents('.sentence'),
                 ranges      = new app.Model.Ranges();
 
+            if ((range.startContainer === range.endContainer) &&
+                (range.startOffset    === range.endOffset))
+            {
+                // Empty selection
+                $start = $end = $startS = $endS = $();
+            }
+
             if (($startS.length > 0) || ($endS.length > 0))
             {
                 /* Since start OR end is within a sentence, ensure both ends

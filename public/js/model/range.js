@@ -43,11 +43,11 @@
         },
 
         isEmpty: function() {
-            var sid     = this.get('sentenceId');
-            var start   = this.get('offsetStart');
-            var end     = this.get('offsetEnd');
+            var sid     = this.get('sentenceId'),
+                start   = this.get('offsetStart'),
+                end     = this.get('offsetEnd');
 
-            return ( sid && (start === end));
+            return ( sid && (end < start));
         },
 
         /** @brief  Retrieve a rangy range that represents this range within
