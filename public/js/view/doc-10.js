@@ -388,7 +388,8 @@
          */
         keywordHighlight: function(keyword, on) {
             var self    = this,
-                $tokens = self.$s.find('.word[data-value="'+ keyword +'"]'),
+                $tokens = self.$s.find('[data-type=word]'+
+                                       '[data-value="'+ keyword +'"]'),
                 op      = (on === false ? 'removeClass' : 'addClass');
 
             $tokens[op]('highlightKeyword');
@@ -400,7 +401,8 @@
          */
         keywordExpand: function(keyword) {
             var self        = this,
-                $tokens     = self.$s.find('.word[data-value="'+ keyword +'"]'),
+                $tokens     = self.$s.find('[data-type=word]'+
+                                           '[data-value="'+ keyword +'"]'),
                 $collection = $(),
                 firstS;
 
@@ -444,7 +446,8 @@
          */
         keywordCollapse: function(keyword) {
             var self        = this,
-                $tokens     = self.$s.find('.word[data-value="'+ keyword +'"]'),
+                $tokens     = self.$s.find('[data-type=word]'+
+                                           '[data-value="'+ keyword +'"]'),
                 $collection = $(),
                 firstS;
 
@@ -458,7 +461,8 @@
 
                 $token.removeClass('highlightKeyword');
 
-                var nLeft   = $s.find('.word.highlightKeyword').length;
+                var nLeft   = $s.find('[data-type=word]'+
+                                        '.highlightKeyword').length;
                 if (nLeft < 1)
                 {
                     // No more keywords in this sentence

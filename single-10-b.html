@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+
+  <title>Summarization Viewer</title>
+
+  <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.min.css" />
+  <link rel="stylesheet" type="text/css" href="css/summary-10.min.css" />
+
+  <script src='js/req.min.js'></script>
+  <script src='js/boot-10-b.js'></script>
+ </head>
+ <body>
+  <div id='app-Summary'><!-- app.Summary { -->
+   <div class='page-header'>
+    <div class='margin-left'><!-- margin-left { -->
+    </div><!-- margin-left } -->
+    <div class='control-pane' style='display:none;'><!-- control-pane { -->
+     <div class='controls'><!-- controls { -->
+      <div class='filter'><!-- filter { -->
+       <label for="filter" class='primary'>Filter</label>
+       <input name="filter" id="filter-notes"
+              type="checkbox" value="notes" />
+       <label for="filter-notes">sentences with notes:</label>
+      </div><!-- filter } -->
+
+      <div class='threshold'><!-- threshold { -->
+	    <div class='info'>
+        <label for="threshold" class='primary'>Threshold</label>
+        <label class='values'></label>
+	    </div>
+
+       <div class='buttons'>
+        <div class='expansion'>
+         <button name='threshold-down'
+                title='expand'><div
+                class='expand su-icon su-icon-expand' /></button
+        ><button name='threshold-up'
+                title='collapse'><div
+                class='collapse su-icon su-icon-collapse' /></button>
+        </div>
+        <div class='global'>
+         <button  name='threshold-all'
+                 title='full document'><div
+                class='all su-icon su-icon-all' /></button
+        ><button name='threshold-reset'
+                title='reset to original threshold'><div
+                class='reset su-icon su-icon-reset' /></button>
+        </div>
+       </div>
+      </div><!-- threshold } -->
+
+      <div class='options'><!-- options { -->
+       <label for="options" class='primary'>Options</label>
+       <input name="quickNote" id="options-quickNote"
+              type="checkbox" value="normal" />
+       <label for="options-quickNote">quick note:</label>
+      </div><!-- options } -->
+     </div><!-- controls } -->
+    </div><!-- control-pane } -->
+    <div class='margin-right'><!-- margin-right { -->
+    </div><!-- margin-right } -->
+   </div>
+   <div class='page-content'><!-- page-content { -->
+    <div class='margin-left'><!-- margin-left { -->
+    </div><!-- margin-left } -->
+    <div class='content-pane'><!-- content-pane { -->
+	 <article></article>
+    </div><!-- content-pane } -->
+    <div class='margin-right'><!-- margin-right { -->
+     <div class='tags-pane'></div>
+     <div class='notes-pane'></div>
+    </div><!-- margin-right } -->
+   </div><!-- page-content } -->
+  </div><!-- app.Summary } -->
+ </body>
+
+ <!-- Templates { -->
+ <script id='template-doc' type='text/template'>
+  <header>
+   <meta charset="utf-8" />
+   <h1><a href="<%= url %>"><%= title %></a></h1>
+   <author><%= author %></author>
+   <time datetime="<%= published.toISOString() %>"
+          pubdate="true"><%= jQuery.date2str(published) %></time>
+   <div class="keywords">
+    <% _.each(keywords, function(keyword) { %>
+        <div class="keyword"<%
+            if (keyword.rank > 0)
+            {
+                print(' data-rank="'+ Math.floor(keyword.rank * 100) +'"')
+            }%>
+             data-value="<%= keyword.value %>"><%= keyword.name %></div>
+    <% }); %>
+   </div>
+  </header>
+  <div class='sections'></div>
+ </script>
+
+ <script id='template-section' type='text/template'>
+  <div class='paragraphs'></div>
+ </script>
+
+ <script id='template-paragraph' type='text/template'>
+  <span class="controls">&para;</span>
+  <div class='sentences'></div>
+ </script>
+
+ <script id='template-sentence' type='text/template'
+  ><span class="rank"><%= (rank > 0 ? Math.floor(rank * 100) : 0) %></span
+  ><span class="content"><% _.each(tokens, function(token) {
+  	%><span   data-id="<%= token.id %>"
+            data-type="<%= token.type %>"
+                class="<%= token.type %>"<%
+        if (token.value && (token.value.length > 0))
+        {
+            print(' data-value="'+ token.value +'"')
+
+        }%>><%= token.content %></span><%
+  }); %></span></script>
+
+ <script id='template-selection' type='text/template'>
+   <span class='range-control'>
+    <span class='su-icon su-state-reverse su-icon-noteNormal noteAdd'
+          name='note-add'
+         title='add note'></span>
+   </span>
+ </script>
+
+ <script id='template-note' type='text/template'>
+   <span class='range-control'>
+    <span class='su-icon ui-state-default su-icon-cancel-blue remove'
+          name='note-remove'
+         title='remove note'></span>
+   </span>
+   <div class='arrow-outer'></div>
+   <div class='arrow-inner'></div>
+   <div class='note-body'>
+    <!-- View.Comment renderings go here -->
+   </div>
+   <div class='note-input-pane'>
+    <textarea class='note-reply' title="Reply to this comment..."></textarea>
+    <div class='buttons'>
+     <button name='reply'>reply</button>
+     <button name='cancel-reply'>cancel</button>
+    </div>
+  </div>
+ </script>
+
+ <script id='template-comment' type='text/template'>
+   <img class='avatar' src='<%= author.get('avatarUrl') %>' />
+   <div class='author'><%= author.get('fullName') %></div>
+   <div class='created'><%= jQuery.prettyDate(created)  %></div>
+   <div class='text'><%= text %></div>
+   <div class='edit'>
+    <textarea class='edit-comment'></textarea>
+    <div class='buttons editing'>
+     <button name='save'>save</button>
+     <button name='cancel-edit'>cancel</button>
+    </div>
+   </div>
+   <div class='buttons viewing'>
+    <button name='edit'>edit</button>
+    <button name='delete'>delete</button>
+   </div>
+ </script>
+
+
+ <!-- Templates } -->
+</html>

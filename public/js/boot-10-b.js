@@ -38,7 +38,7 @@ function bootApp()
 
 
     $(document).ready(function() {
-        /* Startup the application (js/jquery.summary-10.js)
+        /* Startup the application (js/jquery.summary-10-b.js)
          * attaching to the DOM element with id 'app-Summary'
          */
         app.main = new $.Summary({
@@ -143,7 +143,7 @@ if (app.config.mode === 'development')
         'ui.checkbox':  { src: 'js/ui.checkbox.js',     req: ['jquery-ui'] },
     
         // Final suummary app
-        'summary':      { src: 'js/jquery.summary-10.js',
+        'summary':      { src: 'js/jquery.summary-10-b.js',
                           req: [ 'jquery', 'utils', 'hoverIntent',
                                  'rangy',
                                  'ui.checkbox',
@@ -157,7 +157,7 @@ else
     // Non-Development/Production dependencies
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.min.js' },
-        'summary':      { src: 'js/summary-10-full.min.js' }
+        'summary':      { src: 'js/summary-10-b-full.min.js' }
     };
 }
 

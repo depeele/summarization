@@ -688,11 +688,11 @@ a {
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
   -webkit-box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
-  height: 50px;
+  height: 44px;
 }
 .page-content {
   position: absolute;
-  top: 50px;
+  top: 44px;
   bottom: 0;
   padding-bottom: 1em;
   z-index: 1;
@@ -1016,7 +1016,7 @@ a {
   vertical-align: top;
 }
 .control-pane .controls .threshold .buttons {
-  margin: 1.25em 0 0 0;
+  margin: 0.6em 0 0 0;
 }
 .control-pane .controls .threshold .buttons .expansion, .control-pane .controls .threshold .buttons .global {
   display: -moz-inline-stack;
@@ -1045,7 +1045,7 @@ a {
  */
 .tags-pane {
   position: fixed;
-  top: 49px;
+  top: 42px;
   height: 7em;
   width: 240px;
   padding: 0.5em 0.25em 0.25em;
