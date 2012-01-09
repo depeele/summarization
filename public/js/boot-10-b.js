@@ -133,7 +133,7 @@ if (app.config.mode === 'development')
                           req: ['view.selection', 'view.comment',
                                 'model.note']},
 
-        'view.doc':     { src: 'js/view/doc-10.js',
+        'view.doc':     { src: 'js/view/doc-10-b.js',
                           req: ['model.doc',
                                 'view.section', 'view.selection', 'view.note']},
 
