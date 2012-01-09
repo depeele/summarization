@@ -55,11 +55,12 @@
              *        mousedown when selecting (at least in Chrome).  Instead,
              *        we bind to 'mousedown' and 'mouseup'.
              */
-            self.__setSelection = _.bind(self.setSelection, self);
+            _.bindAll(self, 'setSelection');
+
             $(document).bind( ['mousedown.viewDoc',
                                'mouseup.viewDoc',
                                'dblclick.viewDoc'].join(' '),
-                             self.__setSelection);
+                             self.setSelection);
         },
 
         /** @brief  Override so we can unbind events bound in initialize().
@@ -67,7 +68,7 @@
         remove: function() {
             var self    = this;
 
-            $(document).unbind( '.viewDoc', self.__setSelection);
+            $(document).unbind( '.viewDoc', self.setSelection);
 
             self.notes.unbind('add',             self.__noteAdded);
             self.notes.unbind('change',          self.__noteChanged);
@@ -293,6 +294,9 @@
             {
                 /* We have one or more selectable sentences.  See if we
                  * need to contract the start or end of the range.
+                 *
+                 * Note that we only allow highlighting of '.word', '.ws', and
+                 * '.punc' atoms (at any level below '.content').
                  */
                 var $newStart   = _.first($selectable),
                     $newEnd     = _.last($selectable);
@@ -303,7 +307,8 @@
                  */
                 if ($newStart[0] !== $startS[0])
                 {
-                    $startT = $newStart.find('.content').children().first();
+                    $startT = $newStart.find('.content')
+                                       .find('.word,.ws,.punc').first();
                 }
 
                 /* If we have a new end, contract the end of the range to
@@ -311,7 +316,8 @@
                  */
                 if ($newEnd[0] !== $endS[0])
                 {
-                    $endT = $newEnd.find('.content').children().last();
+                    $endT = $newEnd.find('.content')
+                                   .find('.word,.ws,.punc').last();
                 }
 
                 /* Create an independent app.Model.Range for each involved
@@ -320,7 +326,8 @@
                 var last    = $selectable.length;
                 $.each($selectable, function(idex, s) {
                     var $s          = $(s),
-                        $tokens     = $s.find('.content').children(),
+                        $tokens     = $s.find('.content')
+                                        .find('.word,.ws,.punc'),
                         rangeModel  = new app.Model.Range({
                                         sentenceId: $s.attr('id')
                                       });

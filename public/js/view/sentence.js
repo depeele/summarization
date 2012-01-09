@@ -22,6 +22,17 @@
         className:  'sentence',
         template:   _.template($('#template-sentence').html()),
 
+        /* This selector determines which elements will be given a CSS class
+         * corresponding to the 'data-type' value.
+         *
+         * NOTE: If this is an array, it will be reduced to a comma-separated
+         *       string in initialize().
+         */
+        atoms:      [ '[data-type=keyphrase]',
+                      '[data-type=word]',
+                      '[data-type=ws]',
+                      '[date-type=punc]' ],
+
         events: {
             'sentence:expand':              'expand',
             'sentence:collapse':            'collapse',
@@ -32,6 +43,15 @@
             'sentence:expansionToggle':     'expansionToggle',
 
             'click':                        'expansionToggle'
+        },
+
+        initialize: function() {
+            var self    = this;
+
+            if (_.isArray(self.atoms))
+            {
+                self.atoms = self.atoms.join(',');
+            }
         },
 
         /** @brief  (Re)render the contents of the paragraph item. */
@@ -56,25 +76,30 @@
             else
             {
                 /* Modify the rendering for this sentence to conform to our
-                 * template
+                 * template.
+                 *
+                 * In general, add a CSS class to each atom of the type:
+                 *      sentence, word, ws, punc
                  */
                 var data        = {
                         id:     self.$el.data('id'),
                         rank:   self.$el.data('rank'),
                         tokens: []
                     },
-                    $el         = $( self.template( data ) ),
-                    $content    = self.$el.children().detach();
+                    $el         = $( self.template( data ) );
 
-                // Make sure each token has an appropriate CSS class
-                $content.each(function() {
+                // First, make sure each atom has an appropriate CSS class
+                self.$el.find( self.atoms ).each(function() {
                     var $token  = $(this),
                         type    = $token.data('type');
 
                     $token.addClass( type );
                 });
 
-                $el.filter('.content').append( $content );
+                /* Now, detach the top-level children and append them, in
+                 * order, to our generated view.
+                 */
+                $el.filter('.content').append( self.$el.children().detach() );
 
                 self.$el.empty()
                         .addClass( self.className )
