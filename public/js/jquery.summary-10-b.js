@@ -115,16 +115,27 @@ $.Summary = Backbone.View.extend({
 
             self.$paneContent.html( self.viewDoc.render().el );
 
-            // Gather the ranks
+            // Handle the ranks
             self.ranks  = [];
             self.$p     = self.$paneContent.find('section p');
             self.$s     = self.$paneContent.find('.sentence');
+
+            // First, find the maximum ranking
+            var max = _.reduce(self.$s, function(val, item) {
+                            var rank    = $(item).data('rank');
+                            return ( (rank !== undefined) && (rank > val)
+                                        ? rank
+                                        : val);
+                       }, 0.0);
+
             self.$s.each(function() {
                 var $s      = $(this);
                 var rank    = $s.data('rank');
                 if (rank === undefined) { return; }
 
-                rank = Math.floor(rank * (rank < 1 ? 100 : 1));
+                // Convert the rank to a percentile and update the presentation
+                rank = Math.floor( (rank / max) * 100 );
+                $s.find('.rank').text(rank);
 
                 if (self.ranks[rank] === undefined) { self.ranks[rank] = []; }
                 self.ranks[rank].push($s);
@@ -464,7 +475,7 @@ $.Summary = Backbone.View.extend({
             if (ar === undefined) { continue; }
 
             num += ar.length;
-            if (num > opts.showSentences)
+            if (num >= opts.showSentences)
             {
                 threshold.min = Math.floor(idex / 10) * 10;
                 break;
