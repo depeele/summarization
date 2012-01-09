@@ -28,10 +28,10 @@
          * NOTE: If this is an array, it will be reduced to a comma-separated
          *       string in initialize().
          */
-        atoms:      [ '[data-type=keyphrase]',
-                      '[data-type=word]',
-                      '[data-type=ws]',
-                      '[date-type=punc]' ],
+        atoms:      [ '[data-type="keyphrase"]',
+                      '[data-type="word"]',
+                      '[data-type="ws"]',
+                      '[data-type="punc"]' ],
 
         events: {
             'sentence:expand':              'expand',

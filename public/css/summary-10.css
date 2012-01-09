@@ -901,6 +901,9 @@ a {
   background-color: #2779aa;
   color: #d7ebf9;
 }
+.content-pane article section p .sentence .highlightKeyword .note, .content-pane article section p .sentence .highlightKeyword .highlightNote {
+  color: #f6931f !important;
+}
 .content-pane article section p .expanded, .content-pane article section p .expansion, .content-pane article section p .keyworded {
   font-size: 1em;
   line-height: 1.2em;
