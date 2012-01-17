@@ -67,7 +67,17 @@
             if ((! notes) || ! (notes instanceof app.Model.Notes))
             {
                 notes = new app.Model.Notes();
-                notes.fetch({docId: self.get('url')});
+
+                // Fetch ALL notes and then filter to JUST this document
+                //notes.fetch({docId: self.get('url')});
+                notes.fetch();
+
+                var url     = self.get('url'),
+                    models  = notes.filter(function(model) {
+                                return (model.get('docId') === url);
+                              });
+
+                notes.reset( models );
 
                 //self.set({notes: new app.Model.Notes(notes)});
                 self.set({notes: notes}, {silent: true});
