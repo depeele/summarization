@@ -458,7 +458,7 @@
 
             if ($comment.length > 0)
             {
-                self.activate(undefined, function() {
+                self._activate(undefined, function() {
                     $comment.trigger('comment:edit');
                 });
             }
