@@ -8,7 +8,8 @@ var widgets         = require('widget'),
     data            = require('self').data,
     annotatorIsOn   = false,
     selectors       = [],
-    matchers        = [];
+    matchers        = [],
+    widget          = null;
 
 if (! simpleStorage.storage.annotations)
 {
@@ -30,6 +31,19 @@ simpleStorage.on('OverQuota', function() {
     }
 });
 
+/** @brief  Change the state of our widget/button
+ *  @param  active  Is the new state active (true) or not (false);
+ */
+function changeStatus( active )
+{
+    annotatorIsOn = active;
+
+    widget.contentURL = (active
+                            ? data.url('widget/pencil-on.png')
+                            : data.url('widget/pencil-off.png'));
+    notifyStatusChange();
+}
+
 /** @brief  Can we currently annotate?
  *
  *  This checks if annotation has been toggled on AND we are not currently in
@@ -45,15 +59,14 @@ function canAnnotate()
 /** @brief  Handle a click on the widget/button to toggle the activation status
  *          of our add-on.
  */
-function toggleActivation()
+function toggleStatus()
 {
     if (privateBrowsing.isActive)
     {
         return false;
     }
 
-    annotatorIsOn = !annotatorIsOn;
-    notifyStatusChange();
+    changeStatus( !annotatorIsOn );
     return canAnnotate();
 }
 
@@ -153,24 +166,12 @@ function Annotation(text, anchor)
 /** @brief  The main function for our add-on.
  */
 exports.main = function() {
-        /* Create the widget/button to toggle our activation status
-         *  data/widget/widget.js
-         *  data/widget/pencil-on.png
-         *  data/widget/pencil-off.png
-         */
-    var widget      = widgets.Widget({
-                        id:                 'toggle-switch',
-                        label:              'Annotator',
-                        contentURL:         data.url('widget/pencil-off.png'),
-                        contentScriptWhen:  'ready',
-                        contentScriptFile:  data.url('widget/widget.js')
-                      }),
         /* Create a page-mode worker to highlight DOM elements that may be
          * annotated:
          *  data/jquery.min.js
          *  data/selector.js
          */
-        selector    = pageMod.PageMod({
+    var selector    = pageMod.PageMod({
                         include:            ['*'],
                         contentScriptWhen:  'ready',
                         contentScriptFile:  [
@@ -353,47 +354,61 @@ exports.main = function() {
                         }
                       });
 
-    /** @brief  Change the state of our widget/button
-     *  @param  active  Is the new state active (true) or not (false);
+    /* Create the widget/button to toggle our activation status
+     *  data/widget/widget.js
+     *  data/widget/pencil-on.png
+     *  data/widget/pencil-off.png
      */
-    function widget_changeState( active )
-    {
-        widget.contentURL = (active
-                                ? data.url('widget/pencil-on.png')
-                                : data.url('widget/pencil-off.png'));
-    }
+    widget = widgets.Widget({
+        id:                 'toggle-switch',
+        label:              'Annotator',
+        contentURL:         data.url('widget/pencil-off.png'),
+        contentScriptWhen:  'ready',
+        contentScriptFile:  data.url('widget/widget.js'),
+        panel:              annotationList  
+    });
 
     /* On left-click of our widget/button, toggle our activation status
      *  'left-click' is triggered via:
      *      data/widget/widget.js
-     */
     widget.port.on('left-click', function() {
-        var active  = toggleActivation();
+        var active  = toggleStatus();
 
         console.log((active ? '' : 'de') +'activate');
-        widget_changeState(active);
     });
+     */
 
     /* On right-click of our widget/button, present our annotation list
      *  'right-click' is triggered via:
      *      data/widget/widget.js
-     */
     widget.port.on('right-click', function() {
         console.log('show annotation list');
         annotationList.show();
     });
+     */
+
+    /* Let 'widget.panel' handle any left-click so the panel will remain
+     * attached to the widget.
+     *
+     * On right-click of our widget/button, toggle our state.
+     *  'right-click' is triggered via:
+     *      data/widget/widget.js
+     */
+    widget.port.on('right-click', function() {
+        var active  = toggleStatus();
+
+        console.log((active ? '' : 'de') +'activate');
+    });
 
     // When the user enters private-browsing mode, turn off annotation
     privateBrowsing.on('start', function() {
-        widget_changeState( false );
-        notifyStatusChange();
+        changeStatus( false );
     });
 
     privateBrowsing.on('stop', function() {
         if (canAnnotate())
         {
-            widget_changeState( true );
-            notifyStatusChange();
+            changeStatus( true );
         }
     });
 };

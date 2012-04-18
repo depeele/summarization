@@ -83,9 +83,10 @@ function update(annotations)
 function createAnchor(annotation)
 {
     var $ancestor   = $('#'+ annotation.ancestorId),
+        text        = annotation.anchorText.replace(/'/g, "\\'"),
         $anchor     = $ancestor
                         .parent()
-                            .find(':contains('+ annotation.anchorText +')')
+                            .find(":contains('"+ text +"')")
                                 .last(),
         data        = {
             border:     $anchor.css('border'),
