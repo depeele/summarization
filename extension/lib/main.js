@@ -7,7 +7,8 @@ var widgets         = require('widget'),
     simpleStorage   = require('simple-storage'),
     data            = require('self').data,
     annotatorIsOn   = false,
-    selectors       = [];
+    selectors       = [],
+    matchers        = [];
 
 if (! simpleStorage.storage.annotations)
 {
@@ -52,18 +53,41 @@ function toggleActivation()
     }
 
     annotatorIsOn = !annotatorIsOn;
-    notifySelectors();
+    notifyStatusChange();
     return canAnnotate();
 }
 
-/** @brief  Notify all page-mod workers (selectors) of our current activation
- *          status.
+/** @brief  Notify all page-mod workers (selectors and matchers) of our current
+ *          activation status.
  */
-function notifySelectors()
+function notifyStatusChange()
 {
+    var active  = canAnnotate();
+
     selectors.forEach(function(selector) {
         // Trigger the event handler: data/selector.js:on('message')
-        selector.postMessage({action:'changeStatus', on:canAnnotate()});
+        selector.postMessage({action:'changeStatus', active:active});
+    });
+    matchers.forEach(function(matcher) {
+        // Trigger the event handler: data/matcher.js:on('message')
+        matcher.postMessage({
+            action:     'changeStatus',
+            active:     active,
+            annotations:simpleStorage.storage.annotations});
+    });
+}
+
+/** @brief  Notify all page-mod workers (matchers) of any change to our
+ *          annotations.
+ */
+function notifyMatchers()
+{
+    matchers.forEach(function(matcher) {
+        // Trigger the event handler: data/selector.js:on('message')
+        matcher.postMessage({
+            action:      'update',
+            annotations: simpleStorage.storage.annotations
+        });
     });
 }
 
@@ -92,6 +116,8 @@ function addAnnotation(text, anchor)
 
     var annotation  = new Annotation(text, anchor);
     simpleStorage.storage.annotations.push(annotation);
+
+    notifyMatchers();
 
 
     var count   = simpleStorage.storage.annotations.length,
@@ -129,6 +155,8 @@ function Annotation(text, anchor)
 exports.main = function() {
         /* Create the widget/button to toggle our activation status
          *  data/widget/widget.js
+         *  data/widget/pencil-on.png
+         *  data/widget/pencil-off.png
          */
     var widget      = widgets.Widget({
                         id:                 'toggle-switch',
@@ -168,7 +196,7 @@ exports.main = function() {
                                 // Trigger the annotationEditor's 'onShow'
                                 annotationEditor.show();
                             });
-                            worker.port.on('detach', function(data) {
+                            worker.port.on('detach', function() {
                                 detachWorker(this, selectors);
                             });
                         }
@@ -177,6 +205,7 @@ exports.main = function() {
          * user clicks on a highlighted DOM element to allow them to enter an
          * annotation:
          *  data/editor/annotation.html
+         *  data/editor/annotation.css
          *  data/editor/annotation.js
          */
         annotationEditor
@@ -261,6 +290,67 @@ exports.main = function() {
                                 annotations: simpleStorage.storage.annotations
                             });
                         }
+                      }),
+        /* Create a page-mode worker to indicate any DOM elements that have
+         * been annotated:
+         *  data/jquery.min.js
+         *  data/matcher.js
+         */
+        matcher     = pageMod.PageMod({
+                        include:            ['*'],
+                        contentScriptWhen:  'ready',
+                        contentScriptFile:  [
+                            data.url('jquery.min.js'),
+                            data.url('matcher.js')
+                        ],
+                        onAttach:           function(worker) {
+                            worker.postMessage({
+                                action:      'changeStatus',
+                                on:          canAnnotate(),
+                                annotations: simpleStorage.storage.annotations
+                            });
+                            matchers.push(worker);
+
+                            /* Handle a 'show' message, generated via
+                             *  data/selector.js when a highlighted element
+                             *  is clicked.
+                             */
+                            worker.port.on('show', function(annotation) {
+                                annotationPanel.annotation = annotation;
+                                annotationPanel.show();
+                            });
+                            worker.port.on('hide', function() {
+                                annotationPanel.hide();
+                                annotationPanel.annotation = null;
+                            });
+                            worker.port.on('detach', function() {
+                                detachWorker(this, matchers);
+                            });
+                        }
+                      });
+        /* Create an annotation panel that will be used to present information
+         * about a specific annotation when ther user clicks on it.
+         *  data/panel/annotation.html
+         *  data/panel/annotation.css
+         *  data/panel/annotation.js
+         */
+        annotationPanel
+                    = panels.Panel({
+                        width:              200,
+                        height:             180,
+                        contentURL:         data.url('panel/annotation.html'),
+                        contentScriptFile:  [
+                            data.url('jquery.min.js'),
+                            data.url('panel/annotation.js')
+                        ],
+                        onShow:             function() {
+                            if (! this.annotation)  { return; }
+
+                            this.postMessage({
+                                action:     'show',
+                                annotation: this.annotation
+                            });
+                        }
                       });
 
     /** @brief  Change the state of our widget/button
@@ -296,14 +386,14 @@ exports.main = function() {
     // When the user enters private-browsing mode, turn off annotation
     privateBrowsing.on('start', function() {
         widget_changeState( false );
-        notifySelectors();
+        notifyStatusChange();
     });
 
     privateBrowsing.on('stop', function() {
         if (canAnnotate())
         {
             widget_changeState( true );
-            notifySelectors();
+            notifyStatusChange();
         }
     });
 };

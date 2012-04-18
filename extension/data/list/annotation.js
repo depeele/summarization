@@ -1,7 +1,8 @@
 /** @brief  Handle a postMessage()
  *  @param  msg     The message data:
  *                      {action: *action*, action-secific-data}
- *                          Valid actions:  'view', annotations:[]
+ *                          Valid actions:
+ *                              'view', annotations:[]
  */
 self.on('message', function(msg) {
     switch (msg.action)

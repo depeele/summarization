@@ -1,13 +1,23 @@
 /** @brief  Handle a postMessage()
  *  @param  msg     The message data:
  *                      {action: *action*, action-secific-data}
- *                          Valid actions:  'changeStatus', on:boolean
+ *                          Valid actions:
+ *                              'changeStatus', active:boolean
  */
 self.on('message', function(msg) {
     switch (msg.action)
     {
     case 'changeStatus':
-        changeStatus(msg.on);
+        /*
+        console.log('selector:message: changeStatus, '
+                    +   'active: '+ (msg.active ? 'true' : 'false'));
+        // */
+
+        changeStatus(msg.active);
+        break;
+
+    default:
+        consolg.log('selector:message: unknown message [ '+ msg.action +' ]');
         break;
     }
 });
@@ -25,7 +35,7 @@ function changeStatus(newStatus)
 }
 
 var $matched    = null,     // The currently matched element
-    dataName    = 'annotation_addOn',
+    dataName    = 'annotation_selector',
     active      = false;    // Current activation status
 
 /** @brief  Reset the currently active element. */

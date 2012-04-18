@@ -1,7 +1,8 @@
 /** @brief  Handle a postMessage()
  *  @param  msg     The message data:
  *                      {action: *action*, action-secific-data}
- *                          Valid actions:  'focus' (no data)
+ *                          Valid actions:
+ *                              'focus' (no data)
  */
 self.on('message', function(msg) {
     console.log('editor/annotation.js: message[ '+ msg.action +' ]');
