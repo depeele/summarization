@@ -1,6 +1,8 @@
 var widgets         = require('widget'),
     pageMod         = require('page-mod'),
     panels          = require('panel'),
+    notifications   = require('notifications'),
+    privateBrowsing = require('private-browsing'),
     tabs            = require('tabs'),
     simpleStorage   = require('simple-storage'),
     data            = require('self').data,
@@ -13,14 +15,45 @@ if (! simpleStorage.storage.annotations)
     simpleStorage.storage.annotations = [];
 }
 
+/** @brief  Handle the simpleStorage 'OverQuote' event.
+ */
+simpleStorage.on('OverQuota', function() {
+    notifications.notify({
+        title:  'Storage space exceeded',
+        text:   'Removing older annotations'
+    });
+
+    while (simpleStorage.quotaUsage > 1)
+    {
+        simpleStorage.storage.annotations.shift();
+    }
+});
+
+/** @brief  Can we currently annotate?
+ *
+ *  This checks if annotation has been toggled on AND we are not currently in
+ *  "private-browsing" mode.
+ *
+ *  @return true | false
+ */
+function canAnnotate()
+{
+    return (annotatorIsOn && (! privateBrowsing.isActive));
+}
+
 /** @brief  Handle a click on the widget/button to toggle the activation status
  *          of our add-on.
  */
 function toggleActivation()
 {
+    if (privateBrowsing.isActive)
+    {
+        return false;
+    }
+
     annotatorIsOn = !annotatorIsOn;
     notifySelectors();
-    return annotatorIsOn;
+    return canAnnotate();
 }
 
 /** @brief  Notify all page-mod workers (selectors) of our current activation
@@ -30,7 +63,7 @@ function notifySelectors()
 {
     selectors.forEach(function(selector) {
         // Trigger the event handler: data/selector.js:on('message')
-        selector.postMessage({action:'changeStatus', on:annotatorIsOn});
+        selector.postMessage({action:'changeStatus', on:canAnnotate()});
     });
 }
 
@@ -60,9 +93,17 @@ function addAnnotation(text, anchor)
     var annotation  = new Annotation(text, anchor);
     simpleStorage.storage.annotations.push(annotation);
 
-    console.log('There are now '
-                + simpleStorage.storage.annotations.length
-                +' annotations');
+
+    var count   = simpleStorage.storage.annotations.length,
+        text    = 'There '+      (count === 1 ? 'is' : 'are')
+                + ' now '
+                + count
+                + ' annotation'+ (count === 1 ? ''   : 's');
+
+    notifications.notify({
+        title:  'Annotation added',
+        text:   text
+    });
 }
 
 /** @brief  An Annotation object.
@@ -111,7 +152,7 @@ exports.main = function() {
                         onAttach:           function(worker) {
                             worker.postMessage({
                                 action: 'changeStatus',
-                                on:     annotatorIsOn
+                                on:     canAnnotate()
                             });
                             selectors.push(worker);
 
@@ -222,6 +263,16 @@ exports.main = function() {
                         }
                       });
 
+    /** @brief  Change the state of our widget/button
+     *  @param  active  Is the new state active (true) or not (false);
+     */
+    function widget_changeState( active )
+    {
+        widget.contentURL = (active
+                                ? data.url('widget/pencil-on.png')
+                                : data.url('widget/pencil-off.png'));
+    }
+
     /* On left-click of our widget/button, toggle our activation status
      *  'left-click' is triggered via:
      *      data/widget/widget.js
@@ -230,9 +281,7 @@ exports.main = function() {
         var active  = toggleActivation();
 
         console.log((active ? '' : 'de') +'activate');
-        widget.contentURL = (active
-                                ? data.url('widget/pencil-on.png')
-                                : data.url('widget/pencil-off.png'));
+        widget_changeState(active);
     });
 
     /* On right-click of our widget/button, present our annotation list
@@ -242,5 +291,19 @@ exports.main = function() {
     widget.port.on('right-click', function() {
         console.log('show annotation list');
         annotationList.show();
+    });
+
+    // When the user enters private-browsing mode, turn off annotation
+    privateBrowsing.on('start', function() {
+        widget_changeState( false );
+        notifySelectors();
+    });
+
+    privateBrowsing.on('stop', function() {
+        if (canAnnotate())
+        {
+            widget_changeState( true );
+            notifySelectors();
+        }
     });
 };
