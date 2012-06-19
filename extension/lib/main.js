@@ -107,12 +107,23 @@ function notifyMatchers()
 /** @brief  Remove the identified worker from the worker queue.
  *  @param  worker  The worker to remove;
  *  @param  workers The worker queue;
+ *  @param  events  If provided, a hash of eventName/handler items that
+ *                  should be removed via worker.port.removeListener();
  */
-function detachWorker(worker, workers)
+function detachWorker(worker, workers, events)
 {
     var idex    = workers.indexOf(worker);
     if (idex >= 0)
     {
+        //console.log("detachWorker #", idex);
+        if (events)
+        {
+            for (var name in events)
+            {
+                worker.port.removeListener(name, events[name]);
+            }
+        }
+
         workers.splice(idex, 1);
     }
 }
@@ -123,9 +134,13 @@ function detachWorker(worker, workers)
  */
 function addAnnotation(text, anchor)
 {
-    console.log("Add a new annotation:");
-    console.log(anchor);
-    console.log(text);
+    /*
+    console.log("Add a new annotation: ",
+                    "anchor.url[", anchor[0], "], ",
+                    "anchor.ancestorId[", anchor[1], "], ",
+                    "anchor.anchorText[", anchor[2] ,"], ",
+                    "text[", text, "]");
+    // */
 
     var annotation  = new Annotation(text, anchor);
     simpleStorage.storage.annotations.push(annotation);
@@ -156,11 +171,11 @@ function Annotation(text, anchor)
     this.ancestorId     = anchor[1];
     this.anchorText     = anchor[2];
 
-    console.log('New Annotation: '
-                +   'text[ '+       this.annotationText +' ], '
-                +   'url[ '+        this.url            +' ], '
-                +   'ancestorId[ '+ this.ancestorId     +' ], '
-                +   'anchorText[ '+ this.anchorText     +' ]');
+    console.log("New Annotation: ",
+                    "text[",      this.annotationText, "], ",
+                    "url[",        this.url,           "], ",
+                    "ancestorId[", this.ancestorId,    "], ",
+                    "anchorText[", this.anchorText,    "]");
 }
 
 /** @brief  The main function for our add-on.
@@ -183,6 +198,8 @@ exports.main = function() {
                                 action: 'changeStatus',
                                 on:     canAnnotate()
                             });
+                            //console.log("attachWorker #", selectors.length);
+
                             selectors.push(worker);
 
                             /* Handle a 'show' message, generated via
@@ -191,14 +208,21 @@ exports.main = function() {
                              *  (annotationAnchor) comprised of:
                              *      [ url, ancestorId, elementText ]
                              */
-                            worker.port.on('show', function(data) {
-                                annotationEditor.annotationAnchor = data;
+                            var events  = {
+                                show: function(data) {
+                                    annotationEditor.annotationAnchor = data;
 
-                                // Trigger the annotationEditor's 'onShow'
-                                annotationEditor.show();
-                            });
-                            worker.port.on('detach', function() {
-                                detachWorker(this, selectors);
+                                    // Trigger the annotationEditor's 'onShow'
+                                    annotationEditor.show();
+                                }
+                            };
+
+                            for (var name in events)
+                            {
+                                worker.port.on(name, events[name]);
+                            }
+                            worker.on('detach', function() {
+                                detachWorker(this, selectors, events);
                             });
                         }
                       }),
@@ -316,16 +340,23 @@ exports.main = function() {
                              *  data/selector.js when a highlighted element
                              *  is clicked.
                              */
-                            worker.port.on('show', function(annotation) {
-                                annotationPanel.annotation = annotation;
-                                annotationPanel.show();
-                            });
-                            worker.port.on('hide', function() {
-                                annotationPanel.hide();
-                                annotationPanel.annotation = null;
-                            });
-                            worker.port.on('detach', function() {
-                                detachWorker(this, matchers);
+                            var events  = {
+                                show:   function(annotation) {
+                                    annotationPanel.annotation = annotation;
+                                    annotationPanel.show();
+                                },
+                                hide:   function() {
+                                    annotationPanel.hide();
+                                    annotationPanel.annotation = null;
+                                }
+                            };
+
+                            for (var name in events)
+                            {
+                                worker.port.on(name, events[name]);
+                            }
+                            worker.on('detach', function() {
+                                detachWorker(this, matchers, events);
                             });
                         }
                       });
