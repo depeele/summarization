@@ -83,19 +83,19 @@
  <script id='template-doc' type='text/template'>
   <header>
    <meta charset="utf-8" />
-   <h1><a href="<%= url %>"><%= title %></a></h1>
-   <author><%= author %></author>
-   <time datetime="<%= published.toISOString() %>"
-          pubdate="true"><%= jQuery.date2str(published) %></time>
+   <h1><a href="{{= url }}">{{= title }}</a></h1>
+   <author>{{= author }}</author>
+   <time datetime="{{= published.toISOString() }}"
+          pubdate="true">{{= jQuery.date2str(published) }}</time>
    <div class="keywords">
-    <% _.each(keywords, function(keyword) { %>
-        <div class="keyword"<%
+    {{ _.each(keywords, function(keyword) { }}
+        <div class="keyword"{{
             if (keyword.rank > 0)
             {
                 print(' data-rank="'+ Math.floor(keyword.rank * 100) +'"')
-            }%>
-             data-value="<%= keyword.value %>"><%= keyword.name %></div>
-    <% }); %>
+            } 
+        }} data-value="{{= keyword.value }}">{{= keyword.name }}</div>
+    {{ }); }}
    </div>
   </header>
   <div class='sections'></div>
@@ -111,17 +111,18 @@
  </script>
 
  <script id='template-sentence' type='text/template'
-  ><span class="rank"><%= (rank > 0 ? Math.floor(rank * 100) : 0) %></span
-  ><span class="content"><% _.each(tokens, function(token) {
-  	%><span   data-id="<%= token.id %>"
-            data-type="<%= token.type %>"
-                class="<%= token.type %>"<%
+  ><span class="rank">{{= (rank > 0 ? Math.floor(rank * 100) : 0) }}</span
+  ><span class="content">{{ _.each(tokens, function(token) {
+    }}<span   data-id="{{= token.id }}"
+            data-type="{{= token.type }}"
+                class="{{= token.type }}"{{
         if (token.value && (token.value.length > 0))
         {
             print(' data-value="'+ token.value +'"')
 
-        }%>><%= token.content %></span><%
-  }); %></span></script>
+        }
+    }}>{{= token.content }}</span>{{
+  }); }}</span></script>
 
  <script id='template-selection' type='text/template'>
    <span class='range-control'>
@@ -152,10 +153,10 @@
  </script>
 
  <script id='template-comment' type='text/template'>
-   <img class='avatar' src='<%= author.get('avatarUrl') %>' />
-   <div class='author'><%= author.get('fullName') %></div>
-   <div class='created'><%= jQuery.prettyDate(created)  %></div>
-   <div class='text'><%= text %></div>
+   <img class='avatar' src='{{= author.get('avatarUrl') }}' />
+   <div class='author'>{{= author.get('fullName') }}</div>
+   <div class='created'>{{= jQuery.prettyDate(created)  }}</div>
+   <div class='text'>{{= text }}</div>
    <div class='edit'>
     <textarea class='edit-comment'></textarea>
     <div class='buttons editing'>
@@ -168,7 +169,6 @@
     <button name='delete'>delete</button>
    </div>
  </script>
-
 
  <!-- Templates } -->
 </html>

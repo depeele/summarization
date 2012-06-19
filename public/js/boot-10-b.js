@@ -58,7 +58,17 @@ if (app.config.mode === 'development')
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.js' },
 
-        'underscore':   { src: 'js/underscore.js' },
+        'underscore':   {
+            src: 'js/underscore.js',
+            onload: function() {
+                // Set _.template to use mustache-like delimiters {{ }}, {{= }}
+                _.templateSettings = {
+                    evaluate:       /\{\{([\s\S]+?)\}\}/g,
+                    interpolate:    /\{\{=([\s\S]+?)\}\}/g,
+                    escape:         /\{\{-([\s\S]+?)\}\}/g
+                };
+            }
+        },
 
         'jquery':       {
             src:    'js/jquery.js',
