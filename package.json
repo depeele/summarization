@@ -1,10 +1,10 @@
 {
-    "name": "summarization-viewer"
-  , "version": "0.0.5"
-  , "private": true
-  , "dependencies": {
-      "express": "2.4.6"
-    , "less": ">= 0.0.1"
-    , "ejs": ">= 0.0.1"
+    "name": 	"summarization-viewer",
+	"version": 	"0.0.5",
+    "private": 	true,
+    "dependencies": {
+      "express":	">= 2.4.6",
+      "less": 		">= 0.0.1",
+      "ejs": 		">= 0.0.1"
   }
 }
