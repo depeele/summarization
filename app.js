@@ -3,17 +3,16 @@
  *
  */
 
-var fs      = require('fs');
-var express = require('express');
-
-var app = module.exports = express.createServer();
+var Fs      = require('fs'),
+    express = require('express'),
+    app     = module.exports = express.createServer();
 
 /*****************************************************************************
  * Configuration
  *
  */
 
-global.config = JSON.parse(fs.readFileSync(__dirname+ '/config.json', 'utf-8'));
+global.config = JSON.parse(Fs.readFileSync(__dirname+ '/config.json', 'utf-8'));
 
 /****************************
  * Express.js Configuration
@@ -37,6 +36,22 @@ app.configure('production', function(){
   app.use(express.errorHandler()); 
 });
 
+
+/*****************************************************************************
+ * Errors
+ *
+ */
+function NotFound(msg, err)
+{
+    this.name = 'NotFound';
+    this.code = 404;
+    this.err  = err;
+
+    Error.call(this, msg);
+    Error.captureStackTrace(this, arguments.callee);
+}
+NotFound.prototype.__proto__ = Error.prototype;
+
 /*****************************************************************************
  * Routes
  *
@@ -47,11 +62,38 @@ app.get('/', function(req, res){
   });
 });
 
-app.get('/samples/:id', function(req, res){
+/* Map the URL '/samples/:id'
+ *          to './samples/:id'
+ */
+app.get('/samples/:id', function(req, res, next){
   var   path    = 'samples/'+ req.params.id;
   res.sendfile(path, function(err) {
-    if (err)    { next(err); }
-    else        { console.log(">>> transferred %s", path); }
+    if (err)
+    {
+        next(new NotFound("Cannot locate sample '"+ path +"'", err));
+    }
+    else
+    {
+        console.log(">>> transferred %s", path);
+    }
+  });
+});
+
+/* Map the URL '/samples/duc02/:set/:id'
+ *          to './samples/duc02/keywords/single/:set/%id
+ */
+app.get('/samples/duc02/:set/:id', function(req, res, next){
+  var   path    = 'samples/duc02/keywords/single/'
+                + req.params.set +'/'+ req.params.id;
+  res.sendfile(path, function(err) {
+    if (err)
+    {
+        next(new NotFound("Cannot locate sample '"+ path +"'", err));
+    }
+    else
+    {
+        console.log(">>> transferred %s", path);
+    }
   });
 });
 
@@ -61,4 +103,8 @@ app.get('/samples/:id', function(req, res){
  */
 app.listen(config.server.port, config.server.host); //3000);
 console.log("Express server listening on %s:%d in %s mode",
-            app.address().address, app.address().port, app.settings.env);
+            config.server.host, config.server.port, app.settings.env);
+
+console.log(">>> The Earthquake example is at:");
+console.log("  http://%s:%s/?duc02/d061j/AP880911-0016.html",
+             config.server.host, config.server.port);
