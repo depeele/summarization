@@ -15,6 +15,7 @@ var app             = this.app = (this.app || {config:{},     options:{},
                                                Controller:{}, Helper:{}});
 app.config  = {
     mode:       'development',
+    docId:      '0001c',
     animSpeed:  200,
     table:      {
         options:    {name:'app.options', id:'mine'},
@@ -23,16 +24,14 @@ app.config  = {
 };
 
 /** @brief  Boot the application once all dependencies are loaded. */
-function bootApp()
-{
+function bootApp() {
     var $       = jQuery.noConflict();
 
-    app.config.docId = (window.location.search
-                            ? window.location.search
-                                .replace(/^\?(?:\/?samples\/)?(.*?)(\.(?:json|html))?$/, '$1$2')
-                            : '0001c');
-    if (! app.config.docId.match(/\.(json|html)$/))
-    {
+    app.config.docId =
+        app.config.docId
+            .replace(/^\?(?:\/?samples\/)?(.*?)(\.(?:json|html))?$/, '$1$2');
+            
+    if (! app.config.docId.match(/\.(json|html)$/)) {
         app.config.docId += '.json';
     }
 
@@ -52,11 +51,11 @@ function bootApp()
  * Load dependencies and, once loading is complete, invoke bootApp().
  *
  */
-if (app.config.mode === 'development')
-{
+if (app.config.mode === 'development') {
     // Development dependencies
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.js' },
+        'urlParser':    { src: 'js/urlParser.js' },
 
         'underscore':   { src: 'js/underscore.js' },
 
@@ -151,12 +150,12 @@ if (app.config.mode === 'development')
                                  'view.note', 'view.doc'
                           ] }
     };
-}
-else
-{
+    
+} else {
     // Non-Development/Production dependencies
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.min.js' },
+        'urlParser':    { src: 'js/urlParser.min.js' },
         'summary':      { src: 'js/summary-10-b-full.min.js' }
     };
 }
@@ -164,6 +163,9 @@ else
 Req('preloadImages', function() {
         // Preload global images/sprites
         preloadImages('css/images/loading.gif', 'css/images/icons-16.png');
+    },
+    'urlParser', function() {
+        app.config.docId = getSearchVar('docId') || app.config.docId;
     },
     'summary',
     bootApp

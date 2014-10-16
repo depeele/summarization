@@ -19,6 +19,7 @@ if (development === true)
     // Define development script dependencies
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.js' },
+        'urlParser':    { src: 'js/urlParser.js'},
         'jquery':       {
             src:    'js/jquery.min.js',
     
@@ -77,18 +78,20 @@ else
     // Define production script dependencies
     Req.assets = {
         'preloadImages':{ src: 'js/preloadImages.min.js' },
+        'urlParser':    { src: 'js/urlParser.js'},
         'summary':      { src: 'js/summary-06-full.js' }
     };
 }
 
-var docId = (window.location.search
-              ? window.location.search
-                  .replace(/^\?(?:\/?samples\/?)?([^\.\/]+)(?:\.xml)?$/, '$1')
-              : '0001a');
-
+              
+var docId = '0001a';
+              
 Req('preloadImages', function() {
         // Preload global images/sprites
         preloadImages('css/images/loading.gif', 'css/images/icons-16.png');
+    },
+    'urlParser', function() {
+        docId = getSearchVar('doc') || docId;
     },
     'summary', function() {
         var $ = jQuery.noConflict();
@@ -151,7 +154,6 @@ Req('preloadImages', function() {
   </div><!-- margin-right } -->
  </body>
 
- <!-- Templates { -->
  <!-- 'keywords' is an array of XML nodes -->
  <script id='tmpl-header-keywords' type='text/x-jquery-tmpl'>
   <div class='keywords'>
