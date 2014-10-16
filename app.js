@@ -79,12 +79,14 @@ app.get('/', function(req, res){
  *          to './samples/:id'
  */
 app.get('/samples/:id', function(req, res, next){
-  res.sendFile(req.params.id, sampleSendFileOpts, function(err) {
+  var path  = req.params.id;
+
+  res.sendFile(path, sampleSendFileOpts, function(err) {
     if (err && err.code !== 'ECONNABORT') {
         next(new NotFound("Cannot locate sample '"+ path +"'", err));
         
     } else {
-        console.log(">>> transferred samples/%s", req.params.id);
+        console.log(">>> transferred samples/%s", path);
     }
   });
 });
@@ -93,8 +95,8 @@ app.get('/samples/:id', function(req, res, next){
  *          to './samples/duc02/keywords/single/:set/%id
  */
 app.get('/samples/duc02/:set/:id', function(req, res, next){
-  var   path    = 'duc02/keywords/single/'
-                + req.params.set +'/'+ req.params.id;
+  var path  = 'duc02/keywords/single/'
+            + req.params.set +'/'+ req.params.id;
 
   res.sendFile(path, sampleSendFileOpts, function(err) {
     if (err && err.code !== 'ECONNABORT') {
