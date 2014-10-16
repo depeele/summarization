@@ -99,7 +99,7 @@ $.Summary.prototype = {
         var getMetadata  = $.get(opts.metadata);
 
         self.element.addClass('loading');
-        getMetadata.success(function( data ) {
+        getMetadata.done(function( data ) {
             self.metadata = data;
 
             // Perform the initial rendering of the xml
@@ -107,7 +107,7 @@ $.Summary.prototype = {
 
             self.element.removeClass('loading');
         });
-        getMetadata.error(function() {
+        getMetadata.fail(function() {
             alert("Cannot retrieve metadata '"+ opts.metadata +"'");
         });
     },

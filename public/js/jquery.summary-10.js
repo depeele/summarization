@@ -63,7 +63,7 @@ $.Summary = Backbone.View.extend({
         {
             getDoc = $.getJSON(opts.doc);
 
-            getDoc.success(function( data ) {
+            getDoc.done(function( data ) {
                 opts.doc = new app.Model.Doc( data );
             });
         }
@@ -74,7 +74,7 @@ $.Summary = Backbone.View.extend({
                 dataType:   'html'
             });
 
-            getDoc.success(function( html ) {
+            getDoc.done(function( html ) {
                 // Process the HTML
                 self._parseHtml(html);
             });
@@ -82,11 +82,11 @@ $.Summary = Backbone.View.extend({
 
         if (getDoc)
         {
-            getDoc.error(function() {
+            getDoc.fail(function() {
                 alert("Cannot retrieve document data '"+ opts.doc +"'");
             });
 
-            getDoc.complete(function() {
+            getDoc.always(function() {
                 self.render();
             });
         }

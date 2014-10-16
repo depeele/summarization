@@ -99,11 +99,11 @@ $.Summary.prototype = {
         // Kick off the retrieval of the metadata
         var getMetadata  = $.get(opts.metadata);
 
-        getMetadata.success(function( data ) {
+        getMetadata.done(function( data ) {
             self.metadata = data;
             self.render();
         });
-        getMetadata.error(function() {
+        getMetadata.fail(function() {
             alert("Cannot retrieve metadata '"+ opts.metadata +"'");
         });
     },

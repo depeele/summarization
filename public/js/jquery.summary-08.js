@@ -61,15 +61,15 @@ $.Summary = Backbone.View.extend({
         {
             var getDoc  = $.getJSON(opts.doc);
 
-            getDoc.success(function( data ) {
+            getDoc.done(function( data ) {
                 opts.doc = new app.Model.Doc( data );
             });
 
-            getDoc.error(function() {
+            getDoc.fail(function() {
                 alert("Cannot retrieve document data '"+ opts.doc +"'");
             });
 
-            getDoc.complete(function() {
+            getDoc.always(function() {
                 self.render();
             });
         }
