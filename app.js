@@ -8,6 +8,7 @@ var Express         = require('express');
 var BodyParser      = require('body-parser');
 var MethodOverride  = require('method-override');
 var ErrorHandler    = require('errorhandler');
+var Layouts         = require('express-ejs-layouts');
 var engines         = require('consolidate-build');
 var app             = module.exports = Express();
 
@@ -27,6 +28,7 @@ app.set('host', process.env.IP   || config.server.host);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
   
+app.use(Layouts);
 app.use(BodyParser.json());
 app.use(BodyParser.urlencoded({extended:true}));
 app.use(MethodOverride());
@@ -61,6 +63,11 @@ NotFound.prototype.__proto__ = Error.prototype;
  * Routes
  *
  */
+var sampleSendFileOpts  = {
+        root:       __dirname +'/samples/',
+        dofiles:    'deny'
+    };
+
 app.get('/', function(req, res){
   console.log("route( / )");
   res.render('index', {
@@ -72,13 +79,12 @@ app.get('/', function(req, res){
  *          to './samples/:id'
  */
 app.get('/samples/:id', function(req, res, next){
-  var   path    = 'samples/'+ req.params.id;
-  res.sendfile(path, function(err) {
-    if (err) {
+  res.sendFile(req.params.id, sampleSendFileOpts, function(err) {
+    if (err && err.code !== 'ECONNABORT') {
         next(new NotFound("Cannot locate sample '"+ path +"'", err));
         
     } else {
-        console.log(">>> transferred %s", path);
+        console.log(">>> transferred samples/%s", req.params.id);
     }
   });
 });
@@ -87,13 +93,15 @@ app.get('/samples/:id', function(req, res, next){
  *          to './samples/duc02/keywords/single/:set/%id
  */
 app.get('/samples/duc02/:set/:id', function(req, res, next){
-  var   path    = 'samples/duc02/keywords/single/'
+  var   path    = 'duc02/keywords/single/'
                 + req.params.set +'/'+ req.params.id;
-  res.sendfile(path, function(err) {
-    if (err) {
+
+  res.sendFile(path, sampleSendFileOpts, function(err) {
+    if (err && err.code !== 'ECONNABORT') {
         next(new NotFound("Cannot locate sample '"+ path +"'", err));
+
     } else {
-        console.log(">>> transferred %s", path);
+        console.log(">>> transferred samples/%s", path);
     }
   });
 });
