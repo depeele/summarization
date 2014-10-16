@@ -9,6 +9,7 @@
     "errorhandler": "^1.2.2",
     "express": "^4.9.7",
     "less": "^1.7.5",
-    "method-override": "^2.2.0"
+    "method-override": "^2.2.0",
+    "express-ejs-layouts": "~1.1.0"
   }
 }
