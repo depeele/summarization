@@ -55,38 +55,43 @@ $.Summary = Backbone.View.extend({
         self.$paneContent.find('article').addClass('loading');
 
         var getDoc;
-        if (opts.doc instanceof app.Model.Doc)
-        {
+        if (opts.doc instanceof app.Model.Doc) {
             self.render();    
-        }
-        else if (opts.doc.match(/\.json$/))
-        {
+
+        } else if (opts.doc.match(/\.json$/)) {
             getDoc = $.getJSON(opts.doc);
 
-            getDoc.success(function( data ) {
+            getDoc.done(function( data ) {
                 opts.doc = new app.Model.Doc( data );
             });
-        }
-        else if (opts.doc.match(/\.html$/))
-        {
+
+        } else if (opts.doc.match(/\.html$/)) {
             getDoc = $.ajax({
                 url:        opts.doc,
                 dataType:   'html'
             });
 
-            getDoc.success(function( html ) {
+            getDoc.done(function( html ) {
                 // Process the HTML
                 self._parseHtml(html);
             });
         }
 
-        if (getDoc)
-        {
-            getDoc.error(function() {
-                alert("Cannot retrieve document data '"+ opts.doc +"'");
+        if (getDoc) {
+            getDoc.fail(function(jqxhr, textStatus, err) {
+                self.error = {
+                    status: textStatus,
+                    err:    err
+                };
+                /*
+                _.defer(function() {
+                    alert("Cannot retrieve document data '"+ opts.doc +"': "
+                          + textStatus +' : '+ err);
+                });
+                // */
             });
 
-            getDoc.complete(function() {
+            getDoc.always(function() {
                 self.render();
             });
         }
@@ -106,8 +111,7 @@ $.Summary = Backbone.View.extend({
         var self    = this,
             opts    = self.options;
 
-        if (opts.doc instanceof app.Model.Doc)
-        {
+        if (opts.doc instanceof app.Model.Doc) {
             self.viewDoc = new app.View.Doc({model:     opts.doc,
                                              $sections: self.$sections,
                                              $notes:    self.$paneNotes,
@@ -143,8 +147,7 @@ $.Summary = Backbone.View.extend({
 
             // Compute the threshold (unless explicitly provided)
             var threshold   = opts.threshold;
-            if ((opts.threshold.min < 0) || (opts.threshold.max < 0))
-            {
+            if ((opts.threshold.min < 0) || (opts.threshold.max < 0)) {
                 threshold          = self._computeThreshold();
                 self.origThreshold = threshold;
             }
@@ -156,9 +159,16 @@ $.Summary = Backbone.View.extend({
              * associated notes.
              */
             $(self.viewDoc.el).trigger('doc:ready');
+
+        } else if (self.error) {
+            self.$paneContent.find('article')
+                    .removeClass('loading')
+                    .addClass('error')
+                    .text( self.error.status +' : '+ self.error.err );
         }
 
         //self.$paneContent.removeClass('loading');
+        //self.$paneContent.find('article').removeClass('loading');
     },
 
     /** @brief  Add a new Model.Note instance to the collection associated with
@@ -210,30 +220,27 @@ $.Summary = Backbone.View.extend({
          */
         self.$s.addClass('noHighlight');
 
-        if (opts.filter === 'normal')
-        {
+        if (opts.filter === 'normal') {
             // Show only sentences within the threshold range
             for (var idex = opts.threshold.max;
                     idex >= opts.threshold.min;
-                        idex--)
-            {
+                        idex--) {
+
                 var ar  = self.ranks[idex];
                 if (ar === undefined)   { continue; }
 
                 var nItems  = ar.length;
-                for (var jdex = 0; jdex < nItems; jdex++)
-                {
+                for (var jdex = 0; jdex < nItems; jdex++) {
                     // Mark this sentence as TO BE highlighted
                     var $s      = ar[jdex];
                     $s.addClass('toHighlight')
                       .removeClass('noHighlight');
                 }
             }
-        }
-        else
-        {
-            if (opts.filter.indexOf('notes') >= 0)
-            {
+
+        } else {
+
+            if (opts.filter.indexOf('notes') >= 0) {
                 /* Show ALL sentences containing one or more tags regardless of
                  * threshold
                  */
@@ -270,8 +277,7 @@ $.Summary = Backbone.View.extend({
         var name    = $el.attr('name');
         var newMin  = opts.threshold.min;
 
-        switch (name)
-        {
+        switch (name) {
         case 'threshold-all':
             // Set the threshold.min
             opts.threshold.min = 0;
@@ -282,8 +288,7 @@ $.Summary = Backbone.View.extend({
 
         case 'threshold-reset':
             // Reset the threshold.min
-            if (self.origThreshold === undefined)
-            {
+            if (self.origThreshold === undefined) {
                 self.origThreshold = self._computeThreshold();
             }
             opts.threshold.min = self.origThreshold.min;
@@ -469,8 +474,8 @@ $.Summary = Backbone.View.extend({
         /* Find the highest rank that will include at least opts.showSentences
          * sentences.
          */
-        for (var idex = self.ranks.length - 1; idex > 0; idex--)
-        {
+        for (var idex = self.ranks.length - 1; idex > 0; idex--) {
+
             var ar = self.ranks[idex];
             if (ar === undefined) { continue; }
 
@@ -501,8 +506,7 @@ $.Summary = Backbone.View.extend({
                             : [ 'normal' ]);
 
         $.each(filters, function() {
-            switch (this.toString())
-            {
+            switch (this.toString()) {
             case 'notes':
                 $buttons.button('disable');
                 break;
@@ -527,8 +531,7 @@ $.Summary = Backbone.View.extend({
         self.el.removeClass('notes normal')
                     .addClass(filters.join(' '));
 
-        if (noRefresh !== true)
-        {
+        if (noRefresh !== true) {
             // Re-apply the current threshold
             self.refresh();
         }
