@@ -54,6 +54,26 @@
             }
         },
 
+        /** (Re)render our template with the provided data.
+         *  @method renderTemplate
+         *  @param  data    The data with which to render {Object};
+         *
+         *  @return The rendered HTML {String};
+         */
+        renderTemplate: function(data) {
+            var self    = this,
+                html;
+
+            try {
+                html = self.template( data );
+            } catch(e) {
+                html = "<div class='error'>View.Sentence: Error rendering: "
+                     + e +"</div>";
+            }
+
+            return html;
+        },
+
         /** @brief  (Re)render the contents of the paragraph item. */
         render:     function() {
             var self    = this,
@@ -71,7 +91,7 @@
                 self.$el.attr('data-type', 'sentence');
                 if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
 
-                self.$el.html( self.template( self.model.toJSON() ) );
+                self.$el.html( self.renderTemplate( self.model.toJSON() ) );
             }
             else
             {
@@ -86,7 +106,7 @@
                         rank:   self.$el.data('rank'),
                         tokens: []
                     },
-                    $el         = $( self.template( data ) );
+                    $el         = $( self.renderTemplate( data ) );
 
                 // First, make sure each atom has an appropriate CSS class
                 self.$el.find( self.atoms ).each(function() {
@@ -197,5 +217,4 @@
             else                                { this.expansionExpand(e); }
         }
     });
-
  }).call(this);

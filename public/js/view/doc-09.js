@@ -79,13 +79,33 @@
             return Backbone.View.prototype.remove.call(this);
         },
 
+        /** (Re)render our template with the provided data.
+         *  @method renderTemplate
+         *  @param  data    The data with which to render {Object};
+         *
+         *  @return The rendered HTML {String};
+         */
+        renderTemplate: function(data) {
+            var self    = this,
+                html;
+
+            try {
+                html = self.template( data );
+            } catch(e) {
+                html = "<div class='error'>View.Doc: Error rendering: "
+                     + e +"</div>";
+            }
+
+            return html;
+        },
+
         /** @brief  (Re)render the contents of the document item. */
         render:     function() {
             var self    = this,
                 opts    = self.options;
 
             self.$el.attr('id', self.model.cid);
-            self.$el.html( self.template( self.model.toJSON() ) );
+            self.$el.html( self.renderTemplate( self.model.toJSON() ) );
 
             // Store a reference to this view instance
             self.$el.data('View:Doc', self);

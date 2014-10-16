@@ -51,13 +51,33 @@
             self.model.bind('change',  self.__change);
         },
 
+        /** (Re)render our template with the provided data.
+         *  @method renderTemplate
+         *  @param  data    The data with which to render {Object};
+         *
+         *  @return The rendered HTML {String};
+         */
+        renderTemplate: function(data) {
+            var self    = this,
+                html;
+
+            try {
+                html = self.template( data );
+            } catch(e) {
+                html = "<div class='error'>View.Comment: Error rendering: "
+                     + e +"</div>";
+            }
+
+            return html;
+        },
+
         /** @brief  Render this view. */
         render: function() {
             var self    = this;
 
             self.$el = $(self.el);
             self.$el.attr('id', self.model.cid);
-            self.$el.html( self.template( self.model.toJSON() ) );
+            self.$el.html( self.renderTemplate( self.model.toJSON() ) );
 
             // Store a reference to this view instance
             self.$el.data('View:Comment', self);

@@ -18,6 +18,26 @@
         tagName:    'section',
         template:   _.template($('#template-section').html()),
 
+        /** (Re)render our template with the provided data.
+         *  @method renderTemplate
+         *  @param  data    The data with which to render {Object};
+         *
+         *  @return The rendered HTML {String};
+         */
+        renderTemplate: function(data) {
+            var self    = this,
+                html;
+
+            try {
+                html = self.template( data );
+            } catch(e) {
+                html = "<div class='error'>View.Section: Error rendering: "
+                     + e +"</div>";
+            }
+
+            return html;
+        },
+
         /** @brief  (Re)render the contents of the section item. */
         render:     function() {
             var self    = this,
@@ -35,7 +55,7 @@
                 self.$el.attr('data-type', 'section');
                 if (! isNaN(rank))  { self.$el.attr('data-rank', rank); }
 
-                self.$el.html( self.template( self.model.toJSON() ) );
+                self.$el.html( self.renderTemplate( self.model.toJSON() ) );
 
                 var $paragraphs = self.$el.find('.paragraphs:first');
 
@@ -51,7 +71,7 @@
                 /* Include the section template and "render" all paragraphs
                  * into the paragraphs container.
                  */
-                self.$el.append( self.template() )
+                self.$el.append( self.renderTemplate() )
                         .addClass( self.className );
 
                 var $paragraphs = self.$el.find('.paragraphs:first');
