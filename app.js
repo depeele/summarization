@@ -69,7 +69,6 @@ var sampleSendFileOpts  = {
     };
 
 app.get('/', function(req, res){
-  console.log("route( / )");
   res.render('index', {
     title: 'Summarization Viewer'
   });
@@ -83,10 +82,14 @@ app.get('/samples/:id', function(req, res, next){
 
   res.sendFile(path, sampleSendFileOpts, function(err) {
     if (err && err.code !== 'ECONNABORT') {
-        next(new NotFound("Cannot locate sample '"+ path +"'", err));
+        //next(new NotFound("Cannot locate sample '"+ path +"'", err));
+        console.error("*** Sample '%s': %s", path, err);
+        res.status(404).send( null );
         
+    /*
     } else {
         console.log(">>> transferred samples/%s", path);
+    // */
     }
   });
 });
@@ -100,10 +103,14 @@ app.get('/samples/duc02/:set/:id', function(req, res, next){
 
   res.sendFile(path, sampleSendFileOpts, function(err) {
     if (err && err.code !== 'ECONNABORT') {
-        next(new NotFound("Cannot locate sample '"+ path +"'", err));
+        //next(new NotFound("Cannot locate sample '"+ path +"'", err));
+        console.error("*** Sample '%s': %s", path, err);
+        res.status(404).send( null );
 
+    /*
     } else {
         console.log(">>> transferred samples/%s", path);
+    // */
     }
   });
 });
