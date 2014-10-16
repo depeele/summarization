@@ -3,45 +3,51 @@
  *
  */
 
-var fs      = require('fs');
-var express = require('express');
-
-var app = module.exports = express.createServer();
+var fs              = require('fs');
+var Express         = require('express');
+var BodyParser      = require('body-parser');
+var MethodOverride  = require('method-override');
+var ErrorHandler    = require('errorhandler');
+var engines         = require('consolidate-build');
+var app             = module.exports = Express();
 
 /*****************************************************************************
  * Configuration
  *
  */
 
-global.config = JSON.parse(fs.readFileSync(__dirname+ '/config.json', 'utf-8'));
+var config = JSON.parse(fs.readFileSync(__dirname+ '/config.json', 'utf-8'));
 
 /****************************
  * Express.js Configuration
  *
  */
-app.configure(function(){
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'ejs');
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(express.compiler({ src: __dirname + '/public', enable: ['less'] }));
-  app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
-});
+app.set('port', process.env.PORT || config.server.port);
+app.set('host', process.env.IP   || config.server.host);
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+  
+app.use(BodyParser.json());
+app.use(BodyParser.urlencoded({extended:true}));
+app.use(MethodOverride());
+app.use(Express.static(__dirname + '/public'));
 
-app.configure('development', function(){
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
-});
+//app.engine('ejs',  engines.ejs);
+//app.engine('less', engines.less);
 
-app.configure('production', function(){
-  app.use(express.errorHandler()); 
-});
+if (app.get('env') === 'development') {
+  app.use(ErrorHandler({ dumpExceptions: true, showStack: true })); 
+  
+} else {
+  app.use(ErrorHandler()); 
+}
 
 /*****************************************************************************
  * Routes
  *
  */
 app.get('/', function(req, res){
+  console.log("route( / )");
   res.render('index', {
     title: 'Summarization Viewer'
   });
@@ -59,6 +65,9 @@ app.get('/samples/:id', function(req, res){
  * Start the server
  *
  */
-app.listen(config.server.port, config.server.host); //3000);
-console.log("Express server listening on %s:%d in %s mode",
-            app.address().address, app.address().port, app.settings.env);
+app.listen(app.get('port'), app.get('host'), function() {
+  var server  = this;
+  console.log("Express server listening on %s:%d in %s mode",
+              server.address().address, server.address().port,
+              app.get('env'));
+});

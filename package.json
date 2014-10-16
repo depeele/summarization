@@ -1,10 +1,14 @@
 {
-    "name": "summarization-viewer"
-  , "version": "0.0.5"
-  , "private": true
-  , "dependencies": {
-      "express": "2.4.6"
-    , "less": ">= 0.0.1"
-    , "ejs": ">= 0.0.1"
+  "name": "summarization-viewer",
+  "version": "0.0.5",
+  "private": true,
+  "dependencies": {
+    "body-parser": "^1.9.0",
+    "consolidate-build": "^1.1.0",
+    "ejs": "^1.0.0",
+    "errorhandler": "^1.2.2",
+    "express": "^4.9.7",
+    "less": "^1.7.5",
+    "method-override": "^2.2.0"
   }
 }
