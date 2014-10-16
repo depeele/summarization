@@ -49,8 +49,11 @@
                 published   = self.get('published'),
                 sections    = self.get('sections'),
                 notes       = self.get('notes');
-            if ((! published) || ! (published instanceof Date) )
-            {
+            if (! _.isDate(published)) {
+                if (_.isObject(published)) {
+                    published = published.date +' '+ published.time;
+                }
+
                 published = (published
                             ? new Date(published)
                             : new Date());
