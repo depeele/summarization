@@ -9,88 +9,10 @@
   <title><%= title %></title>
 
   <link rel="stylesheet" type="text/css" href="css/theme/jquery-ui.min.css" />
-  <link rel="stylesheet" type="text/css" href="css/summary-07.min.css" />
+  <link rel="stylesheet" type="text/css" href="css/summary-10.min.css" />
 
   <script src='js/req.min.js'></script>
-  <script>
-var development = true;
-if (development === true)
-{
-    // Define development script dependencies
-    Req.assets = {
-        'preloadImages':{ src: 'js/preloadImages.js' },
-        'jquery':       {
-            src:    'js/jquery.js',
-    
-            // script.onload handler that runs as soon as the script has loaded
-            onload: function () {
-                // be strict about jQuery usage.
-                var $ = jQuery.noConflict();
-    
-                // Setup an easy-to-use Req.js plugin for jQuery ($.Req)
-                $.fn.Req = function(){
-                    var args = arguments, t = this;
-                    if (t.length)
-                    {
-                        Req.apply(null, $.map(args, function(a) {
-                            return $.isFunction(a)
-                                    ? function(){a.call(t);}
-                                    : a;
-                        }) );
-                    }
-                    return t;
-                };
-            }
-        },
-        'rangy':        { src: 'js/rangy.js' },
-        'rangy.serializer':
-                        { src: 'js/rangy/serializer.js',req: ['rangy'] },
-    
-        'utils':        { src: 'js/jquery.utils.js',    req: ['jquery'] },
-        'tmpl':         { src: 'js/jquery.tmpl.js',     req: ['jquery'] },
-        'json':         { src: 'js/jquery.json.js',     req: ['jquery'] },
-        'jstorage':     { src: 'js/jstorage.js',        req: ['jquery'] },
-        'hoverIntent':  { src: 'js/jquery.hoverIntent.js',
-                                                        req: ['jquery'] },
-        'delegateHoverIntent':
-                        { src:    'js/jquery.delegateHoverIntent.js',
-                                                        req:    ['jquery'] },
-        'user':         { src: 'js/jquery.user.js',     req: ['jquery'] },
-        'note':         { src: 'js/jquery.note.js',     req: ['jquery'] },
-        'jquery-ui':    { src: 'js/jquery-ui.js',       req: ['jquery'] },
-    
-        'ui.checkbox':  { src: 'js/ui.checkbox.js',     req: ['jquery-ui'] },
-        'ui.note':      { src: 'js/ui.note.js',         req: ['jquery-ui'] },
-        'ui.sentence':  { src: 'js/ui.sentence.js',     req: ['jquery-ui'] },
-        'ui.contentOverlay':
-                        { src: 'js/ui.contentOverlay.js',
-                          req: ['jquery-ui', 'rangy',
-                                'rangy.serializer' ] },
-    
-        'summary':      { src: 'js/jquery.summary-07.js',
-                          req: [ 'jquery',
-                                 'utils', 'tmpl', 'json', 'jstorage',
-                                 'hoverIntent', 'delegateHoverIntent', 'user',
-                                 'note',
-                                 'ui.note', 'ui.checkbox', 'ui.sentence',
-                                 'ui.contentOverlay'] }
-    };
-}
-else
-{
-    // Define production script dependencies
-    Req.assets = {
-        'preloadImages':{ src: 'js/preloadImages.min.js' },
-        'summary':      { src: 'js/summary-07-full.js' }
-    };
-}
-
-Req('preloadImages', function() {
-        // Preload global images/sprites
-        preloadImages('css/images/loading.gif', 'css/images/icons-16.png');
-    }
-);
-  </script>
+  <script src='js/boot-10-b.js'></script>
  </head>
  <body>
   <%- body %>
